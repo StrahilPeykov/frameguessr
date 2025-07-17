@@ -1,0 +1,9 @@
+# FrameGuessr robots.txt
+User-agent: *
+Allow: /
+
+# API endpoints
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://frameguessr.vercel.app/sitemap.xml
