@@ -54,27 +54,6 @@ body {
   }
 }
 
-/* Blur effect utilities */
-.blur-heavy {
-  filter: blur(20px) brightness(0.75) saturate(0.5);
-  transition: filter 0.7s ease-in-out;
-}
-
-.blur-medium {
-  filter: blur(10px) brightness(0.9);
-  transition: filter 0.7s ease-in-out;
-}
-
-.blur-light {
-  filter: blur(3px);
-  transition: filter 0.7s ease-in-out;
-}
-
-.blur-none {
-  filter: none;
-  transition: filter 0.7s ease-in-out;
-}
-
 /* Custom scrollbar for search results */
 .scrollbar-thin {
   scrollbar-width: thin;
@@ -237,12 +216,6 @@ body {
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-  .blur-heavy,
-  .blur-medium,
-  .blur-light {
-    filter: none;
-  }
-  
   .gradient-text,
   .gradient-purple-blue {
     background: none;
@@ -260,13 +233,6 @@ body {
   .animate-error-shake,
   .touch-feedback {
     animation: none;
-  }
-  
-  .blur-heavy,
-  .blur-medium,
-  .blur-light,
-  .blur-none {
-    transition: none;
   }
 }
 

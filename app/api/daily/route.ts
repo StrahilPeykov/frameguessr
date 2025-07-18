@@ -59,11 +59,6 @@ export async function GET(request: NextRequest) {
       year: dailyMovie.year,
       imageUrl: dailyMovie.image_url,
       hints: dailyMovie.hints || createDefaultHints(dailyMovie),
-      blurLevels: dailyMovie.blur_levels || {
-        heavy: dailyMovie.image_url,
-        medium: dailyMovie.image_url,
-        light: dailyMovie.image_url,
-      },
     })
 
   } catch (error) {

@@ -25,18 +25,17 @@ export interface DailyChallenge {
   year?: number
   imageUrl: string
   hints: HintData
-  blurLevels: BlurLevels
 }
 
 export interface HintData {
   level1: {
     type: 'image'
-    data: string // Heavily blurred/cropped image URL
+    data: string // Image URL - blur applied via CSS
   }
   level2: {
     type: 'mixed'
     data: {
-      image: string // Less blurred image
+      image: string // Same image URL - less blur applied via CSS
       year?: number
       genre?: string
     }
@@ -44,18 +43,12 @@ export interface HintData {
   level3: {
     type: 'full'
     data: {
-      image: string // Slightly blurred image
+      image: string // Same image URL - no blur applied
       actors?: string[]
       tagline?: string
       director?: string
     }
   }
-}
-
-export interface BlurLevels {
-  heavy: string
-  medium: string
-  light: string
 }
 
 export interface SearchResult {

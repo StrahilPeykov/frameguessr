@@ -1,5 +1,6 @@
 // Run this script to seed the database with initial daily movies
 // Usage: npx tsx scripts/seed-daily-movies.ts
+// This script will SKIP existing dates to protect your handpicked data
 
 import dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
@@ -122,8 +123,9 @@ class TMDBClient {
 }
 
 async function seedDatabase() {
-  console.log('🎬 FrameGuessr Database Seeder')
-  console.log('==============================')
+  console.log('🎬 FrameGuessr Safe Database Seeder')
+  console.log('==================================')
+  console.log('⚠️  This script will SKIP existing dates to protect your handpicked data')
   console.log('Loading environment variables...')
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -154,14 +156,35 @@ async function seedDatabase() {
   const startDate = new Date('2025-07-01')
   console.log('Starting seed from date:', format(startDate, 'yyyy-MM-dd'))
   console.log('Total movies to seed:', SEED_MOVIES.length)
+  
+  // First, check which dates already exist
+  const endDate = addDays(startDate, SEED_MOVIES.length - 1)
+  console.log('Checking existing data from', format(startDate, 'yyyy-MM-dd'), 'to', format(endDate, 'yyyy-MM-dd'))
+  
+  const { data: existingMovies } = await supabase
+    .from('daily_movies')
+    .select('date')
+    .gte('date', format(startDate, 'yyyy-MM-dd'))
+    .lte('date', format(endDate, 'yyyy-MM-dd'))
+
+  const existingDates = new Set(existingMovies?.map(m => m.date) || [])
+  console.log(`Found ${existingDates.size} existing entries - these will be SKIPPED`)
   console.log('')
 
   let successCount = 0
   let failCount = 0
+  let skippedCount = 0
 
   for (let i = 0; i < SEED_MOVIES.length; i++) {
     const movie = SEED_MOVIES[i]
     const date = format(addDays(startDate, i), 'yyyy-MM-dd')
+    
+    // Skip if date already exists (protects handpicked data)
+    if (existingDates.has(date)) {
+      console.log(`[${i + 1}/${SEED_MOVIES.length}] ⏭️  SKIPPING ${date} - already exists (protecting your data)`)
+      skippedCount++
+      continue
+    }
     
     console.log(`[${i + 1}/${SEED_MOVIES.length}] Processing ${movie.title} for ${date}...`)
 
@@ -254,21 +277,22 @@ async function seedDatabase() {
         title: isMovie ? details.title : details.name,
         year: releaseYear,
         image_url: imageUrl,
-        blur_levels: {
-          heavy: imageUrl,
-          medium: imageUrl,
-          light: imageUrl,
-        },
         hints: hints,
       }
 
+      // Use INSERT with ON CONFLICT DO NOTHING to avoid overwriting existing data
       const { error } = await supabase
         .from('daily_movies')
-        .upsert(seedData, { onConflict: 'date' })
+        .insert(seedData)
 
       if (error) {
-        console.error(`  ❌ Database error:`, error.message)
-        failCount++
+        if (error.code === '23505') { // Unique constraint violation (date already exists)
+          console.log(`  ⏭️  SKIPPED - ${date} already exists`)
+          skippedCount++
+        } else {
+          console.error(`  ❌ Database error:`, error.message)
+          failCount++
+        }
       } else {
         console.log(`  ✓ Successfully seeded ${isMovie ? details.title : details.name}`)
         successCount++
@@ -282,11 +306,16 @@ async function seedDatabase() {
     await new Promise(resolve => setTimeout(resolve, 500))
   }
 
-  console.log('\n==============================')
+  console.log('\n==================================')
   console.log(`✅ Seeding complete!`)
-  console.log(`   Successful: ${successCount}`)
+  console.log(`   New entries: ${successCount}`)
+  console.log(`   Skipped (protected): ${skippedCount}`)
   console.log(`   Failed: ${failCount}`)
-  console.log(`   Total: ${SEED_MOVIES.length}`)
+  console.log(`   Total processed: ${SEED_MOVIES.length}`)
+  console.log('\n🛡️  Your existing handpicked data was protected!')
+  if (skippedCount > 0) {
+    console.log(`   ${skippedCount} existing entries were left untouched`)
+  }
   console.log('\nYour database is ready for FrameGuessr!')
 }
 
