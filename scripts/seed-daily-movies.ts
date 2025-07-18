@@ -9,12 +9,19 @@ import { format, addDays } from 'date-fns'
 dotenv.config({ path: '.env.local' })
 
 // Popular movies and TV shows with good stills available
-const SEED_MOVIES: Array<{
+interface SeedMovie { 
   tmdb_id: number
   media_type: 'movie' | 'tv'
   title: string
   year: number
-}> = [
+  /**
+   * Optional index of the backdrop to use.
+   * If omitted, one of the top images will be chosen at random.
+   */
+  backdropIndex?: number
+}
+
+const SEED_MOVIES: SeedMovie[] = [
   // July 2025
   { tmdb_id: 244786, media_type: 'movie', title: 'Whiplash', year: 2014 },
   { tmdb_id: 1399,   media_type: 'tv',    title: 'Game of Thrones', year: 2011 },
@@ -179,11 +186,23 @@ async function seedDatabase() {
           return aspectRatio >= 1.5 && aspectRatio <= 2.0 && backdrop.vote_average >= 0
         })
         
-        const selectedBackdrop = qualityBackdrops.length > 0 
-          ? qualityBackdrops[Math.floor(Math.random() * Math.min(qualityBackdrops.length, 3))]
-          : images.backdrops[0]
+        let selectedBackdrop: any
+
+        if (
+          qualityBackdrops.length > 0 &&
+          typeof movie.backdropIndex === 'number' &&
+          qualityBackdrops[movie.backdropIndex]
+        ) {
+          selectedBackdrop = qualityBackdrops[movie.backdropIndex]
+        } else if (qualityBackdrops.length > 0) {
+          const index = Math.floor(Math.random() * Math.min(qualityBackdrops.length, 3))
+          selectedBackdrop = qualityBackdrops[index]
+        } else {
+          selectedBackdrop = images.backdrops[0]
+        }
         
         imageUrl = tmdb.getImageUrl(selectedBackdrop.file_path)
+        console.log(`  → using backdrop ${selectedBackdrop.file_path}`)
       } else if (details.backdrop_path) {
         imageUrl = tmdb.getImageUrl(details.backdrop_path)
       } else if (details.poster_path) {
