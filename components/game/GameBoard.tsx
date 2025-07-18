@@ -170,11 +170,11 @@ export default function GameBoard() {
     
     switch (gameState.currentHintLevel) {
       case 1:
-        return 'blur-[8px] brightness-75'
+        return 'blur-[12px] brightness-75'
       case 2:
-        return 'blur-[3px] brightness-90'
+        return 'blur-[5px] brightness-90'
       case 3:
-        return '' // No blur on third hint level
+        return 'blur-[2px]' // Just a tiny hint of blur
       default:
         return ''
     }
@@ -187,7 +187,7 @@ export default function GameBoard() {
   const getHintText = () => {
     if (gameState.currentHintLevel === 1) return "Blurred image"
     if (gameState.currentHintLevel === 2) return "Less blur + Year & Genre"
-    if (gameState.currentHintLevel === 3) return "Clear image + Cast & Director"
+    if (gameState.currentHintLevel === 3) return "Almost clear + Cast & Director"
     return "Full image"
   }
 
