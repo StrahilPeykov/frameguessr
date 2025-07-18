@@ -25,28 +25,31 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Custom utility classes for the game */
+/* Enhanced skeleton animation */
 .skeleton {
-  animation: skeleton-loading 1s linear infinite alternate;
+  animation: skeleton-loading 1.5s ease-in-out infinite alternate;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
 }
 
 @keyframes skeleton-loading {
   0% {
-    opacity: 1;
+    background-position: -200% 0;
   }
   100% {
-    opacity: 0.4;
+    background-position: 200% 0;
   }
 }
 
+/* Smooth fade-in animation */
 .animate-fadeIn {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.5s ease-out;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -54,7 +57,7 @@ body {
   }
 }
 
-/* Custom scrollbar for search results */
+/* Improved scrollbar styling */
 .scrollbar-thin {
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
@@ -77,16 +80,17 @@ body {
   background-color: rgba(156, 163, 175, 0.7);
 }
 
-/* Custom focus styles */
+/* Enhanced touch feedback */
 .touch-feedback {
-  transition: transform 0.1s ease-in-out;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
 }
 
 .touch-feedback:active {
-  transform: scale(0.98);
+  transform: scale(0.96);
 }
 
-/* Line clamp utility */
+/* Better line clamp utilities */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -101,20 +105,22 @@ body {
   overflow: hidden;
 }
 
-/* Glass morphism effect */
+/* Enhanced glassmorphism effects */
 .glass {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(16px) saturate(180%);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .glass-dark {
-  backdrop-filter: blur(10px);
-  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(16px) saturate(180%);
+  background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-/* Gradient text utilities */
+/* Improved gradient text utilities */
 .gradient-text {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
@@ -129,13 +135,15 @@ body {
   background-clip: text;
 }
 
-/* Custom animations */
+/* Enhanced pulse animation */
 @keyframes pulse-glow {
   0%, 100% {
     box-shadow: 0 0 5px rgba(139, 92, 246, 0.5);
+    transform: scale(1);
   }
   50% {
     box-shadow: 0 0 20px rgba(139, 92, 246, 0.8), 0 0 30px rgba(139, 92, 246, 0.4);
+    transform: scale(1.02);
   }
 }
 
@@ -143,19 +151,19 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Success/Error feedback animations */
+/* Enhanced success/error animations */
 @keyframes success-bounce {
   0%, 20%, 53%, 80%, 100% {
     transform: translate3d(0, 0, 0);
   }
   40%, 43% {
-    transform: translate3d(0, -30px, 0);
+    transform: translate3d(0, -20px, 0);
   }
   70% {
-    transform: translate3d(0, -15px, 0);
+    transform: translate3d(0, -10px, 0);
   }
   90% {
-    transform: translate3d(0, -4px, 0);
+    transform: translate3d(0, -3px, 0);
   }
 }
 
@@ -164,46 +172,122 @@ body {
     transform: translateX(0);
   }
   10%, 30%, 50%, 70%, 90% {
-    transform: translateX(-10px);
+    transform: translateX(-8px);
   }
   20%, 40%, 60%, 80% {
-    transform: translateX(10px);
+    transform: translateX(8px);
   }
 }
 
 .animate-success-bounce {
-  animation: success-bounce 1s ease-in-out;
+  animation: success-bounce 1s ease-out;
 }
 
 .animate-error-shake {
-  animation: error-shake 0.6s ease-in-out;
+  animation: error-shake 0.5s ease-in-out;
 }
 
-/* Improved focus indicators for accessibility */
+/* Enhanced focus indicators */
 .focus-ring {
   transition: all 0.2s ease-in-out;
-}
-
-.focus-ring:focus {
-  outline: 2px solid #3B82F6;
+  outline: 2px solid transparent;
   outline-offset: 2px;
 }
 
 .focus-ring:focus-visible {
   outline: 2px solid #3B82F6;
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Improved button hover states */
+.btn-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+}
+
+.btn-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.btn-hover:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Image loading states */
+.image-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.image-loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 /* Dark mode specific enhancements */
 @media (prefers-color-scheme: dark) {
   .glass {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
   
-  .focus-ring:focus,
   .focus-ring:focus-visible {
     outline: 2px solid #60A5FA;
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+  }
+
+  .image-loading {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+  }
+}
+
+/* Enhanced mobile experience */
+@media (max-width: 640px) {
+  .mobile-safe-area {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  /* Optimize text sizes for mobile */
+  .text-4xl {
+    font-size: 2rem;
+    line-height: 2.25rem;
+  }
+  
+  .text-5xl {
+    font-size: 2.5rem;
+    line-height: 2.75rem;
+  }
+  
+  /* Better touch targets */
+  button, .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Reduce motion on mobile if preferred */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
@@ -212,15 +296,28 @@ body {
   .no-print {
     display: none !important;
   }
+  
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .gradient-text,
   .gradient-purple-blue {
-    background: none;
-    -webkit-text-fill-color: currentColor;
-    color: currentColor;
+    background: none !important;
+    -webkit-text-fill-color: currentColor !important;
+    color: currentColor !important;
+  }
+  
+  .glass,
+  .glass-dark {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid currentColor !important;
   }
 }
 
@@ -231,28 +328,39 @@ body {
   .animate-pulse-glow,
   .animate-success-bounce,
   .animate-error-shake,
-  .touch-feedback {
-    animation: none;
+  .touch-feedback,
+  .btn-hover {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
-/* Custom utilities for better mobile experience */
-@media (max-width: 640px) {
-  .mobile-safe-area {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-    padding-bottom: env(safe-area-inset-bottom);
+/* Custom utilities for stable layouts */
+.layout-stable {
+  contain: layout;
+  min-height: 0;
+}
+
+.content-stable {
+  contain: layout style;
+}
+
+/* Smooth state transitions */
+.state-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Backdrop blur fallback */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .glass-dark {
+    background: rgba(255, 255, 255, 0.9);
   }
   
-  /* Optimize text sizes for mobile */
-  .text-4xl {
-    font-size: 2rem;
-    line-height: 2.25rem;
-  }
-  
-  /* Better touch targets */
-  button, .touch-target {
-    min-height: 44px;
-    min-width: 44px;
+  @media (prefers-color-scheme: dark) {
+    .glass,
+    .glass-dark {
+      background: rgba(0, 0, 0, 0.8);
+    }
   }
 }

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { Search, Loader2, Film, Tv, Star, Calendar } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Search, Loader2, Film, Tv, Star, Calendar, X } from 'lucide-react'
 import { SearchResult } from '@/types/game'
 
 interface SearchBoxProps {
@@ -27,6 +27,7 @@ export default function SearchBox({
   const [showResults, setShowResults] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [error, setError] = useState<string | null>(null)
+  const [hasFocus, setHasFocus] = useState(false)
   
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -39,6 +40,7 @@ export default function SearchBox({
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false)
         setSelectedIndex(-1)
+        setHasFocus(false)
       }
     }
 
@@ -46,12 +48,23 @@ export default function SearchBox({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Debounced search function
+  // Scroll selected item into view
   useEffect(() => {
-    if (query.length < 2) {
+    if (selectedIndex >= 0 && resultsRef.current) {
+      const selectedElement = resultsRef.current.children[selectedIndex] as HTMLElement
+      if (selectedElement) {
+        selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    }
+  }, [selectedIndex])
+
+  // Debounced search function
+  const performSearch = useCallback(async (searchQuery: string) => {
+    if (searchQuery.length < 2) {
       setResults([])
       setShowResults(false)
       setError(null)
+      setIsSearching(false)
       return
     }
 
@@ -59,29 +72,33 @@ export default function SearchBox({
     setShowResults(true)
     setError(null)
 
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Search failed')
+      }
+      
+      const data = await response.json()
+      setResults(data)
+      setSelectedIndex(-1)
+    } catch (error) {
+      console.error('Search failed:', error)
+      setError(error instanceof Error ? error.message : 'Search failed')
+      setResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }, [])
+
+  useEffect(() => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current)
     }
 
-    debounceTimer.current = setTimeout(async () => {
-      try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
-        
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'Search failed')
-        }
-        
-        const data = await response.json()
-        setResults(data)
-        setSelectedIndex(-1)
-      } catch (error) {
-        console.error('Search failed:', error)
-        setError(error instanceof Error ? error.message : 'Search failed')
-        setResults([])
-      } finally {
-        setIsSearching(false)
-      }
+    debounceTimer.current = setTimeout(() => {
+      performSearch(query)
     }, 300)
 
     return () => {
@@ -89,21 +106,31 @@ export default function SearchBox({
         clearTimeout(debounceTimer.current)
       }
     }
-  }, [query])
+  }, [query, performSearch])
 
-  const handleSelect = (result: EnhancedSearchResult) => {
+  const handleSelect = useCallback((result: EnhancedSearchResult) => {
     onSelect(result)
     setQuery('')
     setResults([])
     setShowResults(false)
     setSelectedIndex(-1)
+    setHasFocus(false)
     inputRef.current?.blur()
-  }
+  }, [onSelect])
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showResults || results.length === 0) {
+  const clearSearch = useCallback(() => {
+    setQuery('')
+    setResults([])
+    setShowResults(false)
+    setSelectedIndex(-1)
+    inputRef.current?.focus()
+  }, [])
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!showResults) {
       if (e.key === 'Escape') {
         setShowResults(false)
+        setHasFocus(false)
         inputRef.current?.blur()
       }
       return
@@ -112,11 +139,15 @@ export default function SearchBox({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault()
-        setSelectedIndex(prev => (prev < results.length - 1 ? prev + 1 : 0))
+        setSelectedIndex(prev => 
+          prev < results.length - 1 ? prev + 1 : 0
+        )
         break
       case 'ArrowUp':
         e.preventDefault()
-        setSelectedIndex(prev => (prev > 0 ? prev - 1 : results.length - 1))
+        setSelectedIndex(prev => 
+          prev > 0 ? prev - 1 : results.length - 1
+        )
         break
       case 'Enter':
         e.preventDefault()
@@ -127,10 +158,31 @@ export default function SearchBox({
       case 'Escape':
         setShowResults(false)
         setSelectedIndex(-1)
+        setHasFocus(false)
         inputRef.current?.blur()
         break
     }
-  }
+  }, [showResults, results, selectedIndex, handleSelect])
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value)
+  }, [])
+
+  const handleFocus = useCallback(() => {
+    setHasFocus(true)
+    if (query.length >= 2) {
+      setShowResults(true)
+    }
+  }, [query])
+
+  const handleBlur = useCallback(() => {
+    // Delay blur to allow for click events
+    setTimeout(() => {
+      if (!searchRef.current?.contains(document.activeElement)) {
+        setHasFocus(false)
+      }
+    }, 150)
+  }, [])
 
   const formatPopularity = (popularity: number): string => {
     if (popularity >= 100) return '🔥'
@@ -139,116 +191,150 @@ export default function SearchBox({
     return ''
   }
 
+  const shouldShowResults = showResults && (hasFocus || selectedIndex >= 0)
+
   return (
-    <div ref={searchRef} className="relative">
+    <div ref={searchRef} className="relative w-full">
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+          <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+        </div>
+        
         <input
           ref={inputRef}
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          onFocus={() => {
-            if (query.length >= 2) {
-              setShowResults(true)
-            }
-          }}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           placeholder={placeholder}
-          className="w-full pl-12 pr-12 py-4 text-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`w-full pl-12 pr-12 py-4 text-lg bg-white dark:bg-gray-800 rounded-2xl 
+            border-2 transition-all duration-200 shadow-sm hover:shadow-md
+            ${hasFocus || showResults 
+              ? 'border-blue-500 dark:border-blue-400' 
+              : 'border-gray-200 dark:border-gray-700'
+            }
+            ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-300 dark:hover:border-gray-600'}
+            focus:outline-none focus:ring-0 focus:border-blue-500 dark:focus:border-blue-400
+            text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400`}
           disabled={disabled}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck="false"
+          role="combobox"
+          aria-expanded={shouldShowResults}
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
         />
-        {isSearching && (
-          <Loader2 className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 animate-spin" />
-        )}
+        
+        {/* Loading/Clear Button */}
+        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+          {isSearching ? (
+            <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+          ) : query.length > 0 ? (
+            <button
+              onClick={clearSearch}
+              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {/* Search Results Dropdown */}
-      {showResults && (
+      {shouldShowResults && (
         <div 
           ref={resultsRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50 backdrop-blur-sm"
+          className="absolute top-full left-0 right-0 mt-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl max-h-96 overflow-y-auto z-50 scrollbar-thin"
+          role="listbox"
         >
           {error && (
-            <div className="px-6 py-4 text-center text-red-600 dark:text-red-400">
+            <div className="px-6 py-4 text-center text-red-600 dark:text-red-400 border-b border-gray-100 dark:border-gray-700">
               <p className="text-sm font-medium">{error}</p>
-              <p className="text-xs mt-1">Please try again</p>
+              <p className="text-xs mt-1 opacity-70">Please try again</p>
             </div>
           )}
           
           {!error && results.length === 0 && !isSearching && query.length >= 2 && (
             <div className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-              <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-sm font-medium">No results found for "{query}"</p>
-              <p className="text-xs mt-1">Try a different search term or check the spelling</p>
+              <Search className="w-8 h-8 mx-auto mb-3 opacity-50" />
+              <p className="text-sm font-medium">No results found</p>
+              <p className="text-xs mt-1 opacity-70">Try a different search term</p>
             </div>
           )}
           
           {!error && isSearching && (
             <div className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-              <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin" />
+              <Loader2 className="w-6 h-6 mx-auto mb-3 animate-spin" />
               <p className="text-sm">Searching...</p>
             </div>
           )}
 
           {!error && results.length > 0 && (
-            <div role="listbox" className="py-2">
+            <div className="py-2">
               {results.map((result, index) => (
                 <button
                   key={`${result.mediaType}-${result.id}`}
                   role="option"
                   aria-selected={index === selectedIndex}
                   onClick={() => handleSelect(result)}
-                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-gray-50 dark:focus:bg-gray-700 focus:outline-none transition-colors ${
-                    index === selectedIndex ? 'bg-gray-50 dark:bg-gray-700' : ''
-                  } ${index < results.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}`}
+                  className={`w-full text-left px-4 py-3 transition-all duration-150 focus:outline-none
+                    ${index === selectedIndex 
+                      ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' 
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                    }
+                    ${index < results.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}
+                  `}
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-center gap-4">
                     {/* Poster Image */}
-                    {result.posterUrl ? (
-                      <img
-                        src={result.posterUrl}
-                        alt=""
-                        className="w-12 h-16 object-cover rounded-lg flex-shrink-0 shadow-sm"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-12 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                        {result.mediaType === 'tv' ? (
-                          <Tv className="w-6 h-6 text-gray-400" />
-                        ) : (
-                          <Film className="w-6 h-6 text-gray-400" />
-                        )}
-                      </div>
-                    )}
+                    <div className="flex-shrink-0">
+                      {result.posterUrl ? (
+                        <img
+                          src={result.posterUrl}
+                          alt=""
+                          className="w-12 h-16 object-cover rounded-lg shadow-sm bg-gray-200 dark:bg-gray-700"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                      ) : (
+                        <div className="w-12 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                          {result.mediaType === 'tv' ? (
+                            <Tv className="w-6 h-6 text-gray-400" />
+                          ) : (
+                            <Film className="w-6 h-6 text-gray-400" />
+                          )}
+                        </div>
+                      )}
+                    </div>
                     
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate text-base">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate text-base leading-tight">
                           {result.title}
                         </h3>
                         {result.popularity && (
-                          <span className="text-lg flex-shrink-0">
+                          <span className="text-lg flex-shrink-0 ml-2">
                             {formatPopularity(result.popularity)}
                           </span>
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        <span className="flex items-center gap-1">
-                          {result.year && (
-                            <>
-                              <Calendar className="w-3 h-3" />
-                              {result.year}
-                            </>
-                          )}
-                        </span>
+                      <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mb-1">
+                        {result.year && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {result.year}
+                          </span>
+                        )}
                         <span className="flex items-center gap-1">
                           {result.mediaType === 'tv' ? (
                             <>
@@ -265,9 +351,9 @@ export default function SearchBox({
                       </div>
                       
                       {result.overview && (
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                          {result.overview.length > 100 
-                            ? `${result.overview.substring(0, 100)}...`
+                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                          {result.overview.length > 120 
+                            ? `${result.overview.substring(0, 120)}...`
                             : result.overview
                           }
                         </p>
