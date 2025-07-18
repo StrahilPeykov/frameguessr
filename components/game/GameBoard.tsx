@@ -189,7 +189,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       case 2:
         return 'blur-[4px] brightness-90'
       case 3:
-        return 'blur-[0px]'
+        return 'blur-[2px]'
       default:
         return ''
     }
@@ -412,13 +412,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                               {dailyChallenge.mediaType === 'tv' ? 'Created by' : 'Directed by'}
                             </span>
                             <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{dailyChallenge.hints.level3.data.director}</p>
-                          </div>
-                        )}
-
-                        {dailyChallenge.hints.level3.data.director && (
-                          <div className="bg-white/60 dark:bg-gray-700/60 backdrop-blur-sm rounded-lg p-3">
-                            <span className="font-medium text-sm text-gray-600 dark:text-gray-400">Tagline</span>
-                            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{dailyChallenge.hints.level3.data.tagline}</p>
                           </div>
                         )}
                       </>
