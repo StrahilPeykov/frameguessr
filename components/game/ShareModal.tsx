@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { X, Twitter, Copy, Check } from 'lucide-react'
 import { GameState } from '@/types/game'
+import { format } from 'date-fns'
 
 interface ShareModalProps {
   isOpen: boolean
@@ -30,9 +31,12 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
       }
     }
 
+    const isToday = dateStr === format(new Date(), 'yyyy-MM-dd')
+    const url = `frameguessr.vercel.app/day/${dateStr}`
+
     return `FrameGuessr ${dateStr}\n${
       gameState.won ? `Got it in ${attempts}/${maxAttempts}!` : `Failed ${attempts}/${maxAttempts}`
-    }\n\n${grid}\n\nPlay at: frameguessr.vercel.app`
+    }\n\n${grid}\n\n${isToday ? 'Play today:' : 'Try this challenge:'} ${url}`
   }
 
   const shareText = generateShareText()
@@ -58,6 +62,7 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
         await navigator.share({
           title: 'FrameGuessr',
           text: shareText,
+          url: `https://frameguessr.vercel.app/day/${gameState.currentDate}`,
         })
       } catch (err) {
         console.error('Error sharing:', err)

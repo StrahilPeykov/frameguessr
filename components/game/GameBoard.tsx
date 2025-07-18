@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { format } from 'date-fns'
 import { GameState, DailyChallenge, SearchResult } from '@/types/game'
 import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Eye, EyeOff, Calendar, Clock, Trophy, Info, Film, Tv } from 'lucide-react'
 import ShareModal from './ShareModal'
@@ -10,9 +12,15 @@ import SearchBox from './SearchBox'
 import CountdownTimer from './CountdownTimer'
 import DatePicker from './DatePicker'
 
-export default function GameBoard() {
+interface GameBoardProps {
+  initialDate?: string
+}
+
+export default function GameBoard({ initialDate }: GameBoardProps) {
+  const router = useRouter()
   const today = new Date().toISOString().split('T')[0]
-  const [selectedDate, setSelectedDate] = useState(today)
+  const selectedDate = initialDate || today
+  
   const [gameState, setGameState] = useState<GameState>({
     currentDate: selectedDate,
     attempts: 0,
@@ -30,7 +38,11 @@ export default function GameBoard() {
   const [showStatsModal, setShowStatsModal] = useState(false)
   const [showUnblurred, setShowUnblurred] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
-  const [showAnswer, setShowAnswer] = useState(false)
+
+  // Handle date selection by navigating to new URL
+  const handleDateSelect = (date: string) => {
+    router.push(`/day/${date}`)
+  }
 
   // Load game state from localStorage on mount and date change
   useEffect(() => {
@@ -267,7 +279,7 @@ export default function GameBoard() {
           {/* Date Picker */}
           <DatePicker 
             currentDate={selectedDate}
-            onDateSelect={setSelectedDate}
+            onDateSelect={handleDateSelect}
             minDate="2025-07-01"
           />
           

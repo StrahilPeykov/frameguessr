@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
-import { format, subDays, isAfter, isBefore, startOfDay } from 'date-fns'
+import { format, subDays, addDays, isAfter, isBefore, startOfDay } from 'date-fns'
 
 interface DatePickerProps {
   currentDate: string
@@ -10,8 +12,13 @@ interface DatePickerProps {
   minDate?: string
 }
 
-export default function DatePicker({ currentDate, onDateSelect, minDate = '2025-07-01' }: DatePickerProps) {
+export default function DatePicker({ 
+  currentDate, 
+  onDateSelect, 
+  minDate = '2025-07-01' 
+}: DatePickerProps) {
   const [showPicker, setShowPicker] = useState(false)
+  const router = useRouter()
   
   const today = format(new Date(), 'yyyy-MM-dd')
   const current = new Date(currentDate)
@@ -20,19 +27,18 @@ export default function DatePicker({ currentDate, onDateSelect, minDate = '2025-
   const canGoBack = isAfter(current, min)
   const canGoForward = isBefore(current, startOfDay(new Date()))
   
-  const handlePreviousDay = () => {
-    if (canGoBack) {
-      const prevDay = format(subDays(current, 1), 'yyyy-MM-dd')
-      onDateSelect(prevDay)
-    }
-  }
+  const prevDay = canGoBack ? format(subDays(current, 1), 'yyyy-MM-dd') : null
+  const nextDay = canGoForward ? format(addDays(current, 1), 'yyyy-MM-dd') : null
   
-  const handleNextDay = () => {
-    if (canGoForward) {
-      const nextDay = format(new Date(current.getTime() + 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
-      onDateSelect(nextDay)
+  // Prefetch adjacent days for faster navigation
+  useEffect(() => {
+    if (prevDay) {
+      router.prefetch(`/day/${prevDay}`)
     }
-  }
+    if (nextDay) {
+      router.prefetch(`/day/${nextDay}`)
+    }
+  }, [router, prevDay, nextDay])
   
   const handleDateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.value
@@ -48,19 +54,22 @@ export default function DatePicker({ currentDate, onDateSelect, minDate = '2025-
   
   return (
     <div className="flex items-center justify-center gap-4 mb-6">
-      <button
-        onClick={handlePreviousDay}
-        disabled={!canGoBack}
-        className={`p-2 rounded-lg transition-all ${
-          canGoBack 
-            ? 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400' 
-            : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-        }`}
-        aria-label="Previous day"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
+      {/* Previous Day Button with Link prefetching */}
+      {prevDay ? (
+        <Link
+          href={`/day/${prevDay}`}
+          className="p-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+          aria-label="Previous day"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </Link>
+      ) : (
+        <div className="p-2 text-gray-300 dark:text-gray-600 cursor-not-allowed">
+          <ChevronLeft className="w-5 h-5" />
+        </div>
+      )}
       
+      {/* Date Display */}
       <div className="relative">
         <button
           onClick={() => setShowPicker(!showPicker)}
@@ -88,18 +97,20 @@ export default function DatePicker({ currentDate, onDateSelect, minDate = '2025-
         )}
       </div>
       
-      <button
-        onClick={handleNextDay}
-        disabled={!canGoForward}
-        className={`p-2 rounded-lg transition-all ${
-          canGoForward 
-            ? 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400' 
-            : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-        }`}
-        aria-label="Next day"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
+      {/* Next Day Button with Link prefetching */}
+      {nextDay ? (
+        <Link
+          href={`/day/${nextDay}`}
+          className="p-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+          aria-label="Next day"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </Link>
+      ) : (
+        <div className="p-2 text-gray-300 dark:text-gray-600 cursor-not-allowed">
+          <ChevronRight className="w-5 h-5" />
+        </div>
+      )}
     </div>
   )
 }
