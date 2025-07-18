@@ -169,9 +169,14 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       return
     }
 
+    const newAttempts = gameState.attempts + 1
+    const newHintLevel = Math.min(newAttempts + 1, 3)
+
     setGameState(prev => ({
       ...prev,
-      currentHintLevel: prev.currentHintLevel + 1,
+      attempts: newAttempts,
+      currentHintLevel: newHintLevel,
+      completed: newAttempts >= gameState.maxAttempts,
     }))
   }
 
