@@ -7,7 +7,10 @@ const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
 export function middleware(request: NextRequest) {
   // Only apply rate limiting to API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    const ip = request.ip ?? '127.0.0.1'
+    const forwardedFor = request.headers.get('x-forwarded-for')
+    const ip = forwardedFor?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      '127.0.0.1'
     const key = `${ip}:${request.nextUrl.pathname}`
     
     const now = Date.now()
