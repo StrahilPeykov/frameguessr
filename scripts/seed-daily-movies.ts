@@ -128,7 +128,6 @@ async function seedDatabase() {
     console.error('Required environment variables:')
     console.error('- NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✓' : '✗')
     console.error('- SUPABASE_SERVICE_KEY:', supabaseServiceKey ? '✓' : '✗')
-    console.error('\nMake sure your .env.local file contains these variables.')
     process.exit(1)
   }
 
@@ -244,7 +243,6 @@ async function seedDatabase() {
         hints: hints,
       }
 
-    try {
       const { error } = await supabase
         .from('daily_movies')
         .upsert(seedData, { onConflict: 'date' })
