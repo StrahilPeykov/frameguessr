@@ -180,11 +180,11 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     
     switch (gameState.currentHintLevel) {
       case 1:
-        return 'blur-[20px] brightness-75'
+        return 'blur-[12px] brightness-75'
       case 2:
-        return 'blur-[8px] brightness-90'
+        return 'blur-[5px] brightness-90'
       case 3:
-        return 'blur-[3px]'
+        return 'blur-[0px]'
       default:
         return ''
     }
