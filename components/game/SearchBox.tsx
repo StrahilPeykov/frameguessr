@@ -16,7 +16,7 @@ export default function SearchBox({ onSelect, disabled }: SearchBoxProps) {
   const [showResults, setShowResults] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const debounceTimer = useRef<NodeJS.Timeout>(null)
+  const debounceTimer = useRef<NodeJS.Timeout>()
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
