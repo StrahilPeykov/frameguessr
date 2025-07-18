@@ -17,7 +17,7 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
   if (!isOpen) return null
 
   const generateShareText = () => {
-    const date = new Date().toLocaleDateString()
+    const dateStr = gameState.currentDate
     const attempts = gameState.attempts
     const maxAttempts = gameState.maxAttempts
     
@@ -30,7 +30,7 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
       }
     }
 
-    return `FrameGuessr ${date}\n${
+    return `FrameGuessr ${dateStr}\n${
       gameState.won ? `Got it in ${attempts}/${maxAttempts}!` : `Failed ${attempts}/${maxAttempts}`
     }\n\n${grid}\n\nPlay at: frameguessr.vercel.app`
   }

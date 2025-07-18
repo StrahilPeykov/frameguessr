@@ -1,0 +1,16 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1920" height="1080" fill="url(#gradient)"/>
+  <g opacity="0.15">
+    <path d="M960 340C849.54 340 760 429.54 760 540C760 650.46 849.54 740 960 740C1070.46 740 1160 650.46 1160 540C1160 429.54 1070.46 340 960 340ZM960 380C1048.37 380 1120 451.63 1120 540C1120 628.37 1048.37 700 960 700C871.63 700 800 628.37 800 540C800 451.63 871.63 380 960 380Z" fill="white"/>
+    <path d="M880 460V620L1020 540L880 460Z" fill="white"/>
+  </g>
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="white" opacity="0.3" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="600">
+    FrameGuessr
+  </text>
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="1920" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1a1a2e"/>
+      <stop offset="1" stop-color="#16213e"/>
+    </linearGradient>
+  </defs>
+</svg>

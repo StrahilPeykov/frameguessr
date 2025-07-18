@@ -9,7 +9,13 @@ import { format, addDays } from 'date-fns'
 dotenv.config({ path: '.env.local' })
 
 // Popular movies and TV shows with good stills available
-const SEED_MOVIES = [
+const SEED_MOVIES: Array<{
+  tmdb_id: number
+  media_type: 'movie' | 'tv'
+  title: string
+  year: number
+}> = [
+  // July 2025
   { tmdb_id: 244786, media_type: 'movie', title: 'Whiplash', year: 2014 },
   { tmdb_id: 1399,   media_type: 'tv',    title: 'Game of Thrones', year: 2011 },
   { tmdb_id: 49026,  media_type: 'movie', title: 'The Dark Knight Rises', year: 2012 },
@@ -40,14 +46,82 @@ const SEED_MOVIES = [
   { tmdb_id: 4232,   media_type: 'movie', title: 'Scream', year: 1996 },
 ];
 
+// TMDB Client
+class TMDBClient {
+  private accessToken: string
+
+  constructor() {
+    this.accessToken = process.env.TMDB_ACCESS_TOKEN!
+    if (!this.accessToken) {
+      throw new Error('TMDB_ACCESS_TOKEN not found in environment variables')
+    }
+  }
+
+  async getMovieDetails(movieId: number) {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/movie/${movieId}?append_to_response=credits`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    return response.json()
+  }
+
+  async getTVDetails(tvId: number) {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/tv/${tvId}?append_to_response=credits`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    return response.json()
+  }
+
+  async getMovieImages(movieId: number) {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/movie/${movieId}/images?include_image_language=en,null`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    return response.json()
+  }
+
+  async getTVImages(tvId: number) {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/tv/${tvId}/images?include_image_language=en,null`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    return response.json()
+  }
+
+  getImageUrl(path: string, size: string = 'original'): string {
+    return `https://image.tmdb.org/t/p/${size}${path}`
+  }
+}
 
 async function seedDatabase() {
+  console.log('🎬 FrameGuessr Database Seeder')
+  console.log('==============================')
   console.log('Loading environment variables...')
-  console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-  console.log('SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? '***[HIDDEN]***' : 'NOT FOUND')
-
+  
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY
+  const tmdbToken = process.env.TMDB_ACCESS_TOKEN
 
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error('Missing Supabase credentials')
@@ -58,54 +132,117 @@ async function seedDatabase() {
     process.exit(1)
   }
 
+  if (!tmdbToken) {
+    console.error('❌ Missing TMDB_ACCESS_TOKEN')
+    process.exit(1)
+  }
+
+  console.log('✓ Environment variables loaded')
   console.log('Creating Supabase client...')
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  
+  console.log('Creating TMDB client...')
+  const tmdb = new TMDBClient()
 
-  // Start seeding from tomorrow
-  const startDate = addDays(new Date(), 1)
+  // Start from July 1, 2025
+  const startDate = new Date('2025-07-01')
   console.log('Starting seed from date:', format(startDate, 'yyyy-MM-dd'))
+  console.log('Total movies to seed:', SEED_MOVIES.length)
+  console.log('')
+
+  let successCount = 0
+  let failCount = 0
 
   for (let i = 0; i < SEED_MOVIES.length; i++) {
     const movie = SEED_MOVIES[i]
     const date = format(addDays(startDate, i), 'yyyy-MM-dd')
+    
+    console.log(`[${i + 1}/${SEED_MOVIES.length}] Processing ${movie.title} for ${date}...`)
 
-    // For this seed script, we'll use placeholder data
-    // In production, you'd fetch real images from TMDB
-    const placeholderImage = `https://via.placeholder.com/1920x1080/1a1a1a/ffffff?text=${encodeURIComponent(movie.title)}`
+    try {
+      // Get movie/show details from TMDB
+      const isMovie = movie.media_type === 'movie'
+      const details = isMovie
+        ? await tmdb.getMovieDetails(movie.tmdb_id)
+        : await tmdb.getTVDetails(movie.tmdb_id)
+      
+      const images = isMovie
+        ? await tmdb.getMovieImages(movie.tmdb_id)
+        : await tmdb.getTVImages(movie.tmdb_id)
 
-    const seedData = {
-      date,
-      tmdb_id: movie.tmdb_id,
-      media_type: movie.media_type,
-      title: movie.title,
-      year: movie.year,
-      image_url: placeholderImage,
-      blur_levels: {
-        heavy: placeholderImage,
-        medium: placeholderImage,
-        light: placeholderImage,
-      },
-      hints: {
-        level1: { type: 'image', data: placeholderImage },
+      // Select the best backdrop
+      let imageUrl: string
+      
+      if (images.backdrops && images.backdrops.length > 0) {
+        // Filter for high-quality backdrops
+        const qualityBackdrops = images.backdrops.filter((backdrop: any) => {
+          const aspectRatio = backdrop.width / backdrop.height
+          return aspectRatio >= 1.5 && aspectRatio <= 2.0 && backdrop.vote_average >= 0
+        })
+        
+        const selectedBackdrop = qualityBackdrops.length > 0 
+          ? qualityBackdrops[Math.floor(Math.random() * Math.min(qualityBackdrops.length, 3))]
+          : images.backdrops[0]
+        
+        imageUrl = tmdb.getImageUrl(selectedBackdrop.file_path)
+      } else if (details.backdrop_path) {
+        imageUrl = tmdb.getImageUrl(details.backdrop_path)
+      } else if (details.poster_path) {
+        imageUrl = tmdb.getImageUrl(details.poster_path)
+      } else {
+        console.error(`  ❌ No images found for ${movie.title}`)
+        failCount++
+        continue
+      }
+
+      // Extract information for hints
+      const releaseYear = isMovie 
+        ? details.release_date ? new Date(details.release_date).getFullYear() : movie.year
+        : details.first_air_date ? new Date(details.first_air_date).getFullYear() : movie.year
+
+      const cast = details.credits?.cast
+        ?.filter((c: any) => c.order < 5)
+        ?.map((c: any) => c.name) || []
+      
+      const director = isMovie 
+        ? details.credits?.crew?.find((c: any) => c.job === 'Director')?.name || ''
+        : details.created_by?.[0]?.name || ''
+
+      const hints = {
+        level1: { type: 'image', data: imageUrl },
         level2: {
           type: 'mixed',
           data: {
-            image: placeholderImage,
-            year: movie.year,
-            genre: 'Drama', // Placeholder
-          },
+            image: imageUrl,
+            year: releaseYear,
+            genre: details.genres?.[0]?.name || 'Unknown'
+          }
         },
         level3: {
           type: 'full',
           data: {
-            image: placeholderImage,
-            actors: ['Actor 1', 'Actor 2', 'Actor 3'], // Placeholder
-            tagline: 'A great movie tagline', // Placeholder
-            director: 'Famous Director', // Placeholder
-          },
+            image: imageUrl,
+            actors: cast.slice(0, 3),
+            tagline: details.tagline || '',
+            director: director
+          }
+        }
+      }
+
+      const seedData = {
+        date,
+        tmdb_id: movie.tmdb_id,
+        media_type: movie.media_type,
+        title: isMovie ? details.title : details.name,
+        year: releaseYear,
+        image_url: imageUrl,
+        blur_levels: {
+          heavy: imageUrl,
+          medium: imageUrl,
+          light: imageUrl,
         },
-      },
-    }
+        hints: hints,
+      }
 
     try {
       const { error } = await supabase
@@ -113,16 +250,27 @@ async function seedDatabase() {
         .upsert(seedData, { onConflict: 'date' })
 
       if (error) {
-        console.error(`Failed to seed ${movie.title} for ${date}:`, error)
+        console.error(`  ❌ Database error:`, error.message)
+        failCount++
       } else {
-        console.log(`✓ Seeded ${movie.title} for ${date}`)
+        console.log(`  ✓ Successfully seeded ${isMovie ? details.title : details.name}`)
+        successCount++
       }
     } catch (err) {
-      console.error(`Exception seeding ${movie.title}:`, err)
+      console.error(`  ❌ Error:`, err instanceof Error ? err.message : 'Unknown error')
+      failCount++
     }
+
+    // Add a small delay to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 500))
   }
 
-  console.log('\nSeeding complete!')
+  console.log('\n==============================')
+  console.log(`✅ Seeding complete!`)
+  console.log(`   Successful: ${successCount}`)
+  console.log(`   Failed: ${failCount}`)
+  console.log(`   Total: ${SEED_MOVIES.length}`)
+  console.log('\nYour database is ready for FrameGuessr!')
 }
 
 // Run the seed function

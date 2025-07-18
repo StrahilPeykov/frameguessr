@@ -3,9 +3,15 @@ import { supabase } from '@/lib/supabase'
 import { tmdb } from '@/lib/tmdb'
 import { format, subDays } from 'date-fns'
 
-// Curated list of popular movies and TV shows with high-quality backdrops
-const POPULAR_SELECTIONS = [
-  // Movies
+// Expanded list of popular movies and TV shows with high-quality backdrops
+const POPULAR_SELECTIONS: Array<{
+  tmdb_id: number
+  media_type: 'movie' | 'tv'
+  title: string
+  year: number
+  priority: 'high' | 'medium'
+}> = [
+  // Visually Stunning Movies
   { tmdb_id: 244786, media_type: 'movie', title: 'Whiplash', year: 2014, priority: 'high' },
   { tmdb_id: 155, media_type: 'movie', title: 'The Dark Knight', year: 2008, priority: 'high' },
   { tmdb_id: 49026, media_type: 'movie', title: 'The Dark Knight Rises', year: 2012, priority: 'high' },
@@ -16,15 +22,32 @@ const POPULAR_SELECTIONS = [
   { tmdb_id: 671, media_type: 'movie', title: "Harry Potter and the Philosopher's Stone", year: 2001, priority: 'high' },
   { tmdb_id: 414906, media_type: 'movie', title: 'The Batman', year: 2022, priority: 'high' },
   { tmdb_id: 76600, media_type: 'movie', title: 'Avatar: The Way of Water', year: 2022, priority: 'high' },
+  { tmdb_id: 157336, media_type: 'movie', title: 'Interstellar', year: 2014, priority: 'high' },
+  { tmdb_id: 27205, media_type: 'movie', title: 'Inception', year: 2010, priority: 'high' },
+  { tmdb_id: 603, media_type: 'movie', title: 'The Matrix', year: 1999, priority: 'high' },
+  { tmdb_id: 680, media_type: 'movie', title: 'Pulp Fiction', year: 1994, priority: 'high' },
+  { tmdb_id: 13, media_type: 'movie', title: 'Forrest Gump', year: 1994, priority: 'high' },
+  { tmdb_id: 278, media_type: 'movie', title: 'The Shawshank Redemption', year: 1994, priority: 'high' },
+  { tmdb_id: 872585, media_type: 'movie', title: 'Oppenheimer', year: 2023, priority: 'high' },
+  { tmdb_id: 346698, media_type: 'movie', title: 'Barbie', year: 2023, priority: 'high' },
+  
+  // Medium Priority Movies
   { tmdb_id: 1949, media_type: 'movie', title: 'Zodiac', year: 2007, priority: 'medium' },
   { tmdb_id: 607, media_type: 'movie', title: 'Men in Black', year: 1997, priority: 'medium' },
   { tmdb_id: 72105, media_type: 'movie', title: 'Ted', year: 2012, priority: 'medium' },
+  { tmdb_id: 762504, media_type: 'movie', title: 'Nope', year: 2022, priority: 'medium' },
+  { tmdb_id: 9487, media_type: 'movie', title: "A Bug's Life", year: 1998, priority: 'medium' },
+  { tmdb_id: 674324, media_type: 'movie', title: 'The Banshees of Inisherin', year: 2022, priority: 'medium' },
   
-  // TV Shows
+  // High-Quality TV Shows
   { tmdb_id: 1399, media_type: 'tv', title: 'Game of Thrones', year: 2011, priority: 'high' },
   { tmdb_id: 1396, media_type: 'tv', title: 'Breaking Bad', year: 2008, priority: 'high' },
   { tmdb_id: 94605, media_type: 'tv', title: 'Arcane', year: 2021, priority: 'high' },
   { tmdb_id: 1408, media_type: 'tv', title: 'House', year: 2004, priority: 'high' },
+  { tmdb_id: 66732, media_type: 'tv', title: 'Stranger Things', year: 2016, priority: 'high' },
+  { tmdb_id: 63174, media_type: 'tv', title: 'Lucifer', year: 2016, priority: 'high' },
+  { tmdb_id: 60735, media_type: 'tv', title: 'The Flash', year: 2014, priority: 'medium' },
+  { tmdb_id: 71712, media_type: 'tv', title: 'The Good Doctor', year: 2017, priority: 'medium' },
   { tmdb_id: 85271, media_type: 'tv', title: 'WandaVision', year: 2021, priority: 'medium' },
   { tmdb_id: 88396, media_type: 'tv', title: 'The Falcon and the Winter Soldier', year: 2021, priority: 'medium' },
 ]
@@ -33,7 +56,7 @@ export async function GET(request: NextRequest) {
   try {
     // Verify this is called by Vercel Cron (in production)
     const authHeader = request.headers.get('authorization')
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (process.env.NODE_ENV === 'production' && process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -55,97 +78,107 @@ export async function GET(request: NextRequest) {
 
     console.log(`Creating daily movie for ${today}`)
 
-    // Get recently used movies to avoid repetition
+    // Get recently used movies to avoid repetition (last 14 days)
     const { data: recentMovies } = await supabase
       .from('daily_movies')
       .select('tmdb_id, media_type')
-      .gte('date', format(subDays(new Date(), 30), 'yyyy-MM-dd'))
+      .gte('date', format(subDays(new Date(), 14), 'yyyy-MM-dd'))
 
     const recentIds = new Set(recentMovies?.map(m => `${m.media_type}-${m.tmdb_id}`) || [])
 
     // Filter out recently used movies
-    const availableSelections = POPULAR_SELECTIONS.filter(
+    let availableSelections = POPULAR_SELECTIONS.filter(
       item => !recentIds.has(`${item.media_type}-${item.tmdb_id}`)
     )
 
-    // If we've used all movies recently, just use the full list
-    const selectionPool = availableSelections.length > 0 ? availableSelections : POPULAR_SELECTIONS
+    // If we've used many movies recently, expand the pool
+    if (availableSelections.length < 5) {
+      availableSelections = POPULAR_SELECTIONS
+    }
 
-    // Prioritize high-priority selections
-    const highPriority = selectionPool.filter(item => item.priority === 'high')
-    const useHighPriority = Math.random() > 0.3 // 70% chance for high priority
+    // Prioritize high-priority selections (80% chance)
+    const highPriority = availableSelections.filter(item => item.priority === 'high')
+    const useHighPriority = Math.random() > 0.2 && highPriority.length > 0
     
-    const finalPool = useHighPriority && highPriority.length > 0 ? highPriority : selectionPool
+    const finalPool = useHighPriority ? highPriority : availableSelections
     const selectedItem = finalPool[Math.floor(Math.random() * finalPool.length)]
 
     console.log(`Selected: ${selectedItem.title} (${selectedItem.media_type})`)
 
+    // Clear TMDB cache for fresh data
+    tmdb.clearCache()
+
     // Get detailed info from TMDB
     const isMovie = selectedItem.media_type === 'movie'
     
-    let details, images
+    let details: any
+    let imageUrl: string | null = null
+    
     try {
+      // Get movie/show details
       details = isMovie
         ? await tmdb.getMovieDetails(selectedItem.tmdb_id)
         : await tmdb.getTVDetails(selectedItem.tmdb_id)
       
-      images = isMovie
-        ? await tmdb.getMovieImages(selectedItem.tmdb_id)
-        : await tmdb.getTVImages(selectedItem.tmdb_id)
+      // Get the best backdrop image
+      imageUrl = await tmdb.getBestBackdrop(selectedItem.tmdb_id, selectedItem.media_type)
+      
+      if (!imageUrl) {
+        throw new Error('No suitable images found')
+      }
+
+      // Verify image is accessible with a longer timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
+      try {
+        const imageResponse = await fetch(imageUrl, { 
+          method: 'HEAD',
+          signal: controller.signal 
+        })
+        clearTimeout(timeoutId)
+        
+        if (!imageResponse.ok) {
+          throw new Error(`Image not accessible: ${imageResponse.status}`)
+        }
+      } catch (fetchError) {
+        console.error('Image verification failed:', fetchError)
+        // Try a different size
+        if (imageUrl.includes('/original/')) {
+          imageUrl = imageUrl.replace('/original/', '/w1280/')
+        }
+      }
     } catch (tmdbError) {
       console.error('TMDB API error:', tmdbError)
-      throw new Error('Failed to fetch movie details from TMDB')
+      // Skip this movie and try another one
+      return NextResponse.json(
+        { 
+          error: 'Failed to fetch movie data from TMDB', 
+          details: tmdbError instanceof Error ? tmdbError.message : 'Unknown error',
+          retryable: true 
+        },
+        { status: 503 }
+      )
     }
 
-    // Select the best backdrop image
-    const backdrops = images.backdrops || []
+    // Extract release year
+    const releaseYear = isMovie 
+      ? ('release_date' in details && details.release_date) ? new Date(details.release_date).getFullYear() : selectedItem.year
+      : ('first_air_date' in details && details.first_air_date) ? new Date(details.first_air_date).getFullYear() : selectedItem.year
+
+    // Get cast and crew information
+    const cast = details.credits?.cast
+      ?.filter((c: any) => c.order < 5) // Top 5 cast members
+      ?.map((c: any) => c.name) || []
     
-    // Filter for high-quality backdrops (landscape orientation, good aspect ratio)
-    const qualityBackdrops = backdrops.filter((backdrop: any) => {
-      const aspectRatio = backdrop.width / backdrop.height
-      return aspectRatio >= 1.5 && aspectRatio <= 2.0 && backdrop.vote_average >= 5
-    })
-
-    const selectedBackdrop = qualityBackdrops.length > 0 
-      ? qualityBackdrops[Math.floor(Math.random() * Math.min(qualityBackdrops.length, 3))]
-      : backdrops.length > 0 
-      ? backdrops[0]
-      : null
-
-    let imageUrl: string
-    if (selectedBackdrop) {
-      imageUrl = tmdb.getImageUrl(selectedBackdrop.file_path, 'original')
-    } else if (details.backdrop_path) {
-      imageUrl = tmdb.getImageUrl(details.backdrop_path, 'original')
-    } else if (details.poster_path) {
-      imageUrl = tmdb.getImageUrl(details.poster_path, 'original')
-    } else {
-      throw new Error('No suitable images found for selected movie')
-    }
-
-    console.log('Selected image URL:', imageUrl)
-
-    // Verify image is accessible
-    try {
-      const imageResponse = await fetch(imageUrl, { method: 'HEAD' })
-      if (!imageResponse.ok) {
-        throw new Error('Selected image is not accessible')
-      }
-    } catch (imageError) {
-      console.error('Image verification failed:', imageError)
-      // Fall back to poster if available
-      if (details.poster_path) {
-        imageUrl = tmdb.getImageUrl(details.poster_path, 'original')
-      } else {
-        throw new Error('No accessible images found')
-      }
-    }
+    const director = isMovie 
+      ? details.credits?.crew?.find((c: any) => c.job === 'Director')?.name || ''
+      : ('created_by' in details && details.created_by?.[0]?.name) || 
+        details.credits?.crew?.find((c: any) => 
+          c.job === 'Executive Producer' || c.department === 'Production'
+        )?.name || ''
 
     // Create comprehensive hints
-    const releaseYear = isMovie 
-      ? details.release_date ? new Date(details.release_date).getFullYear() : selectedItem.year
-      : details.first_air_date ? new Date(details.first_air_date).getFullYear() : selectedItem.year
-
     const hints = {
       level1: { 
         type: 'image', 
@@ -163,16 +196,15 @@ export async function GET(request: NextRequest) {
         type: 'full',
         data: {
           image: imageUrl,
-          actors: details.credits?.cast?.slice(0, 3).map((c: any) => c.name) || [],
+          actors: cast.slice(0, 3), // Top 3 actors
           tagline: details.tagline || '',
-          director: isMovie 
-            ? details.credits?.crew?.find((c: any) => c.job === 'Director')?.name || ''
-            : details.created_by?.[0]?.name || details.credits?.crew?.find((c: any) => c.job === 'Executive Producer')?.name || ''
+          director: director
         }
       }
     }
 
-    // Create blur levels (same image, will be blurred via CSS)
+    // For now, use the same image for all blur levels
+    // In production, you might want to pre-process these images
     const blurLevels = {
       heavy: imageUrl,
       medium: imageUrl,
@@ -186,7 +218,7 @@ export async function GET(request: NextRequest) {
         date: today,
         tmdb_id: selectedItem.tmdb_id,
         media_type: selectedItem.media_type,
-        title: isMovie ? details.title : details.name,
+        title: isMovie ? ('title' in details ? details.title : selectedItem.title) : ('name' in details ? details.name : selectedItem.title),
         year: releaseYear,
         image_url: imageUrl,
         blur_levels: blurLevels,
@@ -198,14 +230,14 @@ export async function GET(request: NextRequest) {
       throw insertError
     }
 
-    console.log(`Successfully created daily movie: ${isMovie ? details.title : details.name}`)
+    console.log(`Successfully created daily movie: ${isMovie ? ('title' in details ? details.title : selectedItem.title) : ('name' in details ? details.name : selectedItem.title)}`)
 
-    // Clean up old entries (keep last 60 days)
-    const sixtyDaysAgo = format(subDays(new Date(), 60), 'yyyy-MM-dd')
+    // Clean up old entries (keep last 30 days)
+    const thirtyDaysAgo = format(subDays(new Date(), 30), 'yyyy-MM-dd')
     const { error: cleanupError } = await supabase
       .from('daily_movies')
       .delete()
-      .lt('date', sixtyDaysAgo)
+      .lt('date', thirtyDaysAgo)
 
     if (cleanupError) {
       console.warn('Cleanup failed:', cleanupError)
@@ -219,7 +251,8 @@ export async function GET(request: NextRequest) {
       title: isMovie ? details.title : details.name,
       mediaType: selectedItem.media_type,
       year: releaseYear,
-      tmdbId: selectedItem.tmdb_id
+      tmdbId: selectedItem.tmdb_id,
+      imageUrl: imageUrl
     })
 
   } catch (error) {

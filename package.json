@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx scripts/seed-daily-movies.ts",
+    "cron": "tsx scripts/run-cron.ts",
     "clean": "rm -rf .next out",
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,json}\"",
