@@ -60,23 +60,36 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const today = format(new Date(), 'yyyy-MM-dd')
+    const searchParams = request.nextUrl.searchParams
+    const dateParam = searchParams.get('date')
+
+    let targetDate = format(new Date(), 'yyyy-MM-dd')
+    if (dateParam) {
+      const parsed = new Date(dateParam)
+      if (isNaN(parsed.getTime())) {
+        return NextResponse.json(
+          { error: 'Invalid date format' },
+          { status: 400 }
+        )
+      }
+      targetDate = format(parsed, 'yyyy-MM-dd')
+    }
     
-    // Check if today's movie already exists
+    // Check if a movie for the target date already exists
     const { data: existing } = await supabase
       .from('daily_movies')
       .select('id')
-      .eq('date', today)
+      .eq('date', targetDate)
       .single()
 
     if (existing) {
       return NextResponse.json({ 
         message: 'Daily movie already exists',
-        date: today 
+        date: targetDate 
       })
     }
 
-    console.log(`Creating daily movie for ${today}`)
+    console.log(`Creating daily movie for ${targetDate}`)
 
     // Get recently used movies to avoid repetition (last 14 days)
     const { data: recentMovies } = await supabase
@@ -215,7 +228,7 @@ export async function GET(request: NextRequest) {
     const { error: insertError } = await supabase
       .from('daily_movies')
       .insert({
-        date: today,
+        date: targetDate,
         tmdb_id: selectedItem.tmdb_id,
         media_type: selectedItem.media_type,
         title: isMovie ? ('title' in details ? details.title : selectedItem.title) : ('name' in details ? details.name : selectedItem.title),
@@ -247,7 +260,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       message: 'Daily movie created successfully',
-      date: today,
+      date: targetDate,
       title: isMovie ? details.title : details.name,
       mediaType: selectedItem.media_type,
       year: releaseYear,

@@ -11,10 +11,20 @@ export async function GET(request: NextRequest) {
     // Validate date parameter if provided
     let targetDate = format(new Date(), 'yyyy-MM-dd')
     if (dateParam) {
-      // Accept any valid date string (even in the future)
+      // Accept any valid date string but block future dates
       const requestedDate = new Date(dateParam)
       if (!isNaN(requestedDate.getTime())) {
-        targetDate = format(requestedDate, 'yyyy-MM-dd')
+        const formatted = format(requestedDate, 'yyyy-MM-dd')
+        const today = format(new Date(), 'yyyy-MM-dd')
+
+        if (formatted > today) {
+          return NextResponse.json(
+            { error: 'Challenge not yet available', date: formatted },
+            { status: 403 }
+          )
+        }
+
+        targetDate = formatted
       } else {
         return NextResponse.json(
           { error: 'Invalid date format' },
