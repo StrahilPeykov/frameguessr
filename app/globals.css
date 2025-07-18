@@ -57,6 +57,34 @@ body {
   }
 }
 
+/* Enhanced blob animations for background */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
 /* Improved scrollbar styling */
 .scrollbar-thin {
   scrollbar-width: thin;
@@ -118,6 +146,12 @@ body {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced navigation backdrop blur */
+.nav-blur {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
 /* Improved gradient text utilities */
@@ -237,6 +271,11 @@ body {
   }
 }
 
+/* Enhanced navigation scroll effects */
+.nav-scroll-effect {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Dark mode specific enhancements */
 @media (prefers-color-scheme: dark) {
   .glass {
@@ -329,7 +368,8 @@ body {
   .animate-success-bounce,
   .animate-error-shake,
   .touch-feedback,
-  .btn-hover {
+  .btn-hover,
+  .animate-blob {
     animation: none !important;
     transition: none !important;
   }
@@ -353,14 +393,23 @@ body {
 /* Backdrop blur fallback */
 @supports not (backdrop-filter: blur(1px)) {
   .glass,
-  .glass-dark {
+  .glass-dark,
+  .nav-blur {
     background: rgba(255, 255, 255, 0.9);
   }
   
   @media (prefers-color-scheme: dark) {
     .glass,
-    .glass-dark {
+    .glass-dark,
+    .nav-blur {
       background: rgba(0, 0, 0, 0.8);
     }
+  }
+}
+
+/* Better iOS Safari support */
+@supports (-webkit-touch-callout: none) {
+  .nav-blur {
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
 }
