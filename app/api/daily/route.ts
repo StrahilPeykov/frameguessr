@@ -11,16 +11,13 @@ export async function GET(request: NextRequest) {
     // Validate date parameter if provided
     let targetDate = format(new Date(), 'yyyy-MM-dd')
     if (dateParam) {
-      // Validate date format and ensure it's not in the future
+      // Accept any valid date string (even in the future)
       const requestedDate = new Date(dateParam)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      
-      if (!isNaN(requestedDate.getTime()) && requestedDate <= today) {
+      if (!isNaN(requestedDate.getTime())) {
         targetDate = format(requestedDate, 'yyyy-MM-dd')
       } else {
         return NextResponse.json(
-          { error: 'Invalid date or date is in the future' },
+          { error: 'Invalid date format' },
           { status: 400 }
         )
       }
