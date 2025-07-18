@@ -264,7 +264,7 @@ export default function GameBoard() {
         <p className="text-sm text-gray-600">
           {gameState.completed
             ? gameState.won
-              ? '🎉 Congratulations!'
+              ? 'Congratulations!'
               : `The answer was: ${dailyChallenge?.title}`
             : `${getRemainingAttempts()} attempts remaining`}
         </p>
