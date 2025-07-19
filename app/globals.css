@@ -3,6 +3,17 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Cinematic Gold Palette */
+  --gold-primary: #D4AF37;
+  --gold-light: #F4D03F;
+  --gold-dark: #B8860B;
+  --gold-muted: #E6C547;
+  
+  /* Film-inspired accents */
+  --film-silver: #C0C0C0;
+  --film-red: #8B0000;
+  --warm-gray-400: #A8A29E;
 }
 
 @theme inline {
@@ -56,10 +67,10 @@ body {
   filter: blur(12px) brightness(0.9);
 }
 
-/* Enhanced skeleton animation */
+/* Enhanced skeleton animation with warm tones */
 .skeleton {
   animation: skeleton-loading 1.5s ease-in-out infinite alternate;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
   background-size: 200% 100%;
 }
 
@@ -88,7 +99,7 @@ body {
   }
 }
 
-/* Enhanced blob animations for background */
+/* Enhanced blob animations with cinematic colors */
 @keyframes blob {
   0% {
     transform: translate(0px, 0px) scale(1);
@@ -116,7 +127,7 @@ body {
   animation-delay: 4s;
 }
 
-/* Enhanced Audio Controls */
+/* Enhanced Audio Controls with cinematic styling */
 .slider {
   -webkit-appearance: none;
   appearance: none;
@@ -132,40 +143,40 @@ body {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8B5CF6, #6366F1);
+  background: linear-gradient(135deg, #D4AF37, #B8860B);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
   transition: all 0.2s ease;
 }
 
 .slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.6);
 }
 
 .slider::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8B5CF6, #6366F1);
+  background: linear-gradient(135deg, #D4AF37, #B8860B);
   cursor: pointer;
   border: none;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
   transition: all 0.2s ease;
 }
 
 .slider::-moz-range-thumb:hover {
   transform: scale(1.2);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.6);
 }
 
 /* Audio hint container hover effect */
 .audio-hint-container:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.15);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.15);
 }
 
-/* Audio visualizer pulse effect */
+/* Audio visualizer pulse effect with gold */
 @keyframes audio-pulse {
   0%, 100% {
     transform: scale(1);
@@ -253,25 +264,25 @@ body {
   overflow: hidden;
 }
 
-/* Enhanced glassmorphism effects */
+/* Enhanced glassmorphism effects with warm tones */
 .glass {
   backdrop-filter: blur(16px) saturate(180%);
   background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .glass-dark {
   backdrop-filter: blur(16px) saturate(180%);
   background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 @media (prefers-color-scheme: dark) {
   .glass {
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(212, 175, 55, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 }
@@ -282,17 +293,17 @@ body {
   -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
-/* Improved gradient text utilities */
+/* Cinematic gradient text utilities */
 .gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-fill-color: transparent;
 }
 
-.gradient-purple-blue {
-  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
+.gradient-gold {
+  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -300,22 +311,22 @@ body {
 }
 
 /* Audio gradient backgrounds */
-.audio-gradient-purple {
-  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #6D28D9 100%);
+.audio-gradient-gold {
+  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 50%, #996515 100%);
 }
 
-.audio-gradient-blue {
-  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%);
+.audio-gradient-silver {
+  background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 50%, #909090 100%);
 }
 
-/* Enhanced pulse animation */
+/* Enhanced pulse animation with gold glow */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 5px rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.8), 0 0 30px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.8), 0 0 30px rgba(212, 175, 55, 0.4);
     transform: scale(1.02);
   }
 }
@@ -376,7 +387,7 @@ body {
   }
 }
 
-/* Enhanced focus indicators */
+/* Enhanced focus indicators with gold */
 .focus-ring {
   transition: all 0.2s ease-in-out;
   outline: 2px solid transparent;
@@ -384,9 +395,9 @@ body {
 }
 
 .focus-ring:focus-visible {
-  outline: 2px solid #3B82F6;
+  outline: 2px solid #D4AF37;
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
 }
 
 /* Improved button hover states */
@@ -431,7 +442,7 @@ body {
   height: 56px;
 }
 
-/* Status dots enhanced animation */
+/* Status dots enhanced animation with cinematic colors */
 .status-dot {
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
@@ -445,13 +456,13 @@ body {
   box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.5);
 }
 
-/* Audio specific shadow effects */
-.shadow-purple-500\/50 {
-  box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.5);
+/* Cinematic shadow effects */
+.shadow-yellow-500\/50 {
+  box-shadow: 0 4px 14px 0 rgba(212, 175, 55, 0.5);
 }
 
-.shadow-blue-500\/50 {
-  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.5);
+.shadow-amber-500\/50 {
+  box-shadow: 0 4px 14px 0 rgba(245, 158, 11, 0.5);
 }
 
 /* Hint overlay gradient */
@@ -481,8 +492,8 @@ body {
 /* Dark mode specific enhancements */
 @media (prefers-color-scheme: dark) {
   .focus-ring:focus-visible {
-    outline: 2px solid #60A5FA;
-    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+    outline: 2px solid #F4D03F;
+    box-shadow: 0 0 0 4px rgba(244, 208, 63, 0.1);
   }
 
   .image-loading {
@@ -534,20 +545,20 @@ body {
   }
 }
 
-/* High contrast mode support */
+/* High contrast mode support with gold */
 @media (prefers-contrast: high) {
   .gradient-text,
-  .gradient-purple-blue {
+  .gradient-gold {
     background: none !important;
-    -webkit-text-fill-color: currentColor !important;
-    color: currentColor !important;
-    text-fill-color: currentColor !important;
+    -webkit-text-fill-color: #D4AF37 !important;
+    color: #D4AF37 !important;
+    text-fill-color: #D4AF37 !important;
   }
   
   .glass,
   .glass-dark {
     background: rgba(255, 255, 255, 0.95) !important;
-    border: 2px solid currentColor !important;
+    border: 2px solid #D4AF37 !important;
   }
   
   .blur-xl,
@@ -558,8 +569,8 @@ body {
 
   /* Audio controls in high contrast */
   .slider::-webkit-slider-thumb {
-    background: currentColor !important;
-    border: 2px solid currentColor !important;
+    background: #D4AF37 !important;
+    border: 2px solid #D4AF37 !important;
   }
 }
 
@@ -651,10 +662,10 @@ body {
   transform: translateX(2px);
 }
 
-/* Custom scrollbar for guess list */
+/* Custom scrollbar for guess list with gold accents */
 .guess-list {
   scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+  scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
 }
 
 .guess-list::-webkit-scrollbar {
@@ -666,7 +677,7 @@ body {
 }
 
 .guess-list::-webkit-scrollbar-thumb {
-  background-color: rgba(139, 92, 246, 0.3);
+  background-color: rgba(212, 175, 55, 0.3);
   border-radius: 2px;
 }
 
@@ -715,11 +726,11 @@ body {
   }
 }
 
-/* Improved loading spinner */
+/* Improved loading spinner with gold */
 .loading-spinner {
-  border: 3px solid rgba(139, 92, 246, 0.1);
+  border: 3px solid rgba(212, 175, 55, 0.1);
   border-radius: 50%;
-  border-top: 3px solid #8B5CF6;
+  border-top: 3px solid #D4AF37;
   width: 48px;
   height: 48px;
   animation: spin 1s linear infinite;

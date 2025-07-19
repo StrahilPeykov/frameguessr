@@ -85,7 +85,7 @@ export default function DatePicker({
           href={prevDay ? `/day/${prevDay}` : '#'}
           className={`p-1.5 rounded-lg ${
             prevDay 
-              ? 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800' 
+              ? 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-yellow-600 dark:hover:text-yellow-400' 
               : 'text-gray-300 dark:text-gray-600 pointer-events-none'
           }`}
           aria-label="Previous day"
@@ -95,7 +95,7 @@ export default function DatePicker({
         
         <button
           onClick={() => setShowPicker(!showPicker)}
-          className="text-sm font-medium px-2 py-1"
+          className="text-sm font-medium px-2 py-1 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors"
         >
           {isToday ? 'Today' : formatDate(current, 'MMM d')}
         </button>
@@ -104,7 +104,7 @@ export default function DatePicker({
           href={nextDay ? `/day/${nextDay}` : '#'}
           className={`p-1.5 rounded-lg ${
             nextDay
-              ? 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              ? 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-yellow-600 dark:hover:text-yellow-400'
               : 'text-gray-300 dark:text-gray-600 pointer-events-none'
           }`}
           aria-label="Next day"
@@ -121,7 +121,7 @@ export default function DatePicker({
                 min={minDate}
                 max={today}
                 onChange={handleDateInput}
-                className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+                className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 focus:border-yellow-500 dark:focus:border-yellow-400 focus:ring-1 focus:ring-yellow-500 dark:focus:ring-yellow-400"
               />
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function DatePicker({
         {prevDay ? (
           <Link
             href={`/day/${prevDay}`}
-            className="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label="Previous day"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -151,7 +151,7 @@ export default function DatePicker({
         <div className="relative">
           <button
             onClick={() => setShowPicker(!showPicker)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-yellow-600 dark:hover:text-yellow-400 rounded-lg transition-colors"
           >
             <Calendar className="w-4 h-4" />
             <span>{isToday ? 'Today' : formatDate(current, 'MMM d, yyyy')}</span>
@@ -166,7 +166,7 @@ export default function DatePicker({
                   min={minDate}
                   max={today}
                   onChange={handleDateInput}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-yellow-500 dark:focus:border-yellow-400 focus:ring-2 focus:ring-yellow-500/20 dark:focus:ring-yellow-400/20"
                 />
               </div>
             </div>
@@ -176,7 +176,7 @@ export default function DatePicker({
         {nextDay ? (
           <Link
             href={`/day/${nextDay}`}
-            className="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label="Next day"
           >
             <ChevronRight className="w-4 h-4" />
@@ -196,7 +196,7 @@ export default function DatePicker({
       {prevDay ? (
         <Link
           href={`/day/${prevDay}`}
-          className="p-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+          className="p-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400"
           aria-label="Previous day"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -210,9 +210,9 @@ export default function DatePicker({
       <div className="relative">
         <button
           onClick={() => setShowPicker(!showPicker)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:border-yellow-500/50 dark:hover:border-yellow-400/50 transition-colors border border-transparent"
         >
-          <Calendar className="w-4 h-4" />
+          <Calendar className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
           <span className="font-medium">
             {isToday ? 'Today' : formatDate(current, 'MMM d, yyyy')}
           </span>
@@ -227,7 +227,7 @@ export default function DatePicker({
                 min={minDate}
                 max={today}
                 onChange={handleDateInput}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-yellow-500 dark:focus:border-yellow-400 focus:ring-2 focus:ring-yellow-500/20 dark:focus:ring-yellow-400/20"
               />
             </div>
           </div>
@@ -237,7 +237,7 @@ export default function DatePicker({
       {nextDay ? (
         <Link
           href={`/day/${nextDay}`}
-          className="p-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+          className="p-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400"
           aria-label="Next day"
         >
           <ChevronRight className="w-5 h-5" />

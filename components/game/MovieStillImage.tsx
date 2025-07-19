@@ -52,7 +52,7 @@ export default function MovieStillImage({ src, alt, hintLevel, className = '' }:
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-gray-600 border-t-white rounded-full animate-spin mb-4" />
+            <div className="w-16 h-16 border-4 border-gray-600 border-t-yellow-500 rounded-full animate-spin mb-4" />
             <p className="text-white text-sm">Loading image...</p>
           </div>
         </div>
@@ -82,15 +82,15 @@ export default function MovieStillImage({ src, alt, hintLevel, className = '' }:
       )}
 
       {/* Hint level indicator */}
-      <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium">
-        Hint {hintLevel}/3
+      <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium border border-yellow-500/20">
+        <span className="text-yellow-400">🎬</span> Hint {hintLevel}/3
       </div>
 
       {/* Toggle blur button (for debugging/accessibility) */}
       {!hasError && !isLoading && hintLevel < 4 && (
         <button
           onClick={() => setShowUnblurred(!showUnblurred)}
-          className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+          className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/70 transition-colors border border-yellow-500/20 hover:border-yellow-500/40"
           aria-label={showUnblurred ? 'Show blurred' : 'Show unblurred'}
         >
           {showUnblurred ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}

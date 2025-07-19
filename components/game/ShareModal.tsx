@@ -25,7 +25,7 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
     let grid = ''
     for (let i = 0; i < maxAttempts; i++) {
       if (i < gameState.guesses.length) {
-        grid += gameState.guesses[i].correct ? '🟩' : '🟥'
+        grid += gameState.guesses[i].correct ? '🟨' : '🟥'
       } else {
         grid += '⬜'
       }
@@ -72,7 +72,7 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-sm w-full p-6 relative">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-sm w-full p-6 relative border border-yellow-200/20 dark:border-yellow-700/20">
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
@@ -80,16 +80,16 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-xl font-bold mb-4">Share Your Result!</h2>
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">Share Your Result!</h2>
         
-        <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-4 font-mono text-sm whitespace-pre-line">
+        <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-4 font-mono text-sm whitespace-pre-line border border-yellow-200/30 dark:border-yellow-700/30">
           {shareText}
         </div>
 
         <div className="space-y-2">
           <button
             onClick={handleCopy}
-            className="w-full flex items-center justify-center gap-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
           >
             {copied ? (
               <>
@@ -106,7 +106,7 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
 
           <button
             onClick={handleTwitterShare}
-            className="w-full flex items-center justify-center gap-2 bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-lg transition-colors font-medium"
           >
             <Twitter className="w-4 h-4" />
             Share on X
@@ -115,7 +115,7 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
           {typeof navigator !== 'undefined' && 'share' in navigator && (
             <button
               onClick={handleNativeShare}
-              className="w-full bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded-lg transition-colors"
+              className="w-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors font-medium"
             >
               Share...
             </button>
@@ -124,7 +124,7 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
 
         {gameState.won && (
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
-            You guessed "{movieTitle}" correctly! 🎉
+            You guessed "{movieTitle}" correctly! 🎬
           </p>
         )}
       </div>

@@ -213,11 +213,11 @@ export default function SearchBox({
           className={`w-full pl-12 pr-12 py-4 text-lg bg-white dark:bg-gray-800 rounded-2xl 
             border-2 transition-all duration-200 shadow-sm hover:shadow-md
             ${hasFocus || showResults 
-              ? 'border-blue-500 dark:border-blue-400' 
+              ? 'border-yellow-500 dark:border-yellow-400' 
               : 'border-gray-200 dark:border-gray-700'
             }
             ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-300 dark:hover:border-gray-600'}
-            focus:outline-none focus:ring-0 focus:border-blue-500 dark:focus:border-blue-400
+            focus:outline-none focus:ring-0 focus:border-yellow-500 dark:focus:border-yellow-400
             text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400`}
           disabled={disabled}
           autoComplete="off"
@@ -285,7 +285,7 @@ export default function SearchBox({
                   onClick={() => handleSelect(result)}
                   className={`w-full text-left px-4 py-3 transition-all duration-150 focus:outline-none
                     ${index === selectedIndex 
-                      ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' 
+                      ? 'bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500' 
                       : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                     }
                     ${index < results.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}

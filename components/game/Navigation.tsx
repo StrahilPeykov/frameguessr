@@ -33,7 +33,7 @@ export default function Navigation({ onStatsClick, onShareClick, showShareButton
         <div className="flex items-center justify-between h-14">
           {/* Logo/Brand */}
           <div className="flex items-center">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 bg-clip-text text-transparent">
               FrameGuessr
             </h1>
           </div>
@@ -42,7 +42,7 @@ export default function Navigation({ onStatsClick, onShareClick, showShareButton
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={onStatsClick}
-              className="flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all backdrop-blur-sm"
+              className="flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all backdrop-blur-sm"
             >
               <BarChart3 className="w-5 h-5" />
               <span className="text-sm font-medium">Stats</span>
@@ -51,14 +51,14 @@ export default function Navigation({ onStatsClick, onShareClick, showShareButton
             {showShareButton && (
               <button
                 onClick={onShareClick}
-                className="flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all backdrop-blur-sm"
+                className="flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all backdrop-blur-sm"
               >
                 <Share2 className="w-5 h-5" />
                 <span className="text-sm font-medium">Share</span>
               </button>
             )}
             
-            <button className="flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all backdrop-blur-sm">
+            <button className="flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all backdrop-blur-sm">
               <Info className="w-5 h-5" />
               <span className="text-sm font-medium">How to Play</span>
             </button>
@@ -68,7 +68,7 @@ export default function Navigation({ onStatsClick, onShareClick, showShareButton
           <div className="md:hidden">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all backdrop-blur-sm"
+              className="p-2 text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all backdrop-blur-sm"
             >
               {showMobileMenu ? (
                 <X className="w-6 h-6" />
@@ -88,7 +88,7 @@ export default function Navigation({ onStatsClick, onShareClick, showShareButton
                   onStatsClick()
                   setShowMobileMenu(false)
                 }}
-                className="flex items-center gap-3 w-full px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all"
+                className="flex items-center gap-3 w-full px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all"
               >
                 <BarChart3 className="w-5 h-5" />
                 <span className="font-medium">Statistics</span>
@@ -100,7 +100,7 @@ export default function Navigation({ onStatsClick, onShareClick, showShareButton
                     onShareClick()
                     setShowMobileMenu(false)
                   }}
-                  className="flex items-center gap-3 w-full px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all"
+                  className="flex items-center gap-3 w-full px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all"
                 >
                   <Share2 className="w-5 h-5" />
                   <span className="font-medium">Share Result</span>
@@ -109,7 +109,7 @@ export default function Navigation({ onStatsClick, onShareClick, showShareButton
               
               <button
                 onClick={() => setShowMobileMenu(false)}
-                className="flex items-center gap-3 w-full px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all"
+                className="flex items-center gap-3 w-full px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all"
               >
                 <Info className="w-5 h-5" />
                 <span className="font-medium">How to Play</span>

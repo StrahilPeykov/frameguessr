@@ -168,7 +168,7 @@ export default function AudioHint({
   }
 
   return (
-    <div className="bg-gradient-to-r from-purple-900/95 to-indigo-900/95 backdrop-blur-sm rounded-xl p-4 text-white border border-purple-500/20 shadow-lg">
+    <div className="bg-gradient-to-r from-yellow-900/95 to-amber-900/95 backdrop-blur-sm rounded-xl p-4 text-white border border-yellow-500/20 shadow-lg">
       <audio
         ref={audioRef}
         src={previewUrl}
@@ -180,16 +180,16 @@ export default function AudioHint({
         {/* Track Info - No album cover */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <Music2 className="w-4 h-4 text-purple-300 flex-shrink-0" />
+            <Music2 className="w-4 h-4 text-yellow-300 flex-shrink-0" />
             <p className="font-semibold text-sm truncate">{trackTitle}</p>
           </div>
-          <p className="text-xs text-purple-200 opacity-75 truncate mb-2">{artistName}</p>
+          <p className="text-xs text-yellow-200 opacity-75 truncate mb-2">{artistName}</p>
           
           <div className="flex items-center gap-3 text-xs">
-            <span className="bg-purple-600/60 px-2 py-1 rounded-full font-medium">
+            <span className="bg-yellow-600/60 px-2 py-1 rounded-full font-medium">
               🎵 Audio Hint {hintLevel}
             </span>
-            <span className="text-purple-200 opacity-75">
+            <span className="text-yellow-200 opacity-75">
               {duration}s preview
             </span>
           </div>
@@ -205,9 +205,9 @@ export default function AudioHint({
               aria-label={isMuted ? 'Unmute' : 'Mute'}
             >
               {isMuted ? (
-                <VolumeX className="w-4 h-4 text-purple-200" />
+                <VolumeX className="w-4 h-4 text-yellow-200" />
               ) : (
-                <Volume2 className="w-4 h-4 text-purple-200" />
+                <Volume2 className="w-4 h-4 text-yellow-200" />
               )}
             </button>
             
@@ -220,7 +220,7 @@ export default function AudioHint({
               onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
               className="w-16 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
               style={{
-                background: `linear-gradient(to right, #8B5CF6 0%, #8B5CF6 ${volume * 100}%, #4B5563 ${volume * 100}%, #4B5563 100%)`
+                background: `linear-gradient(to right, #D4AF37 0%, #D4AF37 ${volume * 100}%, #4B5563 ${volume * 100}%, #4B5563 100%)`
               }}
             />
           </div>
@@ -229,7 +229,7 @@ export default function AudioHint({
           <button
             onClick={togglePlay}
             disabled={isBuffering}
-            className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-purple-700 disabled:to-indigo-700 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:scale-100"
+            className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-500 hover:to-amber-500 disabled:from-yellow-700 disabled:to-amber-700 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:scale-100"
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {isBuffering ? (
@@ -246,13 +246,13 @@ export default function AudioHint({
       {/* Progress Bar */}
       {hasStarted && !audioError && (
         <div className="mt-4">
-          <div className="w-full bg-purple-800/40 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-yellow-800/40 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-purple-400 to-indigo-400 h-2 rounded-full transition-all duration-150 ease-out"
+              className="bg-gradient-to-r from-yellow-400 to-amber-400 h-2 rounded-full transition-all duration-150 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-purple-200 opacity-75 mt-2">
+          <div className="flex justify-between text-xs text-yellow-200 opacity-75 mt-2">
             <span>0s</span>
             <span>{Math.floor((currentTime - startTimeRef.current))}s / {duration}s</span>
             <span>{duration}s</span>

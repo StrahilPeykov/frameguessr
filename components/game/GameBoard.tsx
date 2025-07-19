@@ -236,7 +236,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
         <div className="text-center">
-          <div className="w-12 h-12 border-3 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-3 border-yellow-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400">Loading challenge...</p>
         </div>
       </div>
@@ -254,7 +254,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                 setError(null)
                 fetchDailyChallenge(selectedDate)
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 transition-colors font-medium"
             >
               <RefreshCw className="w-5 h-5" />
               Try Again
@@ -272,7 +272,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
         <div className="max-w-5xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 bg-clip-text text-transparent">
                 FrameGuessr
               </h1>
               <DatePicker 
@@ -318,7 +318,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                     className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
                       i < gameState.attempts
                         ? gameState.guesses[i]?.correct
-                          ? 'bg-green-500 scale-110 shadow-lg shadow-green-500/50'
+                          ? 'bg-yellow-500 scale-110 shadow-lg shadow-yellow-500/50'
                           : 'bg-red-500 scale-110 shadow-lg shadow-red-500/50'
                         : 'bg-gray-300 dark:bg-gray-600'
                     }`}
@@ -333,7 +333,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             {gameState.completed && (
               <div className="text-sm font-medium">
                 {gameState.won ? (
-                  <span className="text-green-600 dark:text-green-400 flex items-center gap-1.5">
+                  <span className="text-yellow-600 dark:text-yellow-400 flex items-center gap-1.5">
                     <Trophy className="w-4 h-4" />
                     Won in {gameState.attempts}!
                   </span>
@@ -447,7 +447,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
               {gameState.currentHintLevel < 3 && (
                 <button
                   onClick={handleSkip}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-gray-700/90 text-gray-700 dark:text-gray-200 rounded-xl transition-all border border-gray-200/50 dark:border-gray-700/50 font-medium"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-gray-700/90 text-gray-700 dark:text-gray-200 rounded-xl transition-all border border-yellow-200/50 dark:border-yellow-700/50 font-medium"
                 >
                   <SkipForward className="w-5 h-5" />
                   Skip for more hints
@@ -513,7 +513,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                       key={guess.id}
                       className={`flex items-center gap-3 p-3 rounded-lg border backdrop-blur-sm transition-all ${
                         guess.correct 
-                          ? 'bg-green-50/80 dark:bg-green-900/20 border-green-300 dark:border-green-700' 
+                          ? 'bg-yellow-50/80 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700' 
                           : 'bg-red-50/80 dark:bg-red-900/20 border-red-300 dark:border-red-700'
                       }`}
                     >
@@ -530,7 +530,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                         </p>
                       </div>
                       {guess.correct ? (
-                        <Check className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
                       ) : (
                         <X className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
                       )}
@@ -545,8 +545,8 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
 
       {/* Background decoration */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 dark:bg-purple-900 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-20 animate-blob" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 dark:bg-blue-900 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-20 animate-blob animation-delay-2000" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-yellow-300 dark:bg-yellow-900 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-20 animate-blob" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-300 dark:bg-amber-900 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-20 animate-blob animation-delay-2000" />
       </div>
 
       {/* Modals */}

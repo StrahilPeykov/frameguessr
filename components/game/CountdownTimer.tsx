@@ -35,8 +35,8 @@ export default function CountdownTimer() {
 
   return (
     <div className="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-8">
-      <Clock className="w-4 h-4" />
-      <span>Next puzzle in: {timeLeft}</span>
+      <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+      <span className="font-mono">{timeLeft}</span>
     </div>
   )
 }
