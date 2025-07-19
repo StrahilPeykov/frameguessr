@@ -5,7 +5,7 @@ import { Play, Pause, Volume2, VolumeX, Music2, AlertCircle, Radio, Headphones }
 
 interface AudioHintProps {
   previewUrl: string
-  duration: number // How long to play (5, 15, or 30 seconds)
+  duration: number // How long to play (5, 10, or 15 seconds)
   trackTitle: string
   artistName: string
   hintLevel: number
@@ -30,11 +30,16 @@ export default function AudioHint({
   const [volume, setVolume] = useState(0.7)
   const [isBuffering, setIsBuffering] = useState(false)
   const [audioError, setAudioError] = useState(false)
-  const [hasStarted, setHasStarted] = useState(false)
+  const [playbackTime, setPlaybackTime] = useState(0) // Time within our duration window
   
   const audioRef = useRef<HTMLAudioElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number>(8) // Start from 8 seconds by default
+
+  // Stop audio when hint level or duration changes (e.g., when user skips)
+  useEffect(() => {
+    handleStop()
+  }, [hintLevel, duration])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -46,12 +51,13 @@ export default function AudioHint({
       startTimeRef.current = startTime
       audio.currentTime = startTime
       setCurrentTime(startTime)
+      setPlaybackTime(0)
       setIsBuffering(false)
       setAudioError(false)
     }
 
     const handleEnded = () => {
-      stopAndReset()
+      handleStop()
     }
 
     const handleError = () => {
@@ -78,23 +84,32 @@ export default function AudioHint({
       audio.removeEventListener('waiting', handleWaiting)
       audio.removeEventListener('canplay', handleCanPlay)
       
-      if (intervalRef.current) clearInterval(intervalRef.current)
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
     }
-  }, [previewUrl, duration, volume])
+  }, [previewUrl, volume])
 
-  // Stop and reset to beginning - no auto-replay
-  const stopAndReset = () => {
+  // Clean stop function - properly resets everything
+  const handleStop = () => {
     const audio = audioRef.current
     if (!audio) return
 
+    // Stop the audio
+    audio.pause()
     setIsPlaying(false)
-    setCurrentTime(startTimeRef.current)
-    audio.currentTime = startTimeRef.current
     
+    // Clear interval
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
       intervalRef.current = null
     }
+    
+    // Reset to start position
+    audio.currentTime = startTimeRef.current
+    setCurrentTime(startTimeRef.current)
+    setPlaybackTime(0)
     
     onPlayEnd?.()
   }
@@ -105,13 +120,13 @@ export default function AudioHint({
 
     try {
       if (isPlaying) {
-        audio.pause()
-        stopAndReset()
+        // Pause/Stop
+        handleStop()
       } else {
-        // Always reset to start position when playing
+        // Play from start
         audio.currentTime = startTimeRef.current
         setCurrentTime(startTimeRef.current)
-        setHasStarted(true)
+        setPlaybackTime(0)
 
         setIsBuffering(true)
         await audio.play()
@@ -123,10 +138,11 @@ export default function AudioHint({
         intervalRef.current = setInterval(() => {
           const elapsed = audio.currentTime - startTimeRef.current
           setCurrentTime(audio.currentTime)
+          setPlaybackTime(elapsed)
 
-          // Stop exactly at duration limit and reset
+          // Stop exactly at duration limit
           if (elapsed >= duration) {
-            stopAndReset()
+            handleStop()
           }
         }, 100)
       }
@@ -153,7 +169,7 @@ export default function AudioHint({
     }
   }
 
-  const progress = hasStarted ? Math.min(((currentTime - startTimeRef.current) / duration) * 100, 100) : 0
+  const progress = Math.min((playbackTime / duration) * 100, 100)
 
   if (audioError) {
     return (
@@ -202,16 +218,7 @@ export default function AudioHint({
             </div>
           </div>
           
-          <div className="flex items-center gap-4 text-sm">
-            <div className="px-3 py-1.5 rounded-full font-bold flex items-center gap-2 bg-amber-800/60">
-              <Radio className="w-3.5 h-3.5" />
-              Audio Hint {hintLevel}
-            </div>
-            <div className="text-amber-200/70 flex items-center gap-1.5">
-              <Headphones className="w-3.5 h-3.5" />
-              {duration}s preview
-            </div>
-          </div>
+
         </div>
 
         {/* Audio Controls */}
@@ -269,45 +276,36 @@ export default function AudioHint({
       </div>
 
       {/* Cinema Progress Bar */}
-      {hasStarted && !audioError && (
-        <div className="mt-6">
-          <div className="w-full bg-gradient-to-r from-red-900/40 to-amber-900/40 rounded-full h-3 overflow-hidden shadow-inner border border-amber-700/30">
-            <div
-              className="bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 h-3 rounded-full transition-all duration-200 ease-out shadow-lg relative"
-              style={{ width: `${progress}%` }}
-            >
-              {/* Film strip effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/10 rounded-full" />
-            </div>
+      <div className="mt-6">
+        <div className="w-full bg-gradient-to-r from-red-900/40 to-amber-900/40 rounded-full h-3 overflow-hidden shadow-inner border border-amber-700/30">
+          <div
+            className="bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 h-3 rounded-full transition-all duration-200 ease-out shadow-lg relative"
+            style={{ width: `${progress}%` }}
+          >
+            {/* Film strip effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/10 rounded-full" />
           </div>
-          
-          {/* Time Display */}
-          <div className="flex justify-between items-center text-sm text-amber-200/80 mt-3">
-            <span className="font-mono">0:00</span>
-            <div className="flex items-center gap-2">
-              <span className="font-mono">
-                {Math.floor((currentTime - startTimeRef.current))}s
-              </span>
-              <span className="opacity-60">/</span>
-              <span className="font-mono">{duration}s</span>
-            </div>
-            <span className="font-mono">{duration}:00</span>
-          </div>
-          
-          {/* Audio Waveform Visual */}
-          {isPlaying && (
-            <div className="flex justify-center items-center gap-1 mt-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="cinema-waveform-bar"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                />
-              ))}
-            </div>
-          )}
         </div>
-      )}
+        
+        {/* Time Display - Simple seconds */}
+        <div className="flex justify-between items-center text-sm text-amber-200/80 mt-3">
+          <span className="font-mono">{Math.floor(playbackTime)}s</span>
+          <span className="font-mono">{duration}s</span>
+        </div>
+        
+        {/* Audio Waveform Visual */}
+        {isPlaying && (
+          <div className="flex justify-center items-center gap-1 mt-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="cinema-waveform-bar"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Theater Ambiance when Playing */}
       {isPlaying && (

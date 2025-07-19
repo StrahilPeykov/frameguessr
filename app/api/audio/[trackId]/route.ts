@@ -55,8 +55,8 @@ export async function GET(
       },
       durations: {
         level1: 5,   // 5 seconds for first hint
-        level2: 15,  // 15 seconds for second hint
-        level3: 30   // 30 seconds for third hint (full preview)
+        level2: 10,  // 10 seconds for second hint
+        level3: 15   // 15 seconds for third hint
       }
     }
 
