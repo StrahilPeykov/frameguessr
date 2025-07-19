@@ -1,6 +1,8 @@
 # FrameGuessr robots.txt
 User-agent: *
 Allow: /
+Allow: /archive
+Allow: /day/*
 
 # API endpoints
 Disallow: /api/

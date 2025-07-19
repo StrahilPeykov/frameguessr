@@ -88,3 +88,17 @@ export interface AudioHintData {
     level3: number // 15 seconds
   }
 }
+
+// Archive types
+export interface ArchivedMovie {
+  date: string
+  title: string
+  media_type: 'movie' | 'tv'
+  has_audio: boolean
+}
+
+export interface ArchiveGameState {
+  completed: boolean
+  won: boolean
+  attempts: number
+}

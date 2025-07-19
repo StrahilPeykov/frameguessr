@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { GameState, DailyChallenge, SearchResult, AudioHintData } from '@/types/game'
 import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, ChevronLeft, ChevronRight, Sparkles, User, Play } from 'lucide-react'
 import { useBlur, type HintLevel } from '@/utils/blur'
@@ -281,20 +282,33 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       <nav className="fixed top-0 left-0 right-0 z-50 cinema-nav-blur bg-stone-950/80 border-b border-amber-900/30">
         <div className="max-w-5xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Link href="/" className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-600 to-red-700 flex items-center justify-center">
                   <Film className="w-5 h-5 text-white" />
                 </div>
-                <h1 className="text-xl font-bold cinema-gradient-title">
+                <h1 className="text-xl font-bold cinema-gradient-title hidden sm:block">
                   FrameGuessr
                 </h1>
+              </Link>
+              
+              {/* Mobile DatePicker */}
+              <div className="block sm:hidden">
+                <DatePicker 
+                  currentDate={selectedDate}
+                  onDateSelect={handleDateSelect}
+                  mobile
+                />
               </div>
-              <DatePicker 
-                currentDate={selectedDate}
-                onDateSelect={handleDateSelect}
-                compact
-              />
+              
+              {/* Desktop DatePicker */}
+              <div className="hidden sm:block">
+                <DatePicker 
+                  currentDate={selectedDate}
+                  onDateSelect={handleDateSelect}
+                  compact
+                />
+              </div>
             </div>
             
             <div className="flex items-center gap-2">

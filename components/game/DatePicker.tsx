@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, ChevronLeft, ChevronRight, Clock, Film } from 'lucide-react'
+import { Calendar, ChevronLeft, ChevronRight, Clock, Film, CalendarDays } from 'lucide-react'
 
 interface DatePickerProps {
   currentDate: string
@@ -112,6 +112,14 @@ export default function DatePicker({
           <ChevronRight className="w-4 h-4" />
         </Link>
         
+        <Link
+          href="/archive"
+          className="p-2 rounded-xl text-stone-400 hover:bg-stone-800/50 hover:text-amber-400 transition-all duration-300 cinema-touch"
+          aria-label="View archive"
+        >
+          <CalendarDays className="w-4 h-4" />
+        </Link>
+        
         {showPicker && (
           <div className="absolute top-full mt-2 right-4 z-50">
             <div className="cinema-glass-dark rounded-xl shadow-2xl border border-amber-700/30 p-4">
@@ -123,6 +131,12 @@ export default function DatePicker({
                 onChange={handleDateInput}
                 className="px-3 py-2 text-sm border border-stone-600 rounded-lg bg-stone-800 text-stone-100 cinema-focus"
               />
+              <Link
+                href="/archive"
+                className="block mt-3 text-xs text-center text-amber-400 hover:text-amber-300"
+              >
+                View full archive →
+              </Link>
             </div>
           </div>
         )}
@@ -172,6 +186,13 @@ export default function DatePicker({
                   onChange={handleDateInput}
                   className="px-4 py-3 border border-stone-600 rounded-xl bg-stone-800 text-stone-100 cinema-focus w-full"
                 />
+                <Link
+                  href="/archive"
+                  className="flex items-center justify-center gap-2 mt-4 px-4 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 rounded-xl transition-all duration-300 cinema-touch"
+                >
+                  <CalendarDays className="w-4 h-4" />
+                  <span className="text-sm">View full archive</span>
+                </Link>
               </div>
             </div>
           )}
@@ -190,6 +211,14 @@ export default function DatePicker({
             <ChevronRight className="w-4 h-4" />
           </div>
         )}
+        
+        <Link
+          href="/archive"
+          className="p-2 rounded-xl text-stone-400 hover:text-amber-400 hover:bg-stone-800/50 transition-all duration-300 cinema-touch ml-2"
+          aria-label="View archive"
+        >
+          <CalendarDays className="w-4 h-4" />
+        </Link>
       </div>
     )
   }
@@ -255,6 +284,13 @@ export default function DatePicker({
               <div className="mt-3 text-xs text-stone-500 dark:text-stone-400 text-center">
                 Available from {formatDate(min, 'MMM d, yyyy')} to today
               </div>
+              <Link
+                href="/archive"
+                className="flex items-center justify-center gap-2 mt-4 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl transition-all duration-300 cinema-btn shadow-lg hover:shadow-xl font-medium"
+              >
+                <CalendarDays className="w-4 h-4" />
+                <span>Browse Full Archive</span>
+              </Link>
             </div>
           </div>
         )}

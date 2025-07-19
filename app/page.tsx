@@ -4,3 +4,6 @@ export default function HomePage() {
   const today = new Date().toISOString().split('T')[0]
   redirect(`/day/${today}`)
 }
+
+// This page immediately redirects to today's game.
+// Users can access the archive at /archive
