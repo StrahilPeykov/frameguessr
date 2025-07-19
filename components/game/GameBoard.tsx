@@ -409,7 +409,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             </div>
           </div>
 
-          {/* Audio Hint Section */}
+          {/* Audio Hint Section - Improved */}
           {audioHints && (
             <div className="mb-4">
               <AudioHint
@@ -422,16 +422,15 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             </div>
           )}
 
-          {/* Loading state for audio */}
+          {/* Loading state for audio - Simplified */}
           {audioLoading && (
-            <div className="mb-4 bg-gray-900/90 backdrop-blur-sm rounded-xl p-4 text-white">
+            <div className="mb-4 bg-gray-900/90 backdrop-blur-sm rounded-xl p-4 text-white animate-pulse">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-700 rounded-lg animate-pulse" />
+                <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 <div className="flex-1">
-                  <div className="h-4 bg-gray-700 rounded mb-2 animate-pulse" />
-                  <div className="h-3 bg-gray-700 rounded w-2/3 animate-pulse" />
+                  <div className="h-4 bg-gray-700 rounded mb-2" />
+                  <div className="h-3 bg-gray-700 rounded w-2/3" />
                 </div>
-                <div className="w-10 h-10 bg-gray-700 rounded-full animate-pulse" />
               </div>
             </div>
           )}

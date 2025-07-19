@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Play, Pause, Volume2, VolumeX, Music } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, Music2, AlertCircle } from 'lucide-react'
 
 interface AudioHintProps {
   previewUrl: string
@@ -32,7 +32,6 @@ export default function AudioHint({
   
   const audioRef = useRef<HTMLAudioElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  const fadeIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number>(8) // Start from 8 seconds by default
 
   useEffect(() => {
@@ -50,7 +49,7 @@ export default function AudioHint({
     }
 
     const handleEnded = () => {
-      resetAudio()
+      stopAndReset()
     }
 
     const handleError = () => {
@@ -78,12 +77,11 @@ export default function AudioHint({
       audio.removeEventListener('canplay', handleCanPlay)
       
       if (intervalRef.current) clearInterval(intervalRef.current)
-      if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current)
     }
   }, [previewUrl, duration, volume])
 
-  // Reset audio to beginning
-  const resetAudio = () => {
+  // Stop and reset to beginning - no auto-replay
+  const stopAndReset = () => {
     const audio = audioRef.current
     if (!audio) return
 
@@ -91,8 +89,10 @@ export default function AudioHint({
     setCurrentTime(startTimeRef.current)
     audio.currentTime = startTimeRef.current
     
-    if (intervalRef.current) clearInterval(intervalRef.current)
-    if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
     
     onPlayEnd?.()
   }
@@ -104,7 +104,7 @@ export default function AudioHint({
     try {
       if (isPlaying) {
         audio.pause()
-        resetAudio()
+        stopAndReset()
       } else {
         // Always reset to start position when playing
         audio.currentTime = startTimeRef.current
@@ -124,7 +124,7 @@ export default function AudioHint({
 
           // Stop exactly at duration limit and reset
           if (elapsed >= duration) {
-            resetAudio()
+            stopAndReset()
           }
         }, 100)
       }
@@ -155,14 +155,12 @@ export default function AudioHint({
 
   if (audioError) {
     return (
-      <div className="bg-gray-800/90 backdrop-blur-sm rounded-xl p-4 text-white border border-gray-600/50">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
-            <Music className="w-6 h-6 text-gray-500" />
-          </div>
+      <div className="bg-gradient-to-r from-red-900/90 to-red-800/90 backdrop-blur-sm rounded-xl p-4 text-white border border-red-500/20">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-300 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm text-gray-300">Audio hint unavailable</p>
-            <p className="text-xs text-gray-500">Could not load audio preview</p>
+            <p className="text-sm font-medium">Audio hint unavailable</p>
+            <p className="text-xs text-red-200 opacity-75">Unable to load soundtrack preview</p>
           </div>
         </div>
       </div>
@@ -170,7 +168,7 @@ export default function AudioHint({
   }
 
   return (
-    <div className="bg-gradient-to-r from-purple-900/90 to-blue-900/90 backdrop-blur-sm rounded-xl p-4 text-white border border-purple-500/20">
+    <div className="bg-gradient-to-r from-purple-900/95 to-indigo-900/95 backdrop-blur-sm rounded-xl p-4 text-white border border-purple-500/20 shadow-lg">
       <audio
         ref={audioRef}
         src={previewUrl}
@@ -179,20 +177,19 @@ export default function AudioHint({
       />
       
       <div className="flex items-center gap-4">
-        {/* Music Icon (no album cover) */}
-        <div className="flex-shrink-0 w-12 h-12 bg-purple-700/50 rounded-lg flex items-center justify-center">
-          <Music className="w-6 h-6 text-purple-200" />
-        </div>
-
-        {/* Track Info */}
+        {/* Track Info - No album cover */}
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm truncate">{trackTitle}</p>
-          <p className="text-xs text-gray-300 truncate">{artistName}</p>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs bg-purple-600 px-2 py-0.5 rounded-full">
+          <div className="flex items-center gap-2 mb-1">
+            <Music2 className="w-4 h-4 text-purple-300 flex-shrink-0" />
+            <p className="font-semibold text-sm truncate">{trackTitle}</p>
+          </div>
+          <p className="text-xs text-purple-200 opacity-75 truncate mb-2">{artistName}</p>
+          
+          <div className="flex items-center gap-3 text-xs">
+            <span className="bg-purple-600/60 px-2 py-1 rounded-full font-medium">
               🎵 Audio Hint {hintLevel}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-purple-200 opacity-75">
               {duration}s preview
             </span>
           </div>
@@ -208,9 +205,9 @@ export default function AudioHint({
               aria-label={isMuted ? 'Unmute' : 'Mute'}
             >
               {isMuted ? (
-                <VolumeX className="w-4 h-4" />
+                <VolumeX className="w-4 h-4 text-purple-200" />
               ) : (
-                <Volume2 className="w-4 h-4" />
+                <Volume2 className="w-4 h-4 text-purple-200" />
               )}
             </button>
             
@@ -232,7 +229,7 @@ export default function AudioHint({
           <button
             onClick={togglePlay}
             disabled={isBuffering}
-            className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-full transition-all disabled:opacity-50 shadow-lg"
+            className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-purple-700 disabled:to-indigo-700 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:scale-100"
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {isBuffering ? (
@@ -248,15 +245,16 @@ export default function AudioHint({
 
       {/* Progress Bar */}
       {hasStarted && !audioError && (
-        <div className="mt-3">
-          <div className="w-full bg-gray-700 rounded-full h-1.5">
+        <div className="mt-4">
+          <div className="w-full bg-purple-800/40 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-purple-500 to-blue-500 h-1.5 rounded-full transition-all duration-100"
+              className="bg-gradient-to-r from-purple-400 to-indigo-400 h-2 rounded-full transition-all duration-150 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className="flex justify-between text-xs text-purple-200 opacity-75 mt-2">
             <span>0s</span>
+            <span>{Math.floor((currentTime - startTimeRef.current))}s / {duration}s</span>
             <span>{duration}s</span>
           </div>
         </div>
