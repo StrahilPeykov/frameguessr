@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Calendar, ChevronLeft, ChevronRight, Clock, Film } from 'lucide-react'
 
 interface DatePickerProps {
   currentDate: string
@@ -83,45 +83,45 @@ export default function DatePicker({
       <div className="flex items-center gap-2">
         <Link
           href={prevDay ? `/day/${prevDay}` : '#'}
-          className={`p-1.5 rounded-lg ${
+          className={`p-2 rounded-xl transition-all duration-300 cinema-touch ${
             prevDay 
-              ? 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-yellow-600 dark:hover:text-yellow-400' 
-              : 'text-gray-300 dark:text-gray-600 pointer-events-none'
+              ? 'text-stone-400 hover:bg-stone-800/50 hover:text-amber-400' 
+              : 'text-stone-600 pointer-events-none'
           }`}
-          aria-label="Previous day"
+          aria-label="Previous screening"
         >
           <ChevronLeft className="w-4 h-4" />
         </Link>
         
         <button
           onClick={() => setShowPicker(!showPicker)}
-          className="text-sm font-medium px-2 py-1 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors"
+          className="text-sm font-medium px-3 py-1.5 hover:text-amber-400 transition-colors rounded-lg hover:bg-stone-800/50 cinema-touch"
         >
-          {isToday ? 'Today' : formatDate(current, 'MMM d')}
+          {isToday ? 'Tonight' : formatDate(current, 'MMM d')}
         </button>
         
         <Link
           href={nextDay ? `/day/${nextDay}` : '#'}
-          className={`p-1.5 rounded-lg ${
+          className={`p-2 rounded-xl transition-all duration-300 cinema-touch ${
             nextDay
-              ? 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-yellow-600 dark:hover:text-yellow-400'
-              : 'text-gray-300 dark:text-gray-600 pointer-events-none'
+              ? 'text-stone-400 hover:bg-stone-800/50 hover:text-amber-400'
+              : 'text-stone-600 pointer-events-none'
           }`}
-          aria-label="Next day"
+          aria-label="Next screening"
         >
           <ChevronRight className="w-4 h-4" />
         </Link>
         
         {showPicker && (
-          <div className="absolute top-full mt-1 right-4 z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-3">
+          <div className="absolute top-full mt-2 right-4 z-50">
+            <div className="cinema-glass-dark rounded-xl shadow-2xl border border-amber-700/30 p-4">
               <input
                 type="date"
                 value={currentDate}
                 min={minDate}
                 max={today}
                 onChange={handleDateInput}
-                className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 focus:border-yellow-500 dark:focus:border-yellow-400 focus:ring-1 focus:ring-yellow-500 dark:focus:ring-yellow-400"
+                className="px-3 py-2 text-sm border border-stone-600 rounded-lg bg-stone-800 text-stone-100 cinema-focus"
               />
             </div>
           </div>
@@ -137,13 +137,13 @@ export default function DatePicker({
         {prevDay ? (
           <Link
             href={`/day/${prevDay}`}
-            className="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Previous day"
+            className="p-2 rounded-xl text-stone-400 hover:text-amber-400 hover:bg-stone-800/50 transition-all duration-300 cinema-touch"
+            aria-label="Previous screening"
           >
             <ChevronLeft className="w-4 h-4" />
           </Link>
         ) : (
-          <div className="p-1.5 text-gray-300 dark:text-gray-600">
+          <div className="p-2 text-stone-600">
             <ChevronLeft className="w-4 h-4" />
           </div>
         )}
@@ -151,22 +151,26 @@ export default function DatePicker({
         <div className="relative">
           <button
             onClick={() => setShowPicker(!showPicker)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-yellow-600 dark:hover:text-yellow-400 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium hover:bg-stone-800/50 hover:text-amber-400 rounded-xl transition-all duration-300 cinema-touch group"
           >
-            <Calendar className="w-4 h-4" />
+            <Calendar className="w-4 h-4 text-amber-500 group-hover:text-amber-400 transition-colors" />
             <span>{isToday ? 'Today' : formatDate(current, 'MMM d, yyyy')}</span>
           </button>
           
           {showPicker && (
-            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div className="absolute top-full mt-3 left-1/2 -translate-x-1/2 z-50">
+              <div className="cinema-glass-dark rounded-2xl shadow-2xl border border-amber-700/30 p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Film className="w-4 h-4 text-amber-400" />
+                  <span className="text-sm font-medium text-stone-200">Select Date</span>
+                </div>
                 <input
                   type="date"
                   value={currentDate}
                   min={minDate}
                   max={today}
                   onChange={handleDateInput}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-yellow-500 dark:focus:border-yellow-400 focus:ring-2 focus:ring-yellow-500/20 dark:focus:ring-yellow-400/20"
+                  className="px-4 py-3 border border-stone-600 rounded-xl bg-stone-800 text-stone-100 cinema-focus w-full"
                 />
               </div>
             </div>
@@ -176,13 +180,13 @@ export default function DatePicker({
         {nextDay ? (
           <Link
             href={`/day/${nextDay}`}
-            className="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Next day"
+            className="p-2 rounded-xl text-stone-400 hover:text-amber-400 hover:bg-stone-800/50 transition-all duration-300 cinema-touch"
+            aria-label="Next screening"
           >
             <ChevronRight className="w-4 h-4" />
           </Link>
         ) : (
-          <div className="p-1.5 text-gray-300 dark:text-gray-600">
+          <div className="p-2 text-stone-600">
             <ChevronRight className="w-4 h-4" />
           </div>
         )}
@@ -190,45 +194,67 @@ export default function DatePicker({
     )
   }
 
-  // Original full version
+  // Original full version with cinema styling
   return (
-    <div className="flex items-center justify-center gap-4 mb-6">
+    <div className="flex items-center justify-center gap-6 mb-8">
       {prevDay ? (
         <Link
           href={`/day/${prevDay}`}
-          className="p-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400"
-          aria-label="Previous day"
+          className="p-3 rounded-2xl transition-all duration-300 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 cinema-btn group shadow-lg hover:shadow-xl"
+          aria-label="Previous screening"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
         </Link>
       ) : (
-        <div className="p-2 text-gray-300 dark:text-gray-600 cursor-not-allowed">
-          <ChevronLeft className="w-5 h-5" />
+        <div className="p-3 text-stone-300 dark:text-stone-600 cursor-not-allowed">
+          <ChevronLeft className="w-6 h-6" />
         </div>
       )}
       
       <div className="relative">
         <button
           onClick={() => setShowPicker(!showPicker)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:border-yellow-500/50 dark:hover:border-yellow-400/50 transition-colors border border-transparent"
+          className="flex items-center gap-3 px-6 py-4 cinema-glass rounded-2xl hover:bg-stone-100/80 dark:hover:bg-stone-800/80 border border-amber-200/50 dark:border-amber-700/50 transition-all duration-300 cinema-btn group shadow-lg hover:shadow-xl"
         >
-          <Calendar className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-          <span className="font-medium">
-            {isToday ? 'Today' : formatDate(current, 'MMM d, yyyy')}
-          </span>
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+            {isToday ? (
+              <Clock className="w-5 h-5 text-white" />
+            ) : (
+              <Calendar className="w-5 h-5 text-white" />
+            )}
+          </div>
+          <div className="text-left">
+            <div className="font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+              {isToday ? 'Tonight\'s Feature' : 'Past Screening'}
+            </div>
+            <div className="text-sm text-stone-600 dark:text-stone-400">
+              {formatDate(current, 'MMMM d, yyyy')}
+            </div>
+          </div>
         </button>
         
         {showPicker && (
-          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4">
+          <div className="absolute top-full mt-4 left-1/2 -translate-x-1/2 z-50">
+            <div className="cinema-glass rounded-2xl shadow-2xl border border-amber-200/50 dark:border-amber-700/50 p-6 min-w-[280px]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                  <Film className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-medium text-stone-900 dark:text-stone-100">
+                  Choose Screening Date
+                </span>
+              </div>
               <input
                 type="date"
                 value={currentDate}
                 min={minDate}
                 max={today}
                 onChange={handleDateInput}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-yellow-500 dark:focus:border-yellow-400 focus:ring-2 focus:ring-yellow-500/20 dark:focus:ring-yellow-400/20"
+                className="w-full px-4 py-3 border border-stone-300 dark:border-stone-600 rounded-xl bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 cinema-focus"
               />
+              <div className="mt-3 text-xs text-stone-500 dark:text-stone-400 text-center">
+                Available from {formatDate(min, 'MMM d, yyyy')} to today
+              </div>
             </div>
           </div>
         )}
@@ -237,14 +263,14 @@ export default function DatePicker({
       {nextDay ? (
         <Link
           href={`/day/${nextDay}`}
-          className="p-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400"
-          aria-label="Next day"
+          className="p-3 rounded-2xl transition-all duration-300 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 cinema-btn group shadow-lg hover:shadow-xl"
+          aria-label="Next screening"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
         </Link>
       ) : (
-        <div className="p-2 text-gray-300 dark:text-gray-600 cursor-not-allowed">
-          <ChevronRight className="w-5 h-5" />
+        <div className="p-3 text-stone-300 dark:text-stone-600 cursor-not-allowed">
+          <ChevronRight className="w-6 h-6" />
         </div>
       )}
     </div>

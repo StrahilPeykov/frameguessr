@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { GameState, DailyChallenge, SearchResult, AudioHintData } from '@/types/game'
-import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import ShareModal from './ShareModal'
 import StatsModal from './StatsModal'
 import SearchBox from './SearchBox'
@@ -234,10 +234,11 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-3 border-yellow-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading challenge...</p>
+          <div className="cinema-spinner mx-auto mb-6" />
+          <h2 className="text-xl font-bold mb-2 cinema-gradient-text">Loading</h2>
+          <p className="text-slate-600 dark:text-slate-400">Preparing the projection room...</p>
         </div>
       </div>
     )
@@ -245,19 +246,23 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl">
+          <div className="cinema-glass rounded-3xl p-8 shadow-2xl border border-stone-200/50 dark:border-stone-800/50">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center mx-auto mb-4">
+              <X className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Show Cancelled</h3>
             <p className="text-red-600 dark:text-red-400 mb-6">{error}</p>
             <button
               onClick={() => {
                 setError(null)
                 fetchDailyChallenge(selectedDate)
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 transition-colors font-medium"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl hover:from-amber-700 hover:to-orange-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl cinema-btn"
             >
               <RefreshCw className="w-5 h-5" />
-              Try Again
+              Restart Projection
             </button>
           </div>
         </div>
@@ -267,14 +272,19 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
 
   return (
     <>
-      {/* Compact Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/50 dark:border-gray-800/50">
+      {/* Cinematic Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 cinema-nav-blur bg-stone-950/80 border-b border-amber-900/30">
         <div className="max-w-5xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
+          <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 bg-clip-text text-transparent">
-                FrameGuessr
-              </h1>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-600 to-red-700 flex items-center justify-center">
+                  <Film className="w-5 h-5 text-white" />
+                </div>
+                <h1 className="text-xl font-bold cinema-gradient-title">
+                  FrameGuessr
+                </h1>
+              </div>
               <DatePicker 
                 currentDate={selectedDate}
                 onDateSelect={handleDateSelect}
@@ -285,7 +295,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowStatsModal(true)}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                className="p-2.5 text-stone-400 hover:text-amber-400 hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
                 aria-label="View statistics"
               >
                 <BarChart3 className="w-5 h-5" />
@@ -293,7 +303,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
               {gameState.completed && (
                 <button
                   onClick={() => setShowShareModal(true)}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  className="p-2.5 text-stone-400 hover:text-amber-400 hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
                   aria-label="Share result"
                 >
                   <Share2 className="w-5 h-5" />
@@ -304,101 +314,114 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
         </div>
       </nav>
 
-      {/* Main Game Area - Centralized Layout */}
-      <div className="min-h-screen pt-14 pb-8 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
-        <div className="max-w-3xl mx-auto px-4">
-          {/* Compact Game Header */}
-          <div className="flex items-center justify-between mb-4 mt-4">
-            <div className="flex items-center gap-4">
-              {/* Attempt dots */}
-              <div className="flex gap-2">
+      {/* Main Theater - Centralized Layout */}
+      <div className="min-h-screen pt-16 pb-8">
+        <div className="cinema-container px-4">
+          {/* Theater Header */}
+          <div className="flex items-center justify-between mb-6 mt-6">
+            <div className="flex items-center gap-6">
+              {/* Film Reel Dots */}
+              <div className="flex gap-3">
                 {Array.from({ length: gameState.maxAttempts }).map((_, i) => (
                   <div
                     key={i}
-                    className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
+                    className={`w-4 h-4 rounded-full transition-all duration-500 ${
                       i < gameState.attempts
                         ? gameState.guesses[i]?.correct
-                          ? 'bg-yellow-500 scale-110 shadow-lg shadow-yellow-500/50'
-                          : 'bg-red-500 scale-110 shadow-lg shadow-red-500/50'
-                        : 'bg-gray-300 dark:bg-gray-600'
+                          ? 'cinema-status-correct animate-cinema-success'
+                          : 'cinema-status-incorrect animate-cinema-error'
+                        : 'cinema-status-pending'
                     }`}
                   />
                 ))}
               </div>
-              <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              
+              {/* Hint Level Badge */}
+              <div className="px-2 py-1 rounded-md text-xs font-medium bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700">
                 Hint {gameState.currentHintLevel}/3
-              </span>
+              </div>
             </div>
             
             {gameState.completed && (
-              <div className="text-sm font-medium">
+              <div className="text-right">
                 {gameState.won ? (
-                  <span className="text-yellow-600 dark:text-yellow-400 flex items-center gap-1.5">
-                    <Trophy className="w-4 h-4" />
-                    Won in {gameState.attempts}!
-                  </span>
+                  <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold">
+                    <Trophy className="w-5 h-5 animate-cinema-trophy" />
+                    <span>Standing Ovation!</span>
+                  </div>
                 ) : (
-                  <span className="text-red-600 dark:text-red-400">Game Over</span>
+                  <div className="text-red-600 dark:text-red-400 font-medium">
+                    <span>The Credits Roll</span>
+                  </div>
                 )}
               </div>
             )}
           </div>
 
-          {/* Movie Still with integrated hints */}
-          <div className="relative mb-4">
-            <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl">
-              <div className="relative w-full aspect-video">
+          {/* Main Screen with Theater Styling */}
+          <div className="relative mb-6">
+            <div className="relative bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-amber-900/20 dark:border-amber-700/30">
+              {/* Screen Frame */}
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-amber-900/10 via-transparent to-amber-900/10 pointer-events-none z-10" />
+              
+              <div className="relative w-full cinema-aspect-video">
                 {dailyChallenge?.imageUrl && !imageError ? (
                   <>
                     <img
                       src={dailyChallenge.imageUrl}
                       alt="Movie still"
-                      className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
+                      className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
                         imageLoaded ? 'opacity-100' : 'opacity-0'
                       } ${getBlurClass()}`}
                       onLoad={() => setImageLoaded(true)}
                       onError={() => setImageError(true)}
                     />
                     {!imageLoaded && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-                        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+                        <div className="text-center">
+                          <div className="cinema-spinner mb-4" />
+                          <p className="text-white/80 text-sm">Loading film reel...</p>
+                        </div>
                       </div>
                     )}
                   </>
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                    <Film className="w-12 h-12 text-gray-600" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+                    <div className="text-center text-white/60">
+                      <Film className="w-16 h-16 mx-auto mb-3" />
+                      <p>No film available</p>
+                    </div>
                   </div>
                 )}
               </div>
               
-              {/* Overlay hints on image when available */}
+              {/* Cinema Overlay with Hint Information */}
               {gameState.currentHintLevel >= 2 && dailyChallenge && (
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/50 to-transparent">
-                  <div className="flex flex-wrap gap-3 text-white">
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
+                  <div className="flex flex-wrap gap-2 text-white text-sm">
                     {dailyChallenge.hints.level2.data.year && (
-                      <div className="flex items-center gap-1.5 text-sm">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span className="font-medium">{dailyChallenge.hints.level2.data.year}</span>
+                      <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded backdrop-blur-sm">
+                        <Calendar className="w-3 h-3" />
+                        <span>{dailyChallenge.hints.level2.data.year}</span>
                       </div>
                     )}
                     {dailyChallenge.hints.level2.data.genre && (
-                      <div className="flex items-center gap-1.5 text-sm">
-                        <Film className="w-3.5 h-3.5" />
-                        <span className="font-medium">{dailyChallenge.hints.level2.data.genre}</span>
+                      <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded backdrop-blur-sm">
+                        <Film className="w-3 h-3" />
+                        <span>{dailyChallenge.hints.level2.data.genre}</span>
                       </div>
                     )}
                     {gameState.currentHintLevel >= 3 && (
                       <>
                         {dailyChallenge.hints.level3.data.director && (
-                          <div className="flex items-center gap-1.5 text-sm">
-                            <Star className="w-3.5 h-3.5" />
-                            <span className="font-medium">{dailyChallenge.hints.level3.data.director}</span>
+                          <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded backdrop-blur-sm">
+                            <Star className="w-3 h-3" />
+                            <span className="text-xs">Dir: {dailyChallenge.hints.level3.data.director}</span>
                           </div>
                         )}
                         {dailyChallenge.hints.level3.data.actors && dailyChallenge.hints.level3.data.actors.length > 0 && (
-                          <div className="text-sm">
-                            <span className="opacity-75">Stars:</span> <span className="font-medium">{dailyChallenge.hints.level3.data.actors.slice(0, 2).join(', ')}</span>
+                          <div className="bg-black/50 px-2 py-1 rounded backdrop-blur-sm text-xs">
+                            <span>Cast: {dailyChallenge.hints.level3.data.actors.slice(0, 2).join(', ')}</span>
                           </div>
                         )}
                       </>
@@ -409,72 +432,77 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             </div>
           </div>
 
-          {/* Audio Hint Section - Improved */}
+          {/* Audio Section with Theater Styling */}
           {audioHints && (
-            <div className="mb-4">
+            <div className="mb-6">
               <AudioHint
                 previewUrl={audioHints.track.previewUrl}
                 duration={audioHints.durations[`level${gameState.currentHintLevel}` as keyof typeof audioHints.durations]}
                 trackTitle={audioHints.track.title}
                 artistName={audioHints.track.artist}
                 hintLevel={gameState.currentHintLevel}
+                gameCompleted={gameState.completed}
               />
             </div>
           )}
 
-          {/* Loading state for audio - Simplified */}
+          {/* Audio Loading with Theater Theme */}
           {audioLoading && (
-            <div className="mb-4 bg-gray-900/90 backdrop-blur-sm rounded-xl p-4 text-white animate-pulse">
+            <div className="mb-6 bg-gradient-to-r from-slate-900/95 to-stone-900/95 cinema-glass-dark rounded-2xl p-6 text-white animate-pulse">
               <div className="flex items-center gap-4">
-                <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="cinema-spinner" />
                 <div className="flex-1">
-                  <div className="h-4 bg-gray-700 rounded mb-2" />
-                  <div className="h-3 bg-gray-700 rounded w-2/3" />
+                  <div className="h-5 bg-amber-800/30 rounded-lg mb-3" />
+                  <div className="h-4 bg-amber-800/20 rounded-lg w-2/3" />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Game Controls */}
+          {/* Theater Controls */}
           {!gameState.completed ? (
-            <div className="space-y-3 mb-6">
+            <div className="space-y-4 mb-8">
               <SearchBox 
                 onSelect={handleGuess} 
                 disabled={gameState.completed}
-                placeholder="Search for a movie or TV show..."
+                placeholder="Search for the movie or show..."
               />
               
               {gameState.currentHintLevel < 3 && (
                 <button
                   onClick={handleSkip}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-gray-700/90 text-gray-700 dark:text-gray-200 rounded-xl transition-all border border-yellow-200/50 dark:border-yellow-700/50 font-medium"
+                  className="w-full flex items-center justify-center gap-3 px-6 py-4 cinema-glass hover:bg-stone-100/80 dark:hover:bg-stone-800/80 text-stone-700 dark:text-stone-200 rounded-2xl transition-all duration-300 border border-amber-200/50 dark:border-amber-700/50 font-medium cinema-btn group"
                 >
-                  <SkipForward className="w-5 h-5" />
-                  Skip for more hints
+                  <SkipForward className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  Skip to Next Scene
                 </button>
               )}
             </div>
           ) : (
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 text-center mb-6">
+            <div className="cinema-glass rounded-3xl p-8 text-center mb-8 shadow-xl border border-stone-200/50 dark:border-stone-800/50">
               {gameState.won ? (
                 <>
-                  <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-3 animate-bounce" />
-                  <h3 className="text-2xl font-bold mb-2">Congratulations!</h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    You guessed <span className="font-bold text-gray-900 dark:text-gray-100">"{dailyChallenge?.title}"</span> correctly!
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <Trophy className="w-10 h-10 text-white animate-cinema-trophy" />
+                  </div>
+                  <h3 className="text-3xl font-bold mb-3 cinema-gradient-text">Bravo!</h3>
+                  <p className="text-stone-600 dark:text-stone-400 text-lg mb-2">
+                    You identified <span className="font-bold text-stone-900 dark:text-stone-100">"{dailyChallenge?.title}"</span>
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                    {gameState.attempts} {gameState.attempts === 1 ? 'guess' : 'guesses'}
+                  <p className="text-sm text-stone-500 dark:text-stone-500">
+                    Solved in {gameState.attempts} {gameState.attempts === 1 ? 'scene' : 'scenes'}
                   </p>
                 </>
               ) : (
                 <>
-                  <X className="w-16 h-16 text-red-500 mx-auto mb-3" />
-                  <h3 className="text-2xl font-bold mb-2">Game Over</h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-3">The answer was:</p>
-                  <div className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 inline-block">
-                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{dailyChallenge?.title}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 mt-1">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center mx-auto mb-4">
+                    <X className="w-10 h-10 text-white" />
+                  </div>
+                  <h3 className="text-3xl font-bold mb-3 text-stone-900 dark:text-stone-100">Final Credits</h3>
+                  <p className="text-stone-600 dark:text-stone-400 text-lg mb-4">The answer was:</p>
+                  <div className="cinema-glass bg-stone-100 dark:bg-stone-800 rounded-2xl px-6 py-4 inline-block">
+                    <p className="text-2xl font-bold text-stone-900 dark:text-stone-100">{dailyChallenge?.title}</p>
+                    <p className="text-sm text-stone-500 dark:text-stone-400 flex items-center justify-center gap-2 mt-2">
                       {dailyChallenge?.mediaType === 'tv' ? <Tv className="w-4 h-4" /> : <Film className="w-4 h-4" />}
                       {dailyChallenge?.year}
                     </p>
@@ -483,57 +511,62 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
               )}
               
               {selectedDate === today && (
-                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    <Clock className="w-4 h-4 inline mr-1" />
-                    Next puzzle in: <CountdownTimer />
+                <div className="mt-8 pt-6 border-t border-stone-200 dark:border-stone-700">
+                  <div className="text-sm text-stone-500 dark:text-stone-400 flex items-center justify-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Next show starts in: <CountdownTimer />
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Previous Guesses - Collapsible on mobile */}
+          {/* Theater Program - Previous Guesses */}
           {gameState.guesses.length > 0 && (
-            <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-4">
+            <div className="cinema-glass rounded-2xl p-6 border border-stone-200/50 dark:border-stone-800/50">
               <button
                 onClick={() => setShowGuesses(!showGuesses)}
-                className="flex items-center justify-between w-full text-left mb-3"
+                className="flex items-center justify-between w-full text-left mb-4 group"
               >
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <h3 className="text-lg font-bold text-stone-700 dark:text-stone-300 flex items-center gap-2">
+                  <Film className="w-5 h-5 text-amber-600" />
                   Your Guesses ({gameState.guesses.length})
                 </h3>
-                <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${showGuesses ? 'rotate-90' : ''}`} />
+                <ChevronRight className={`w-5 h-5 text-stone-500 transition-transform duration-300 ${showGuesses ? 'rotate-90' : ''} group-hover:text-amber-600`} />
               </button>
               
               {showGuesses && (
-                <div className="space-y-2">
+                <div className="space-y-3 cinema-section">
                   {gameState.guesses.map((guess, index) => (
                     <div
                       key={guess.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg border backdrop-blur-sm transition-all ${
+                      className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 cinema-touch ${
                         guess.correct 
-                          ? 'bg-yellow-50/80 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700' 
-                          : 'bg-red-50/80 dark:bg-red-900/20 border-red-300 dark:border-red-700'
-                      }`}
+                          ? 'bg-amber-50/80 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700 shadow-amber-100 dark:shadow-amber-900/20' 
+                          : 'bg-red-50/80 dark:bg-red-900/20 border-red-300 dark:border-red-700 shadow-red-100 dark:shadow-red-900/20'
+                      } shadow-sm`}
                     >
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-bold">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-700 text-sm font-bold text-stone-600 dark:text-stone-300">
                         {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                        <p className="font-semibold text-stone-900 dark:text-stone-100 truncate text-base">
                           {guess.title}
                         </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                          {guess.mediaType === 'tv' ? <Tv className="w-3 h-3" /> : <Film className="w-3 h-3" />}
-                          {guess.mediaType === 'tv' ? 'TV Show' : 'Movie'}
+                        <p className="text-sm text-stone-600 dark:text-stone-400 flex items-center gap-1.5 mt-1">
+                          {guess.mediaType === 'tv' ? <Tv className="w-3.5 h-3.5" /> : <Film className="w-3.5 h-3.5" />}
+                          {guess.mediaType === 'tv' ? 'TV Series' : 'Feature Film'}
                         </p>
                       </div>
-                      {guess.correct ? (
-                        <Check className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-                      ) : (
-                        <X className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-                      )}
+                      <div className={`p-2 rounded-full ${
+                        guess.correct ? 'bg-amber-200 dark:bg-amber-800' : 'bg-red-200 dark:bg-red-800'
+                      }`}>
+                        {guess.correct ? (
+                          <Check className="w-5 h-5 text-amber-700 dark:text-amber-300" />
+                        ) : (
+                          <X className="w-5 h-5 text-red-700 dark:text-red-300" />
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -543,13 +576,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
         </div>
       </div>
 
-      {/* Background decoration */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-yellow-300 dark:bg-yellow-900 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-20 animate-blob" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-300 dark:bg-amber-900 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-20 animate-blob animation-delay-2000" />
-      </div>
-
-      {/* Modals */}
+      {/* Theater Modals */}
       <ShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
@@ -565,7 +592,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
   )
 }
 
-// Inline CountdownTimer component
+// Countdown Timer Component
 function CountdownTimer() {
   const [timeLeft, setTimeLeft] = useState('')
 
@@ -596,5 +623,5 @@ function CountdownTimer() {
     return () => clearInterval(timer)
   }, [])
 
-  return <span className="font-mono">{timeLeft}</span>
+  return <span className="font-mono text-amber-600 dark:text-amber-400">{timeLeft}</span>
 }

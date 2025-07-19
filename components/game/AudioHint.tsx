@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Play, Pause, Volume2, VolumeX, Music2, AlertCircle } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, Music2, AlertCircle, Radio, Headphones } from 'lucide-react'
 
 interface AudioHintProps {
   previewUrl: string
@@ -9,6 +9,7 @@ interface AudioHintProps {
   trackTitle: string
   artistName: string
   hintLevel: number
+  gameCompleted?: boolean // Add this to show track info only when game is done
   onPlayStart?: () => void
   onPlayEnd?: () => void
 }
@@ -19,6 +20,7 @@ export default function AudioHint({
   trackTitle,
   artistName,
   hintLevel,
+  gameCompleted = false,
   onPlayStart,
   onPlayEnd
 }: AudioHintProps) {
@@ -155,12 +157,14 @@ export default function AudioHint({
 
   if (audioError) {
     return (
-      <div className="bg-gradient-to-r from-red-900/90 to-red-800/90 backdrop-blur-sm rounded-xl p-4 text-white border border-red-500/20">
-        <div className="flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-300 flex-shrink-0" />
+      <div className="bg-gradient-to-r from-red-900/90 to-rose-800/90 cinema-glass-dark rounded-2xl p-6 text-white border border-red-500/30 shadow-lg">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="w-6 h-6 text-red-300" />
+          </div>
           <div className="flex-1">
-            <p className="text-sm font-medium">Audio hint unavailable</p>
-            <p className="text-xs text-red-200 opacity-75">Unable to load soundtrack preview</p>
+            <h4 className="text-lg font-bold mb-1">Soundtrack Unavailable</h4>
+            <p className="text-sm text-red-200 opacity-90">The film's audio reel couldn't be loaded</p>
           </div>
         </div>
       </div>
@@ -168,7 +172,7 @@ export default function AudioHint({
   }
 
   return (
-    <div className="bg-gradient-to-r from-yellow-900/95 to-amber-900/95 backdrop-blur-sm rounded-xl p-4 text-white border border-yellow-500/20 shadow-lg">
+    <div className="bg-gradient-to-r from-amber-900/95 via-orange-900/95 to-red-900/95 cinema-glass-dark rounded-2xl p-6 text-white border border-amber-500/30 shadow-2xl">
       <audio
         ref={audioRef}
         src={previewUrl}
@@ -176,88 +180,138 @@ export default function AudioHint({
         muted={isMuted}
       />
       
-      <div className="flex items-center gap-4">
-        {/* Track Info - No album cover */}
+      <div className="flex items-center gap-6">
+        {/* Soundtrack Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <Music2 className="w-4 h-4 text-yellow-300 flex-shrink-0" />
-            <p className="font-semibold text-sm truncate">{trackTitle}</p>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+              <Music2 className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              {gameCompleted ? (
+                <>
+                  <h4 className="font-bold text-lg truncate text-amber-100">{trackTitle}</h4>
+                  <p className="text-sm text-amber-200/80 truncate">{artistName}</p>
+                </>
+              ) : (
+                <>
+                  <h4 className="font-bold text-lg text-amber-100">Soundtrack Preview</h4>
+                  <p className="text-sm text-amber-200/80">Audio hint for this film</p>
+                </>
+              )}
+            </div>
           </div>
-          <p className="text-xs text-yellow-200 opacity-75 truncate mb-2">{artistName}</p>
           
-          <div className="flex items-center gap-3 text-xs">
-            <span className="bg-yellow-600/60 px-2 py-1 rounded-full font-medium">
-              🎵 Audio Hint {hintLevel}
-            </span>
-            <span className="text-yellow-200 opacity-75">
+          <div className="flex items-center gap-4 text-sm">
+            <div className="px-3 py-1.5 rounded-full font-bold flex items-center gap-2 bg-amber-800/60">
+              <Radio className="w-3.5 h-3.5" />
+              Audio Hint {hintLevel}
+            </div>
+            <div className="text-amber-200/70 flex items-center gap-1.5">
+              <Headphones className="w-3.5 h-3.5" />
               {duration}s preview
-            </span>
+            </div>
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-3">
+        {/* Audio Controls */}
+        <div className="flex items-center gap-4">
           {/* Volume Control (hidden on mobile) */}
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-3">
             <button
               onClick={toggleMute}
-              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300 cinema-touch"
               aria-label={isMuted ? 'Unmute' : 'Mute'}
             >
               {isMuted ? (
-                <VolumeX className="w-4 h-4 text-yellow-200" />
+                <VolumeX className="w-5 h-5 text-amber-200" />
               ) : (
-                <Volume2 className="w-4 h-4 text-yellow-200" />
+                <Volume2 className="w-5 h-5 text-amber-200" />
               )}
             </button>
             
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={volume}
-              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-              className="w-16 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
-              style={{
-                background: `linear-gradient(to right, #D4AF37 0%, #D4AF37 ${volume * 100}%, #4B5563 ${volume * 100}%, #4B5563 100%)`
-              }}
-            />
+            <div className="relative">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={volume}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className="cinema-slider w-20 h-2 bg-gradient-to-r from-amber-800 to-orange-800 rounded-lg appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, 
+                    #D4A574 0%, 
+                    #D4A574 ${volume * 100}%, 
+                    #8B1538 ${volume * 100}%, 
+                    #8B1538 100%)`
+                }}
+              />
+            </div>
           </div>
 
-          {/* Play Button */}
+          {/* Play/Pause Button */}
           <button
             onClick={togglePlay}
             disabled={isBuffering}
-            className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-500 hover:to-amber-500 disabled:from-yellow-700 disabled:to-amber-700 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:scale-100"
-            aria-label={isPlaying ? 'Pause' : 'Play'}
+            className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-600 via-orange-600 to-red-600 hover:from-amber-500 hover:via-orange-500 hover:to-red-500 disabled:from-amber-800 disabled:via-orange-800 disabled:to-red-800 rounded-full transition-all duration-300 shadow-lg hover:shadow-2xl cinema-btn disabled:opacity-50 disabled:cursor-not-allowed group"
+            aria-label={isPlaying ? 'Pause soundtrack' : 'Play soundtrack'}
           >
             {isBuffering ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="cinema-spinner w-6 h-6" />
             ) : isPlaying ? (
-              <Pause className="w-5 h-5" />
+              <Pause className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
             ) : (
-              <Play className="w-5 h-5 ml-0.5" />
+              <Play className="w-6 h-6 ml-1 text-white group-hover:scale-110 transition-transform" />
             )}
           </button>
         </div>
       </div>
 
-      {/* Progress Bar */}
+      {/* Cinema Progress Bar */}
       {hasStarted && !audioError && (
-        <div className="mt-4">
-          <div className="w-full bg-yellow-800/40 rounded-full h-2 overflow-hidden">
+        <div className="mt-6">
+          <div className="w-full bg-gradient-to-r from-red-900/40 to-amber-900/40 rounded-full h-3 overflow-hidden shadow-inner border border-amber-700/30">
             <div
-              className="bg-gradient-to-r from-yellow-400 to-amber-400 h-2 rounded-full transition-all duration-150 ease-out"
+              className="bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 h-3 rounded-full transition-all duration-200 ease-out shadow-lg relative"
               style={{ width: `${progress}%` }}
-            />
+            >
+              {/* Film strip effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/10 rounded-full" />
+            </div>
           </div>
-          <div className="flex justify-between text-xs text-yellow-200 opacity-75 mt-2">
-            <span>0s</span>
-            <span>{Math.floor((currentTime - startTimeRef.current))}s / {duration}s</span>
-            <span>{duration}s</span>
+          
+          {/* Time Display */}
+          <div className="flex justify-between items-center text-sm text-amber-200/80 mt-3">
+            <span className="font-mono">0:00</span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono">
+                {Math.floor((currentTime - startTimeRef.current))}s
+              </span>
+              <span className="opacity-60">/</span>
+              <span className="font-mono">{duration}s</span>
+            </div>
+            <span className="font-mono">{duration}:00</span>
           </div>
+          
+          {/* Audio Waveform Visual */}
+          {isPlaying && (
+            <div className="flex justify-center items-center gap-1 mt-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="cinema-waveform-bar"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                />
+              ))}
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Theater Ambiance when Playing */}
+      {isPlaying && (
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-400/5 via-orange-400/5 to-red-400/5 pointer-events-none cinema-glow" />
       )}
     </div>
   )
