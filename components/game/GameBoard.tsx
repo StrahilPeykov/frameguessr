@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { GameState, DailyChallenge, SearchResult, AudioHintData } from '@/types/game'
 import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, ChevronLeft, ChevronRight, Sparkles, User, Play } from 'lucide-react'
+import { useBlur, type HintLevel } from '@/utils/blur'
 import ShareModal from './ShareModal'
 import StatsModal from './StatsModal'
 import SearchBox from './SearchBox'
@@ -40,6 +41,12 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [showGuesses, setShowGuesses] = useState(false)
+
+  // Get blur configuration for current state
+  const blur = useBlur(
+    gameState.currentHintLevel as HintLevel, 
+    gameState.completed || gameState.won
+  )
 
   // Handle date selection
   const handleDateSelect = (date: string) => {
@@ -230,21 +237,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     }))
   }
 
-  const getBlurClass = () => {
-    if (gameState.won || gameState.completed) return ''
-    
-    switch (gameState.currentHintLevel) {
-      case 1:
-        return 'blur-xl brightness-75'
-      case 2:
-        return 'blur-md brightness-90'
-      case 3:
-        return 'blur-sm'
-      default:
-        return ''
-    }
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -382,10 +374,14 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                   <>
                     <img
                       src={dailyChallenge.imageUrl}
-                      alt="Movie still"
+                      alt={blur.description}
                       className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
                         imageLoaded ? 'opacity-100' : 'opacity-0'
-                      } ${getBlurClass()}`}
+                      } ${blur.className}`}
+                      style={{ 
+                        filter: blur.filter,
+                        transition: 'filter 0.8s ease-in-out, opacity 1s ease-in-out'
+                      }}
                       onLoad={() => setImageLoaded(true)}
                       onError={() => setImageError(true)}
                     />

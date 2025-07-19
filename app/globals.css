@@ -111,35 +111,40 @@ body {
   overflow-y: auto;
 }
 
-/* Enhanced Cinematic Blur Effects */
-.blur-sm {
-  filter: blur(4px) contrast(1.1);
-}
+/* === CONSOLIDATED BLUR SYSTEM === */
+/* Generated from utils/blur.ts configuration */
 
-.blur-md {
-  filter: blur(12px) contrast(1.05);
-}
-
-.blur-xl {
-  filter: blur(25px) contrast(1.05);
-}
-
-/* Cinematic Brightness and Saturation */
-.brightness-75 {
-  filter: brightness(0.75) saturate(1.1);
-}
-
-.brightness-90 {
-  filter: brightness(0.9) saturate(1.05);
-}
-
-/* Combined Cinematic Filters */
-.blur-xl.brightness-75 {
+.blur-heavy {
   filter: blur(25px) brightness(0.75) contrast(1.05) saturate(1.1);
+  transition: filter 0.5s ease-in-out;
 }
 
-.blur-md.brightness-90 {
+.blur-medium {
   filter: blur(12px) brightness(0.9) contrast(1.05) saturate(1.05);
+  transition: filter 0.5s ease-in-out;
+}
+
+.blur-light {
+  filter: blur(4px) contrast(1.1);
+  transition: filter 0.5s ease-in-out;
+}
+
+/* Accessibility: Reduce blur for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .blur-heavy,
+  .blur-medium,
+  .blur-light {
+    transition: none !important;
+  }
+}
+
+/* High contrast mode: Disable blur for better accessibility */
+@media (prefers-contrast: high) {
+  .blur-heavy,
+  .blur-medium,
+  .blur-light {
+    filter: contrast(2) !important;
+  }
 }
 
 /* Art Deco Skeleton Animation */
@@ -628,28 +633,6 @@ body {
 
   .cinema-audio-mobile-hidden {
     display: none;
-  }
-}
-
-/* High Contrast Mode */
-@media (prefers-contrast: high) {
-  .cinema-gradient-text,
-  .cinema-gradient-title {
-    background: none !important;
-    -webkit-text-fill-color: var(--cinema-burgundy) !important;
-    color: var(--cinema-burgundy) !important;
-  }
-  
-  .cinema-glass,
-  .cinema-glass-dark {
-    background: rgba(255, 255, 255, 0.95) !important;
-    border: 2px solid var(--cinema-burgundy) !important;
-  }
-  
-  .blur-xl,
-  .blur-md,
-  .blur-sm {
-    filter: blur(0) contrast(2) !important;
   }
 }
 
