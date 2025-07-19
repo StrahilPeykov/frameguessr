@@ -51,6 +51,7 @@ export async function GET(
         title: track.title,
         artist: track.artist.name,
         previewUrl: track.preview,
+        streamUrl: `/api/audio/stream/${track.id}`,
         duration: track.duration
       },
       durations: {

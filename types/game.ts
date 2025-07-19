@@ -80,6 +80,7 @@ export interface AudioHintData {
     title: string
     artist: string
     previewUrl: string
+    streamUrl: string
     duration?: number
   }
   durations: {

@@ -447,7 +447,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             <div className="mb-6">
               <AudioHint
                 ref={audioRef}
-                previewUrl={audioHints.track.previewUrl}
+                previewUrl={audioHints.track.streamUrl || audioHints.track.previewUrl}
                 duration={gameState.completed ? 15 : audioHints.durations[`level${gameState.currentHintLevel}` as keyof typeof audioHints.durations]}
                 trackTitle={audioHints.track.title}
                 artistName={audioHints.track.artist}
