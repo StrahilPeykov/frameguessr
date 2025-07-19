@@ -50,7 +50,10 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    // Return the daily challenge with proper formatting
+    // Create hints with default structure
+    let processedHints = dailyMovie.hints || createDefaultHints(dailyMovie)
+    
+    // Return the daily challenge with Deezer track ID
     return NextResponse.json({
       date: dailyMovie.date,
       movieId: dailyMovie.tmdb_id,
@@ -58,7 +61,9 @@ export async function GET(request: NextRequest) {
       title: dailyMovie.title,
       year: dailyMovie.year,
       imageUrl: dailyMovie.image_url,
-      hints: dailyMovie.hints || createDefaultHints(dailyMovie),
+      hints: processedHints,
+      // Include Deezer track ID if available
+      deezerTrackId: dailyMovie.deezer_track_id || null,
     })
 
   } catch (error) {

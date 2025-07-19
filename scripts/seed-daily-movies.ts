@@ -1,6 +1,7 @@
 // Run this script to seed the database with initial daily movies
 // Usage: npx tsx scripts/seed-daily-movies.ts
 // This script will SKIP existing dates to protect your handpicked data
+// Audio hints are now added manually - see SIMPLE_AUDIO_SETUP.md
 
 import dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
@@ -20,30 +21,35 @@ interface SeedMovie {
    * If omitted, one of the top images will be chosen at random.
    */
   backdropIndex?: number
+  /**
+   * Optional Deezer track ID for audio hint.
+   * Add these manually after seeding using the setup guide.
+   */
+  suggestedTrackId?: number
 }
 
 const SEED_MOVIES: SeedMovie[] = [
   // July 2025
-  { tmdb_id: 244786, media_type: 'movie', title: 'Whiplash', year: 2014 },
-  { tmdb_id: 1399,   media_type: 'tv',    title: 'Game of Thrones', year: 2011 },
-  { tmdb_id: 49026,  media_type: 'movie', title: 'The Dark Knight Rises', year: 2012 },
+  { tmdb_id: 244786, media_type: 'movie', title: 'Whiplash', year: 2014, suggestedTrackId: 95428 },
+  { tmdb_id: 1399,   media_type: 'tv',    title: 'Game of Thrones', year: 2011, suggestedTrackId: 916424 },
+  { tmdb_id: 49026,  media_type: 'movie', title: 'The Dark Knight Rises', year: 2012, suggestedTrackId: 916426 },
   { tmdb_id: 94605,  media_type: 'tv',    title: 'Arcane', year: 2021 },
-  { tmdb_id: 1726,   media_type: 'movie', title: 'Iron Man', year: 2008 },
-  { tmdb_id: 607,    media_type: 'movie', title: 'Men in Black', year: 1997 },
-  { tmdb_id: 1396,   media_type: 'tv',    title: 'Breaking Bad', year: 2008 },
-  { tmdb_id: 475557, media_type: 'movie', title: 'Joker', year: 2019 },
+  { tmdb_id: 1726,   media_type: 'movie', title: 'Iron Man', year: 2008, suggestedTrackId: 72981 },
+  { tmdb_id: 607,    media_type: 'movie', title: 'Men in Black', year: 1997, suggestedTrackId: 72982 },
+  { tmdb_id: 1396,   media_type: 'tv',    title: 'Breaking Bad', year: 2008, suggestedTrackId: 6337 },
+  { tmdb_id: 475557, media_type: 'movie', title: 'Joker', year: 2019, suggestedTrackId: 11520 },
   { tmdb_id: 1408,   media_type: 'tv',    title: 'House', year: 2004 },
   { tmdb_id: 491472, media_type: 'movie', title: "At Eternity's Gate", year: 2018 },
   { tmdb_id: 1359,   media_type: 'movie', title: 'American Psycho', year: 2000 },
-  { tmdb_id: 671,    media_type: 'movie', title: "Harry Potter and the Philosopher's Stone", year: 2001 },
+  { tmdb_id: 671,    media_type: 'movie', title: "Harry Potter and the Philosopher's Stone", year: 2001, suggestedTrackId: 5104 },
   { tmdb_id: 454626, media_type: 'movie', title: 'Sonic the Hedgehog', year: 2020 },
-  { tmdb_id: 329,    media_type: 'movie', title: 'Jurassic Park', year: 1993 },
-  { tmdb_id: 597,    media_type: 'movie', title: 'Titanic', year: 1997 },
+  { tmdb_id: 329,    media_type: 'movie', title: 'Jurassic Park', year: 1993, suggestedTrackId: 5105 },
+  { tmdb_id: 597,    media_type: 'movie', title: 'Titanic', year: 1997, suggestedTrackId: 72983 },
   { tmdb_id: 762504, media_type: 'movie', title: 'Nope', year: 2022 },
   { tmdb_id: 9487,   media_type: 'movie', title: "A Bug's Life", year: 1998 },
   { tmdb_id: 1949,   media_type: 'movie', title: 'Zodiac', year: 2007 },
   { tmdb_id: 9297,   media_type: 'movie', title: 'Monster House', year: 2006 },
-  { tmdb_id: 155,    media_type: 'movie', title: 'The Dark Knight', year: 2008 },
+  { tmdb_id: 155,    media_type: 'movie', title: 'The Dark Knight', year: 2008, suggestedTrackId: 916426 },
   { tmdb_id: 436270, media_type: 'movie', title: 'Black Adam', year: 2022 },
   { tmdb_id: 76600,  media_type: 'movie', title: 'Avatar: The Way of Water', year: 2022 },
   { tmdb_id: 414906, media_type: 'movie', title: 'The Batman', year: 2022 },
@@ -52,7 +58,8 @@ const SEED_MOVIES: SeedMovie[] = [
   { tmdb_id: 72105,  media_type: 'movie', title: 'Ted', year: 2012 },
   { tmdb_id: 600,    media_type: 'movie', title: 'Full Metal Jacket', year: 1987 },
   { tmdb_id: 4232,   media_type: 'movie', title: 'Scream', year: 1996 },
-];
+  { tmdb_id: 2675,   media_type: 'movie', title: 'Signs', year: 2002 },
+]
 
 // TMDB Client
 class TMDBClient {
@@ -123,9 +130,10 @@ class TMDBClient {
 }
 
 async function seedDatabase() {
-  console.log('🎬 FrameGuessr Safe Database Seeder')
-  console.log('==================================')
+  console.log('🎬 FrameGuessr Database Seeder')
+  console.log('=============================')
   console.log('⚠️  This script will SKIP existing dates to protect your handpicked data')
+  console.log('🎵 Audio hints are now added manually - see SIMPLE_AUDIO_SETUP.md')
   console.log('Loading environment variables...')
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -174,6 +182,7 @@ async function seedDatabase() {
   let successCount = 0
   let failCount = 0
   let skippedCount = 0
+  let audioSuggestionsCount = 0
 
   for (let i = 0; i < SEED_MOVIES.length; i++) {
     const movie = SEED_MOVIES[i]
@@ -278,6 +287,8 @@ async function seedDatabase() {
         year: releaseYear,
         image_url: imageUrl,
         hints: hints,
+        // Don't automatically add audio - this is now manual
+        // deezer_track_id: null
       }
 
       // Use INSERT with ON CONFLICT DO NOTHING to avoid overwriting existing data
@@ -294,7 +305,14 @@ async function seedDatabase() {
           failCount++
         }
       } else {
-        console.log(`  ✓ Successfully seeded ${isMovie ? details.title : details.name}`)
+        console.log(`  ✅ Successfully seeded ${isMovie ? details.title : details.name}`)
+        
+        // Show audio suggestion if available
+        if (movie.suggestedTrackId) {
+          console.log(`  🎵 Suggested audio: Deezer track ID ${movie.suggestedTrackId}`)
+          audioSuggestionsCount++
+        }
+        
         successCount++
       }
     } catch (err) {
@@ -302,21 +320,54 @@ async function seedDatabase() {
       failCount++
     }
 
-    // Add a small delay to avoid rate limiting
+    // Add a small delay to avoid rate limiting TMDB
     await new Promise(resolve => setTimeout(resolve, 500))
   }
 
-  console.log('\n==================================')
-  console.log(`✅ Seeding complete!`)
+  console.log('\n=============================')
+  console.log(`🎬 Seeding complete!`)
   console.log(`   New entries: ${successCount}`)
   console.log(`   Skipped (protected): ${skippedCount}`)
   console.log(`   Failed: ${failCount}`)
   console.log(`   Total processed: ${SEED_MOVIES.length}`)
-  console.log('\n🛡️  Your existing handpicked data was protected!')
+  console.log('')
+  console.log(`🎵 Audio Integration:`)
+  console.log(`   Suggested track IDs: ${audioSuggestionsCount}`)
+  console.log(`   Manual setup required - see SIMPLE_AUDIO_SETUP.md`)
+  console.log('')
+  console.log('🛡️  Your existing handpicked data was protected!')
   if (skippedCount > 0) {
     console.log(`   ${skippedCount} existing entries were left untouched`)
   }
-  console.log('\nYour database is ready for FrameGuessr!')
+  console.log('')
+  console.log('🎮 Your FrameGuessr database is ready!')
+  console.log('')
+  console.log('📝 Next steps for audio:')
+  console.log('   1. See SIMPLE_AUDIO_SETUP.md for track ID setup')
+  console.log('   2. Add track IDs to movies using SQL or Supabase dashboard')
+  console.log('   3. Test audio hints in your app')
+  
+  if (audioSuggestionsCount > 0) {
+    console.log('')
+    console.log('🎵 Quick SQL to add suggested audio tracks:')
+    console.log(`
+UPDATE daily_movies SET deezer_track_id = 
+  CASE 
+    WHEN title = 'Game of Thrones' THEN 916424
+    WHEN title = 'The Dark Knight' OR title = 'The Dark Knight Rises' THEN 916426
+    WHEN title = 'Harry Potter and the Philosopher\\'s Stone' THEN 5104
+    WHEN title = 'Jurassic Park' THEN 5105
+    WHEN title = 'Whiplash' THEN 95428
+    WHEN title = 'Iron Man' THEN 72981
+    WHEN title = 'Men in Black' THEN 72982
+    WHEN title = 'Breaking Bad' THEN 6337
+    WHEN title = 'Joker' THEN 11520
+    WHEN title = 'Titanic' THEN 72983
+    ELSE deezer_track_id
+  END
+WHERE title IN ('Game of Thrones', 'The Dark Knight', 'The Dark Knight Rises', 'Harry Potter and the Philosopher\\'s Stone', 'Jurassic Park', 'Whiplash', 'Iron Man', 'Men in Black', 'Breaking Bad', 'Joker', 'Titanic');
+    `)
+  }
 }
 
 // Run the seed function

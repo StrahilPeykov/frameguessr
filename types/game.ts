@@ -25,6 +25,7 @@ export interface DailyChallenge {
   year?: number
   imageUrl: string
   hints: HintData
+  deezerTrackId?: number | null // Simple track ID
 }
 
 export interface HintData {
@@ -57,4 +58,23 @@ export interface SearchResult {
   year?: number
   mediaType: 'movie' | 'tv'
   posterUrl?: string
+  overview?: string
+  popularity?: number
+  backdropUrl?: string
+}
+
+// Simple audio data from API
+export interface AudioHintData {
+  track: {
+    id: number
+    title: string
+    artist: string
+    previewUrl: string
+    duration?: number
+  }
+  durations: {
+    level1: number // 5 seconds
+    level2: number // 15 seconds
+    level3: number // 30 seconds
+  }
 }

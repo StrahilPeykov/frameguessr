@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { GameState, DailyChallenge, SearchResult } from '@/types/game'
-import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Eye, EyeOff, Calendar, Clock, Trophy, Info, Film, Tv, Star, ChevronLeft, ChevronRight, Menu } from 'lucide-react'
+import { GameState, DailyChallenge, SearchResult, AudioHintData } from '@/types/game'
+import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, ChevronLeft, ChevronRight } from 'lucide-react'
 import ShareModal from './ShareModal'
 import StatsModal from './StatsModal'
 import SearchBox from './SearchBox'
 import DatePicker from './DatePicker'
+import AudioHint from './AudioHint'
 
 interface GameBoardProps {
   initialDate?: string
@@ -29,7 +30,9 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
   })
 
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null)
+  const [audioHints, setAudioHints] = useState<AudioHintData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [audioLoading, setAudioLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
   const [showStatsModal, setShowStatsModal] = useState(false)
@@ -68,6 +71,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     fetchDailyChallenge(selectedDate)
     setImageLoaded(false)
     setImageError(false)
+    setAudioHints(null)
   }, [selectedDate])
 
   // Save game state
@@ -79,6 +83,34 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       )
     }
   }, [gameState, selectedDate])
+
+  // Fetch audio hints using Deezer track ID
+  const fetchAudioHints = async (trackId: number) => {
+    try {
+      setAudioLoading(true)
+      console.log(`[GameBoard] Fetching audio for track ID: ${trackId}`)
+      
+      const response = await fetch(`/api/audio/${trackId}`)
+      
+      console.log(`[GameBoard] Audio API response status: ${response.status}`)
+      
+      if (response.ok) {
+        const audioData = await response.json()
+        setAudioHints(audioData)
+        console.log('[GameBoard] Audio hints loaded:', audioData.track.title)
+      } else {
+        const errorData = await response.text()
+        console.error(`[GameBoard] Audio API error ${response.status}:`, errorData)
+        console.log(`[GameBoard] No audio hints available for track ID: ${trackId}`)
+        setAudioHints(null)
+      }
+    } catch (error) {
+      console.error('[GameBoard] Failed to fetch audio hints:', error)
+      setAudioHints(null)
+    } finally {
+      setAudioLoading(false)
+    }
+  }
 
   const fetchDailyChallenge = async (date: string) => {
     try {
@@ -95,6 +127,13 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       
       const data = await response.json()
       setDailyChallenge(data)
+      
+      // Fetch audio hints if Deezer track ID is available
+      if (data.deezerTrackId) {
+        fetchAudioHints(data.deezerTrackId)
+      } else {
+        setAudioHints(null)
+      }
       
       if (data.imageUrl) {
         const img = new Image()
@@ -369,6 +408,33 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
               )}
             </div>
           </div>
+
+          {/* Audio Hint Section */}
+          {audioHints && (
+            <div className="mb-4">
+              <AudioHint
+                previewUrl={audioHints.track.previewUrl}
+                duration={audioHints.durations[`level${gameState.currentHintLevel}` as keyof typeof audioHints.durations]}
+                trackTitle={audioHints.track.title}
+                artistName={audioHints.track.artist}
+                hintLevel={gameState.currentHintLevel}
+              />
+            </div>
+          )}
+
+          {/* Loading state for audio */}
+          {audioLoading && (
+            <div className="mb-4 bg-gray-900/90 backdrop-blur-sm rounded-xl p-4 text-white">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gray-700 rounded-lg animate-pulse" />
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-700 rounded mb-2 animate-pulse" />
+                  <div className="h-3 bg-gray-700 rounded w-2/3 animate-pulse" />
+                </div>
+                <div className="w-10 h-10 bg-gray-700 rounded-full animate-pulse" />
+              </div>
+            </div>
+          )}
 
           {/* Game Controls */}
           {!gameState.completed ? (
