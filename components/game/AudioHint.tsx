@@ -1,20 +1,24 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { Play, Pause, Volume2, VolumeX, Music2, AlertCircle, Radio, Headphones } from 'lucide-react'
 
 interface AudioHintProps {
   previewUrl: string
-  duration: number // How long to play (5, 10, or 15 seconds)
+  duration: number // 5, 10, or 15 seconds based on hint level (or 15 when completed)
   trackTitle: string
   artistName: string
   hintLevel: number
-  gameCompleted?: boolean // Add this to show track info only when game is done
+  gameCompleted?: boolean
   onPlayStart?: () => void
   onPlayEnd?: () => void
 }
 
-export default function AudioHint({
+interface AudioHintRef {
+  stopAudio: () => void
+}
+
+const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
   previewUrl,
   duration,
   trackTitle,
@@ -23,7 +27,7 @@ export default function AudioHint({
   gameCompleted = false,
   onPlayStart,
   onPlayEnd
-}: AudioHintProps) {
+}, ref) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
@@ -36,10 +40,10 @@ export default function AudioHint({
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number>(8) // Start from 8 seconds by default
 
-  // Stop audio when hint level or duration changes (e.g., when user skips)
-  useEffect(() => {
-    handleStop()
-  }, [hintLevel, duration])
+  // Expose stop function to parent
+  useImperativeHandle(ref, () => ({
+    stopAudio: handleStop
+  }))
 
   useEffect(() => {
     const audio = audioRef.current
@@ -89,7 +93,7 @@ export default function AudioHint({
         intervalRef.current = null
       }
     }
-  }, [previewUrl, volume])
+  }, [previewUrl, volume, duration, hintLevel])
 
   // Clean stop function - properly resets everything
   const handleStop = () => {
@@ -217,8 +221,6 @@ export default function AudioHint({
               )}
             </div>
           </div>
-          
-
         </div>
 
         {/* Audio Controls */}
@@ -313,4 +315,8 @@ export default function AudioHint({
       )}
     </div>
   )
-}
+})
+
+AudioHint.displayName = 'AudioHint'
+
+export default AudioHint

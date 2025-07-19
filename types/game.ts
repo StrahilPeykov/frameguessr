@@ -25,7 +25,18 @@ export interface DailyChallenge {
   year?: number
   imageUrl: string
   hints: HintData
-  deezerTrackId?: number | null // Simple track ID
+  details: MovieDetails // Full details shown at completion
+  deezerTrackId?: number | null
+}
+
+export interface MovieDetails {
+  director?: string
+  actors?: string[]
+  tagline?: string
+  genre?: string
+  overview?: string
+  runtime?: number
+  rating?: string
 }
 
 export interface HintData {
@@ -34,20 +45,19 @@ export interface HintData {
     data: string // Image URL - blur applied via CSS
   }
   level2: {
-    type: 'mixed'
+    type: 'tagline'
     data: {
-      image: string // Same image URL - less blur applied via CSS
-      year?: number
-      genre?: string
+      image: string // Same image URL - less blur
+      tagline?: string
     }
   }
   level3: {
-    type: 'full'
+    type: 'metadata'
     data: {
-      image: string // Same image URL - no blur applied
-      actors?: string[]
-      tagline?: string
-      director?: string
+      image: string // Same image URL - no blur
+      tagline?: string // Keep tagline visible
+      year?: number
+      genre?: string
     }
   }
 }
@@ -74,7 +84,7 @@ export interface AudioHintData {
   }
   durations: {
     level1: number // 5 seconds
-    level2: number // 15 seconds
-    level3: number // 30 seconds
+    level2: number // 10 seconds  
+    level3: number // 15 seconds
   }
 }

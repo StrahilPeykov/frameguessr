@@ -50,10 +50,53 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    // Create hints with default structure
-    let processedHints = dailyMovie.hints || createDefaultHints(dailyMovie)
+    // Generate hints dynamically (no more database hints!)
+    // Extract genre from old hints structure if exists, otherwise use fallback
+    const genre = dailyMovie.hints?.level2?.data?.genre || 
+                  dailyMovie.hints?.level3?.data?.genre || 
+                  dailyMovie.genre || 
+                  'Unknown'
     
-    // Return the daily challenge with Deezer track ID
+    const tagline = dailyMovie.hints?.level2?.data?.tagline || 
+                    dailyMovie.hints?.level3?.data?.tagline || 
+                    dailyMovie.tagline || 
+                    'A cinematic experience awaits'
+
+    const dynamicHints = {
+      level1: {
+        type: 'image',
+        data: dailyMovie.image_url
+      },
+      level2: {
+        type: 'tagline',
+        data: {
+          image: dailyMovie.image_url,
+          tagline: tagline
+        }
+      },
+      level3: {
+        type: 'metadata',
+        data: {
+          image: dailyMovie.image_url,
+          tagline: tagline, // Keep tagline visible
+          year: dailyMovie.year,
+          genre: genre
+        }
+      }
+    }
+
+    // Create movie details object for completion screen
+    const movieDetails = {
+      director: dailyMovie.hints?.level3?.data?.director || dailyMovie.director || '',
+      actors: dailyMovie.hints?.level3?.data?.actors || dailyMovie.actors || [],
+      tagline: tagline,
+      genre: genre,
+      overview: dailyMovie.overview || '',
+      runtime: dailyMovie.runtime || null,
+      rating: dailyMovie.rating || null
+    }
+    
+    // Return the daily challenge with dynamically generated hints
     return NextResponse.json({
       date: dailyMovie.date,
       movieId: dailyMovie.tmdb_id,
@@ -61,8 +104,8 @@ export async function GET(request: NextRequest) {
       title: dailyMovie.title,
       year: dailyMovie.year,
       imageUrl: dailyMovie.image_url,
-      hints: processedHints,
-      // Include Deezer track ID if available
+      hints: dynamicHints,
+      details: movieDetails,
       deezerTrackId: dailyMovie.deezer_track_id || null,
     })
 
@@ -75,29 +118,5 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     )
-  }
-}
-
-// Helper function to create default hints if missing
-function createDefaultHints(movie: any) {
-  return {
-    level1: { type: 'image', data: movie.image_url },
-    level2: { 
-      type: 'mixed', 
-      data: {
-        image: movie.image_url,
-        year: movie.year,
-        genre: 'Unknown'
-      }
-    },
-    level3: {
-      type: 'full',
-      data: {
-        image: movie.image_url,
-        actors: [],
-        tagline: '',
-        director: ''
-      }
-    }
   }
 }

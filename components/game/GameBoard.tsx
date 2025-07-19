@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { GameState, DailyChallenge, SearchResult, AudioHintData } from '@/types/game'
-import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
+import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, ChevronLeft, ChevronRight, Sparkles, User, Play } from 'lucide-react'
 import ShareModal from './ShareModal'
 import StatsModal from './StatsModal'
 import SearchBox from './SearchBox'
@@ -18,6 +18,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
   const router = useRouter()
   const today = new Date().toISOString().split('T')[0]
   const selectedDate = initialDate || today
+  const audioRef = useRef<{ stopAudio: () => void } | null>(null)
   
   const [gameState, setGameState] = useState<GameState>({
     currentDate: selectedDate,
@@ -84,6 +85,13 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     }
   }, [gameState, selectedDate])
 
+  // Stop audio when game completes
+  useEffect(() => {
+    if (gameState.completed && audioRef.current) {
+      audioRef.current.stopAudio()
+    }
+  }, [gameState.completed])
+
   // Fetch audio hints using Deezer track ID
   const fetchAudioHints = async (trackId: number) => {
     try {
@@ -96,12 +104,12 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       
       if (response.ok) {
         const audioData = await response.json()
+        // Keep the original format with durations
         setAudioHints(audioData)
         console.log('[GameBoard] Audio hints loaded:', audioData.track.title)
       } else {
         const errorData = await response.text()
         console.error(`[GameBoard] Audio API error ${response.status}:`, errorData)
-        console.log(`[GameBoard] No audio hints available for track ID: ${trackId}`)
         setAudioHints(null)
       }
     } catch (error) {
@@ -204,6 +212,11 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
   const handleSkip = () => {
     if (gameState.completed || gameState.currentHintLevel >= 3) {
       return
+    }
+
+    // Stop audio when skipping
+    if (audioRef.current) {
+      audioRef.current.stopAudio()
     }
 
     const newAttempts = gameState.attempts + 1
@@ -398,32 +411,33 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
               {/* Cinema Overlay with Hint Information */}
               {gameState.currentHintLevel >= 2 && dailyChallenge && (
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
-                  <div className="flex flex-wrap gap-2 text-white text-sm">
-                    {dailyChallenge.hints.level2.data.year && (
-                      <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded backdrop-blur-sm">
-                        <Calendar className="w-3 h-3" />
-                        <span>{dailyChallenge.hints.level2.data.year}</span>
-                      </div>
-                    )}
-                    {dailyChallenge.hints.level2.data.genre && (
-                      <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded backdrop-blur-sm">
-                        <Film className="w-3 h-3" />
-                        <span>{dailyChallenge.hints.level2.data.genre}</span>
+                  <div className="text-white text-sm space-y-2">
+                    {gameState.currentHintLevel === 2 && dailyChallenge.hints.level2.data.tagline && (
+                      <div className="bg-black/50 px-3 py-2 rounded backdrop-blur-sm">
+                        <p className="italic">"{dailyChallenge.hints.level2.data.tagline}"</p>
                       </div>
                     )}
                     {gameState.currentHintLevel >= 3 && (
                       <>
-                        {dailyChallenge.hints.level3.data.director && (
-                          <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded backdrop-blur-sm">
-                            <Star className="w-3 h-3" />
-                            <span className="text-xs">Dir: {dailyChallenge.hints.level3.data.director}</span>
+                        {dailyChallenge.hints.level3.data.tagline && (
+                          <div className="bg-black/50 px-3 py-2 rounded backdrop-blur-sm">
+                            <p className="italic">"{dailyChallenge.hints.level3.data.tagline}"</p>
                           </div>
                         )}
-                        {dailyChallenge.hints.level3.data.actors && dailyChallenge.hints.level3.data.actors.length > 0 && (
-                          <div className="bg-black/50 px-2 py-1 rounded backdrop-blur-sm text-xs">
-                            <span>Cast: {dailyChallenge.hints.level3.data.actors.slice(0, 2).join(', ')}</span>
-                          </div>
-                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {dailyChallenge.hints.level3.data.year && (
+                            <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded backdrop-blur-sm">
+                              <Calendar className="w-3 h-3" />
+                              <span>{dailyChallenge.hints.level3.data.year}</span>
+                            </div>
+                          )}
+                          {dailyChallenge.hints.level3.data.genre && (
+                            <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded backdrop-blur-sm">
+                              <Film className="w-3 h-3" />
+                              <span>{dailyChallenge.hints.level3.data.genre}</span>
+                            </div>
+                          )}
+                        </div>
                       </>
                     )}
                   </div>
@@ -432,12 +446,13 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             </div>
           </div>
 
-          {/* Audio Section with Theater Styling */}
+          {/* Audio Section with Theater Styling - Always available if track exists */}
           {audioHints && (
             <div className="mb-6">
               <AudioHint
+                ref={audioRef}
                 previewUrl={audioHints.track.previewUrl}
-                duration={audioHints.durations[`level${gameState.currentHintLevel}` as keyof typeof audioHints.durations]}
+                duration={gameState.completed ? 15 : audioHints.durations[`level${gameState.currentHintLevel}` as keyof typeof audioHints.durations]}
                 trackTitle={audioHints.track.title}
                 artistName={audioHints.track.artist}
                 hintLevel={gameState.currentHintLevel}
@@ -508,6 +523,63 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                     </p>
                   </div>
                 </>
+              )}
+
+              {/* Full Movie Details - Always shown when completed */}
+              {dailyChallenge?.details && (
+                <div className="mt-8 pt-6 border-t border-stone-200 dark:border-stone-700">
+                  <div className="text-left space-y-4">
+                    {dailyChallenge.details.tagline && (
+                      <div>
+                        <h4 className="font-semibold text-stone-700 dark:text-stone-300 mb-1">Tagline</h4>
+                        <p className="text-stone-600 dark:text-stone-400 italic">"{dailyChallenge.details.tagline}"</p>
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {dailyChallenge.details.director && (
+                        <div>
+                          <h4 className="font-semibold text-stone-700 dark:text-stone-300 mb-1 flex items-center gap-1">
+                            <Star className="w-4 h-4" />
+                            Director
+                          </h4>
+                          <p className="text-stone-600 dark:text-stone-400">{dailyChallenge.details.director}</p>
+                        </div>
+                      )}
+                      
+                      {dailyChallenge.details.genre && (
+                        <div>
+                          <h4 className="font-semibold text-stone-700 dark:text-stone-300 mb-1 flex items-center gap-1">
+                            <Film className="w-4 h-4" />
+                            Genre
+                          </h4>
+                          <p className="text-stone-600 dark:text-stone-400">{dailyChallenge.details.genre}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {dailyChallenge.details.actors && dailyChallenge.details.actors.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-stone-700 dark:text-stone-300 mb-1 flex items-center gap-1">
+                          <User className="w-4 h-4" />
+                          Cast
+                        </h4>
+                        <p className="text-stone-600 dark:text-stone-400">
+                          {dailyChallenge.details.actors.slice(0, 3).join(', ')}
+                        </p>
+                      </div>
+                    )}
+
+                    {dailyChallenge.details.overview && (
+                      <div>
+                        <h4 className="font-semibold text-stone-700 dark:text-stone-300 mb-1">Overview</h4>
+                        <p className="text-stone-600 dark:text-stone-400 text-sm leading-relaxed">
+                          {dailyChallenge.details.overview}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
               
               {selectedDate === today && (
