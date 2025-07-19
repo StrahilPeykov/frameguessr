@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'FrameGuessr - Classic Cinema Challenge',
     description: 'Can you identify tonight\'s feature film? Test your cinema knowledge with our daily movie guessing game.',
-    url: 'https://frameguessr.vercel.app',
+    url: 'https://frameguessr.strahil.dev',
     siteName: 'FrameGuessr',
     images: [
       {
@@ -166,7 +166,7 @@ export default function RootLayout({
               "@type": "WebApplication",
               "name": "FrameGuessr",
               "description": "Daily movie and TV show guessing game from film stills",
-              "url": "https://frameguessr.vercel.app",
+              "url": "https://frameguessr.strahil.dev",
               "applicationCategory": "GameApplication",
               "operatingSystem": "All",
               "offers": {

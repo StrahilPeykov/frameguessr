@@ -33,7 +33,7 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
     }
 
     const isToday = dateStr === format(new Date(), 'yyyy-MM-dd')
-    const url = `frameguessr.vercel.app/day/${dateStr}`
+    const url = `frameguessr.strahil.dev/day/${dateStr}`
 
     return `🎬 FrameGuessr ${dateStr}
 ${gameState.won ? `🏆 Solved in ${attempts}/${maxAttempts} guesses!` : `🎭 Final curtain ${attempts}/${maxAttempts}`}
@@ -68,7 +68,7 @@ ${isToday ? '🎥 Tonight\'s feature:' : '🎞️ Catch this classic:'} ${url}
         await navigator.share({
           title: 'FrameGuessr - Cinema Challenge',
           text: shareText,
-          url: `https://frameguessr.vercel.app/day/${gameState.currentDate}`,
+          url: `https://frameguessr.strahil.dev/day/${gameState.currentDate}`,
         })
       } catch (err) {
         console.error('Error sharing:', err)
