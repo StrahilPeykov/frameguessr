@@ -91,7 +91,7 @@ const SEED_MOVIES: SeedMovie[] = [
   { tmdb_id: 808,    media_type: 'movie', title: 'Shrek', year: 2001 },
   { tmdb_id: 578,    media_type: 'movie', title: 'Jaws', year: 1975 },
   { tmdb_id: 258475, media_type: 'movie', title: 'A Pigeon Sat on a Branch Reflecting on Existence', year: 2014 },
-  { tmdb_id: 673,    media_type: 'movie', title: 'Harry Potter and the Prisoner of Azkaban', year: 2003 },
+  { tmdb_id: 673,    media_type: 'movie', title: 'Harry Potter and the Prisoner of Azkaban', year: 2004 },
   { tmdb_id: 22881,  media_type: 'movie', title: 'The Blind Side', year: 2009 },
   { tmdb_id: 15,     media_type: 'movie', title: 'Citizen Kane', year: 1941 },
   { tmdb_id: 11036,  media_type: 'movie', title: 'The Notebook', year: 2004 },
