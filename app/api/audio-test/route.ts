@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
-    const trackId = searchParams.get('trackId') || '3116451' // Default to Inception theme
+    const trackId = searchParams.get('trackId') || '3116451' 
     
     console.log(`[Audio Test] Testing Deezer API with track ID: ${trackId}`)
     
