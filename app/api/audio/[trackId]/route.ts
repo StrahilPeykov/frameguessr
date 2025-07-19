@@ -4,7 +4,7 @@ import { deezer } from '@/lib/deezer'
 // Next.js 15 App Router dynamic route handler
 export async function GET(
   request: NextRequest,
-  { params }: { params: { trackId: string } },
+  { params }: { params: { trackId: string } }
 ) {
   try {
     console.log('[Audio API] Full request URL:', request.url)
