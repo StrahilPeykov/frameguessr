@@ -1,16 +1,11 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { deezer } from '@/lib/deezer'
 
 // Next.js 15 App Router dynamic route handler
-type TrackContext = {
-  params: { trackId: string }
-}
 export async function GET(
   request: NextRequest,
-  context: TrackContext,
+  { params }: { params: { trackId: string } },
 ) {
-  const { params } = context
   try {
     console.log('[Audio API] Full request URL:', request.url)
     console.log('[Audio API] Raw params:', params)
