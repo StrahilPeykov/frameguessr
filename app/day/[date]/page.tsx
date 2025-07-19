@@ -1,5 +1,4 @@
 import { notFound, redirect } from 'next/navigation'
-import { format, isValid, isBefore, isAfter } from 'date-fns'
 import GameBoard from '@/components/game/GameBoard'
 
 interface PageProps {
@@ -17,40 +16,35 @@ export default async function DayPage({ params }: PageProps) {
   }
   
   // Parse date
-  const dateObj = new Date(date + 'T00:00:00.000Z') // Force UTC to avoid timezone issues
-  if (!isValid(dateObj) || date !== format(dateObj, 'yyyy-MM-dd')) {
+  const dateObj = new Date(date + 'T00:00:00.000Z')
+  
+  // Manual date validation
+  const [year, month, day] = date.split('-').map(Number)
+  const isValidDate = !isNaN(dateObj.getTime()) && 
+    dateObj.getFullYear() === year &&
+    dateObj.getMonth() === month - 1 &&
+    dateObj.getDate() === day
+  
+  if (!isValidDate) {
     notFound()
   }
   
   // Get today's date in the same format
   const today = new Date()
-  const todayStr = format(today, 'yyyy-MM-dd')
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
   
-  // Check if date is in the future - redirect directly to today's URL
+  // Check if date is in the future
   if (date > todayStr) {
     redirect(`/day/${todayStr}`)
   }
   
-  // Check if date is too far in the past (before game started)
+  // Check if date is too far in the past
   const gameStartDate = new Date('2025-07-01T00:00:00.000Z')
   if (dateObj < gameStartDate) {
     notFound()
   }
   
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 transition-colors duration-300">
-      <div className="container mx-auto py-4 sm:py-6 md:py-8">
-        <GameBoard initialDate={date} />
-      </div>
-      
-      {/* Background decoration */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 dark:bg-purple-900 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-20 animate-blob" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 dark:b-blue-900 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-20 animate-blob animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-300 dark:bg-pink-900 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
-      </div>
-    </main>
-  )
+  return <GameBoard initialDate={date} />
 }
 
 // Generate metadata for each day
@@ -65,15 +59,20 @@ export async function generateMetadata({ params }: PageProps) {
   }
   
   const dateObj = new Date(date + 'T00:00:00.000Z')
+  const isValidDate = !isNaN(dateObj.getTime())
   
-  if (!isValid(dateObj)) {
+  if (!isValidDate) {
     return {
       title: 'Day Not Found - FrameGuessr'
     }
   }
   
-  const formattedDate = format(dateObj, 'MMMM d, yyyy')
-  const todayStr = format(new Date(), 'yyyy-MM-dd')
+  // Format date for display
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  const formattedDate = `${months[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`
+  
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
   const isToday = date === todayStr
   
   return {

@@ -4,33 +4,58 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
-import { format, subDays, addDays, isAfter, isBefore, startOfDay } from 'date-fns'
 
 interface DatePickerProps {
   currentDate: string
   onDateSelect: (date: string) => void
   minDate?: string
+  compact?: boolean
+  mobile?: boolean
 }
 
 export default function DatePicker({ 
   currentDate, 
   onDateSelect, 
-  minDate = '2025-07-01' 
+  minDate = '2025-07-01',
+  compact = false,
+  mobile = false
 }: DatePickerProps) {
   const [showPicker, setShowPicker] = useState(false)
   const router = useRouter()
   
-  const today = format(new Date(), 'yyyy-MM-dd')
+  const today = new Date().toISOString().split('T')[0]
   const current = new Date(currentDate)
   const min = new Date(minDate)
   
-  const canGoBack = isAfter(current, min)
-  const canGoForward = isBefore(current, startOfDay(new Date()))
+  // Helper to format date
+  const formatDate = (date: Date, format: string): string => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const fullMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    
+    if (format === 'MMM d') {
+      return `${months[date.getMonth()]} ${date.getDate()}`
+    } else if (format === 'MMM d, yyyy') {
+      return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
+    } else if (format === 'MMMM d, yyyy') {
+      return `${fullMonths[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
+    }
+    return date.toLocaleDateString()
+  }
   
-  const prevDay = canGoBack ? format(subDays(current, 1), 'yyyy-MM-dd') : null
-  const nextDay = canGoForward ? format(addDays(current, 1), 'yyyy-MM-dd') : null
+  // Helper to add/subtract days
+  const addDays = (date: Date, days: number): Date => {
+    const result = new Date(date)
+    result.setDate(result.getDate() + days)
+    return result
+  }
   
-  // Prefetch adjacent days for faster navigation
+  const canGoBack = current > min
+  const canGoForward = currentDate < today
+  
+  const prevDay = canGoBack ? addDays(current, -1).toISOString().split('T')[0] : null
+  const nextDay = canGoForward ? addDays(current, 1).toISOString().split('T')[0] : null
+  
+  // Prefetch adjacent days
   useEffect(() => {
     if (prevDay) {
       router.prefetch(`/day/${prevDay}`)
@@ -51,10 +76,123 @@ export default function DatePicker({
   }
   
   const isToday = currentDate === today
-  
+
+  // Mobile compact version
+  if (mobile) {
+    return (
+      <div className="flex items-center gap-2">
+        <Link
+          href={prevDay ? `/day/${prevDay}` : '#'}
+          className={`p-1.5 rounded-lg ${
+            prevDay 
+              ? 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800' 
+              : 'text-gray-300 dark:text-gray-600 pointer-events-none'
+          }`}
+          aria-label="Previous day"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </Link>
+        
+        <button
+          onClick={() => setShowPicker(!showPicker)}
+          className="text-sm font-medium px-2 py-1"
+        >
+          {isToday ? 'Today' : formatDate(current, 'MMM d')}
+        </button>
+        
+        <Link
+          href={nextDay ? `/day/${nextDay}` : '#'}
+          className={`p-1.5 rounded-lg ${
+            nextDay
+              ? 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              : 'text-gray-300 dark:text-gray-600 pointer-events-none'
+          }`}
+          aria-label="Next day"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </Link>
+        
+        {showPicker && (
+          <div className="absolute top-full mt-1 right-4 z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-3">
+              <input
+                type="date"
+                value={currentDate}
+                min={minDate}
+                max={today}
+                onChange={handleDateInput}
+                className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Compact version for desktop nav
+  if (compact) {
+    return (
+      <div className="flex items-center">
+        {prevDay ? (
+          <Link
+            href={`/day/${prevDay}`}
+            className="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+            aria-label="Previous day"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Link>
+        ) : (
+          <div className="p-1.5 text-gray-300 dark:text-gray-600">
+            <ChevronLeft className="w-4 h-4" />
+          </div>
+        )}
+        
+        <div className="relative">
+          <button
+            onClick={() => setShowPicker(!showPicker)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            <Calendar className="w-4 h-4" />
+            <span>{isToday ? 'Today' : formatDate(current, 'MMM d, yyyy')}</span>
+          </button>
+          
+          {showPicker && (
+            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4">
+                <input
+                  type="date"
+                  value={currentDate}
+                  min={minDate}
+                  max={today}
+                  onChange={handleDateInput}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {nextDay ? (
+          <Link
+            href={`/day/${nextDay}`}
+            className="p-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+            aria-label="Next day"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        ) : (
+          <div className="p-1.5 text-gray-300 dark:text-gray-600">
+            <ChevronRight className="w-4 h-4" />
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Original full version
   return (
     <div className="flex items-center justify-center gap-4 mb-6">
-      {/* Previous Day Button with Link prefetching */}
       {prevDay ? (
         <Link
           href={`/day/${prevDay}`}
@@ -69,7 +207,6 @@ export default function DatePicker({
         </div>
       )}
       
-      {/* Date Display */}
       <div className="relative">
         <button
           onClick={() => setShowPicker(!showPicker)}
@@ -77,7 +214,7 @@ export default function DatePicker({
         >
           <Calendar className="w-4 h-4" />
           <span className="font-medium">
-            {isToday ? 'Today' : format(current, 'MMM d, yyyy')}
+            {isToday ? 'Today' : formatDate(current, 'MMM d, yyyy')}
           </span>
         </button>
         
@@ -97,7 +234,6 @@ export default function DatePicker({
         )}
       </div>
       
-      {/* Next Day Button with Link prefetching */}
       {nextDay ? (
         <Link
           href={`/day/${nextDay}`}

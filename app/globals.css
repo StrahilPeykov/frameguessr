@@ -25,6 +25,37 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Enhanced blur effects for movie stills */
+.blur-sm {
+  filter: blur(4px);
+}
+
+.blur-md {
+  filter: blur(12px);
+}
+
+.blur-xl {
+  filter: blur(25px);
+}
+
+/* Smooth brightness adjustments */
+.brightness-75 {
+  filter: brightness(0.75);
+}
+
+.brightness-90 {
+  filter: brightness(0.9);
+}
+
+/* Combined filters */
+.blur-xl.brightness-75 {
+  filter: blur(25px) brightness(0.75);
+}
+
+.blur-md.brightness-90 {
+  filter: blur(12px) brightness(0.9);
+}
+
 /* Enhanced skeleton animation */
 .skeleton {
   animation: skeleton-loading 1.5s ease-in-out infinite alternate;
@@ -93,6 +124,7 @@ body {
 
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
@@ -148,6 +180,14 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+}
+
 /* Enhanced navigation backdrop blur */
 .nav-blur {
   backdrop-filter: blur(20px) saturate(180%);
@@ -160,6 +200,7 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-fill-color: transparent;
 }
 
 .gradient-purple-blue {
@@ -167,6 +208,7 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-fill-color: transparent;
 }
 
 /* Enhanced pulse animation */
@@ -221,6 +263,22 @@ body {
   animation: error-shake 0.5s ease-in-out;
 }
 
+/* Trophy bounce animation */
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
 /* Enhanced focus indicators */
 .focus-ring {
   transition: all 0.2s ease-in-out;
@@ -271,19 +329,51 @@ body {
   }
 }
 
-/* Enhanced navigation scroll effects */
+/* Compact layout specific styles */
+.compact-nav {
+  height: 56px;
+}
+
+/* Status dots enhanced animation */
+.status-dot {
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Shadow effects for status dots */
+.shadow-green-500\/50 {
+  box-shadow: 0 4px 14px 0 rgba(34, 197, 94, 0.5);
+}
+
+.shadow-red-500\/50 {
+  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.5);
+}
+
+/* Hint overlay gradient */
+.bg-gradient-to-t {
+  background-image: linear-gradient(to top, var(--tw-gradient-stops));
+}
+
+.from-black\/80 {
+  --tw-gradient-from: rgba(0, 0, 0, 0.8);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 0, 0, 0));
+}
+
+.via-black\/50 {
+  --tw-gradient-via: rgba(0, 0, 0, 0.5);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to, rgba(0, 0, 0, 0));
+}
+
+.to-transparent {
+  --tw-gradient-to: transparent;
+}
+
+/* Navigation scroll effects */
 .nav-scroll-effect {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Dark mode specific enhancements */
 @media (prefers-color-scheme: dark) {
-  .glass {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  }
-  
   .focus-ring:focus-visible {
     outline: 2px solid #60A5FA;
     box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
@@ -301,17 +391,6 @@ body {
     padding-left: max(1rem, env(safe-area-inset-left));
     padding-right: max(1rem, env(safe-area-inset-right));
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  }
-  
-  /* Optimize text sizes for mobile */
-  .text-4xl {
-    font-size: 2rem;
-    line-height: 2.25rem;
-  }
-  
-  .text-5xl {
-    font-size: 2.5rem;
-    line-height: 2.75rem;
   }
   
   /* Better touch targets */
@@ -351,12 +430,19 @@ body {
     background: none !important;
     -webkit-text-fill-color: currentColor !important;
     color: currentColor !important;
+    text-fill-color: currentColor !important;
   }
   
   .glass,
   .glass-dark {
     background: rgba(255, 255, 255, 0.95) !important;
     border: 2px solid currentColor !important;
+  }
+  
+  .blur-xl,
+  .blur-md,
+  .blur-sm {
+    filter: blur(0) contrast(2) !important;
   }
 }
 
@@ -367,6 +453,7 @@ body {
   .animate-pulse-glow,
   .animate-success-bounce,
   .animate-error-shake,
+  .animate-bounce,
   .touch-feedback,
   .btn-hover,
   .animate-blob {
@@ -395,14 +482,14 @@ body {
   .glass,
   .glass-dark,
   .nav-blur {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
   }
   
   @media (prefers-color-scheme: dark) {
     .glass,
     .glass-dark,
     .nav-blur {
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.9);
     }
   }
 }
@@ -412,4 +499,158 @@ body {
   .nav-blur {
     -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
+  
+  /* Fix for iOS Safari backdrop filter performance */
+  .glass,
+  .glass-dark {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+}
+
+/* Improved search focus states */
+.search-focus {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-focus:focus-within {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Guess card animations */
+.guess-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.guess-card:hover {
+  transform: translateX(2px);
+}
+
+/* Custom scrollbar for guess list */
+.guess-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+}
+
+.guess-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.guess-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.guess-list::-webkit-scrollbar-thumb {
+  background-color: rgba(139, 92, 246, 0.3);
+  border-radius: 2px;
+}
+
+/* Rotate animation for chevron */
+.rotate-90 {
+  transform: rotate(90deg);
+}
+
+/* Centralized layout optimizations */
+.centralized-container {
+  max-width: 48rem; /* 768px */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Smooth height transitions for collapsible sections */
+.collapsible-section {
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+/* Better spacing for compact layout */
+.compact-spacing {
+  --spacing-unit: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .compact-spacing {
+    --spacing-unit: 0.75rem;
+  }
+}
+
+/* Enhanced modal animations */
+.modal-enter {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Improved loading spinner */
+.loading-spinner {
+  border: 3px solid rgba(139, 92, 246, 0.1);
+  border-radius: 50%;
+  border-top: 3px solid #8B5CF6;
+  width: 48px;
+  height: 48px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Better aspect ratio support */
+.aspect-video {
+  aspect-ratio: 16 / 9;
+}
+
+@supports not (aspect-ratio: 16 / 9) {
+  .aspect-video {
+    position: relative;
+    padding-bottom: 56.25%;
+  }
+  
+  .aspect-video > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* Final optimizations */
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Prevent layout shift from scrollbars */
+body {
+  overflow-y: scroll;
+}
+
+/* Optimize font rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ensure images don't cause layout shift */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
