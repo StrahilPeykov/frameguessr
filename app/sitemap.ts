@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { supabase } from '@/lib/supabase'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://frameguessr.strahil.dev'
+  const baseUrl = 'https://frameguessr.com'
   
   // Get all available dates from the database
   const { data: dates } = await supabase

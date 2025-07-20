@@ -6,4 +6,4 @@ Allow: /
 Disallow: /api/
 
 # Sitemap
-Sitemap: https://frameguessr.strahil.dev/sitemap.xml
+Sitemap: https://frameguessr.com/sitemap.xml
