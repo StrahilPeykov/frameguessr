@@ -5,7 +5,7 @@ import { Play, Pause, Volume2, VolumeX, Music2, AlertCircle, Disc3, MoreHorizont
 
 interface AudioHintProps {
   previewUrl: string
-  duration: number // 5, 10, or 15 seconds based on hint level (or 15 when completed)
+  duration: number // seconds based on hint level
   trackTitle: string
   artistName: string
   hintLevel: number

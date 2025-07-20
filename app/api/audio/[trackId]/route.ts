@@ -55,9 +55,9 @@ export async function GET(
         duration: track.duration
       },
       durations: {
-        level1: 5,   // 5 seconds for first hint
-        level2: 10,  // 10 seconds for second hint
-        level3: 15   // 15 seconds for third hint
+        level1: 3,   // seconds for first hint
+        level2: 5,  // seconds for second hint
+        level3: 15   // seconds for third hint
       }
     }
 

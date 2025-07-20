@@ -84,8 +84,8 @@ export interface AudioHintData {
     duration?: number
   }
   durations: {
-    level1: number // 5 seconds
-    level2: number // 10 seconds  
-    level3: number // 15 seconds
+    level1: number
+    level2: number  
+    level3: number
   }
 }
