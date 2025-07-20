@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Search, Loader2, Film, Tv, Star, Calendar, X, Sparkles } from 'lucide-react'
+import { Search, Loader2, Film, Tv, Calendar, X } from 'lucide-react'
 import { SearchResult } from '@/types/game'
 
 interface SearchBoxProps {
@@ -28,6 +28,7 @@ export default function SearchBox({
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [error, setError] = useState<string | null>(null)
   const [hasFocus, setHasFocus] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -81,7 +82,13 @@ export default function SearchBox({
       }
       
       const data = await response.json()
-      setResults(data)
+      
+      // Filter out already selected items
+      const filteredResults = data.filter((item: EnhancedSearchResult) => 
+        !selectedIds.has(`${item.mediaType}-${item.id}`)
+      )
+      
+      setResults(filteredResults)
       setSelectedIndex(-1)
     } catch (error) {
       console.error('Search failed:', error)
@@ -90,7 +97,7 @@ export default function SearchBox({
     } finally {
       setIsSearching(false)
     }
-  }, [])
+  }, [selectedIds])
 
   useEffect(() => {
     if (debounceTimer.current) {
@@ -109,6 +116,9 @@ export default function SearchBox({
   }, [query, performSearch])
 
   const handleSelect = useCallback((result: EnhancedSearchResult) => {
+    // Add to selected set
+    setSelectedIds(prev => new Set(prev).add(`${result.mediaType}-${result.id}`))
+    
     onSelect(result)
     setQuery('')
     setResults([])
@@ -184,13 +194,6 @@ export default function SearchBox({
     }, 150)
   }, [])
 
-  const formatPopularity = (popularity: number): string => {
-    if (popularity >= 100) return '🎬'
-    if (popularity >= 50) return '⭐'
-    if (popularity >= 20) return '🎪'
-    return '🎭'
-  }
-
   const shouldShowResults = showResults && (hasFocus || selectedIndex >= 0)
 
   return (
@@ -250,12 +253,12 @@ export default function SearchBox({
       {shouldShowResults && (
         <div 
           ref={resultsRef}
-          className="absolute top-full left-0 right-0 mt-4 cinema-glass-dark border border-stone-700/50 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50 cinema-scrollbar backdrop-blur-lg"
+          className="absolute top-full left-0 right-0 mt-4 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50 cinema-scrollbar"
           role="listbox"
         >
           {error && (
-            <div className="px-6 py-6 text-center text-red-400 border-b border-stone-700/50">
-              <div className="w-12 h-12 rounded-full bg-red-900/20 flex items-center justify-center mx-auto mb-3">
+            <div className="px-6 py-6 text-center text-red-600 dark:text-red-400 border-b border-stone-200 dark:border-stone-700">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-3">
                 <X className="w-6 h-6" />
               </div>
               <p className="text-sm font-medium">{error}</p>
@@ -264,8 +267,8 @@ export default function SearchBox({
           )}
           
           {!error && results.length === 0 && !isSearching && query.length >= 2 && (
-            <div className="px-6 py-8 text-center text-stone-400">
-              <div className="w-16 h-16 rounded-full bg-stone-800/50 flex items-center justify-center mx-auto mb-4">
+            <div className="px-6 py-8 text-center text-stone-500 dark:text-stone-400">
+              <div className="w-16 h-16 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center mx-auto mb-4">
                 <Search className="w-8 h-8 opacity-50" />
               </div>
               <p className="text-sm font-medium">No films found in our archives</p>
@@ -274,7 +277,7 @@ export default function SearchBox({
           )}
           
           {!error && isSearching && (
-            <div className="px-6 py-8 text-center text-stone-400">
+            <div className="px-6 py-8 text-center text-stone-500 dark:text-stone-400">
               <div className="cinema-spinner mx-auto mb-4" />
               <p className="text-sm">Searching the film library...</p>
             </div>
@@ -290,10 +293,10 @@ export default function SearchBox({
                   onClick={() => handleSelect(result)}
                   className={`w-full text-left px-5 py-4 transition-all duration-200 cinema-focus group
                     ${index === selectedIndex 
-                      ? 'bg-gradient-to-r from-amber-900/30 to-orange-900/30 border-l-4 border-amber-500' 
-                      : 'hover:bg-stone-800/50'
+                      ? 'bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500' 
+                      : 'hover:bg-stone-50 dark:hover:bg-stone-800/50'
                     }
-                    ${index < results.length - 1 ? 'border-b border-stone-700/30' : ''}
+                    ${index < results.length - 1 ? 'border-b border-stone-200 dark:border-stone-700/30' : ''}
                   `}
                 >
                   <div className="flex items-center gap-4">
@@ -304,7 +307,7 @@ export default function SearchBox({
                           <img
                             src={result.posterUrl}
                             alt=""
-                            className="w-14 h-20 object-cover rounded-lg shadow-lg bg-stone-700 border border-stone-600/50"
+                            className="w-14 h-20 object-cover rounded-lg shadow-lg bg-stone-200 dark:bg-stone-700 border border-stone-300 dark:border-stone-600/50"
                             loading="lazy"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'
@@ -314,7 +317,7 @@ export default function SearchBox({
                           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg pointer-events-none" />
                         </div>
                       ) : (
-                        <div className="w-14 h-20 bg-stone-700 rounded-lg flex items-center justify-center border border-stone-600/50">
+                        <div className="w-14 h-20 bg-stone-200 dark:bg-stone-700 rounded-lg flex items-center justify-center border border-stone-300 dark:border-stone-600/50">
                           {result.mediaType === 'tv' ? (
                             <Tv className="w-7 h-7 text-stone-400" />
                           ) : (
@@ -327,18 +330,12 @@ export default function SearchBox({
                     {/* Content with Cinema Styling */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3 mb-2">
-                        <h3 className="font-bold text-stone-100 truncate text-base leading-tight group-hover:text-amber-200 transition-colors">
+                        <h3 className="font-bold text-stone-900 dark:text-stone-100 truncate text-base leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-200 transition-colors">
                           {result.title}
                         </h3>
-                        {result.popularity && (
-                          <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                            <span className="text-lg">{formatPopularity(result.popularity)}</span>
-                            <Sparkles className="w-3 h-3 text-amber-400" />
-                          </div>
-                        )}
                       </div>
                       
-                      <div className="flex items-center gap-4 text-sm text-stone-400 mb-2">
+                      <div className="flex items-center gap-4 text-sm text-stone-600 dark:text-stone-400 mb-2">
                         {result.year && (
                           <span className="flex items-center gap-1.5">
                             <Calendar className="w-3.5 h-3.5" />
@@ -361,7 +358,7 @@ export default function SearchBox({
                       </div>
                       
                       {result.overview && (
-                        <p className="text-xs text-stone-500 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-stone-500 dark:text-stone-500 line-clamp-2 leading-relaxed">
                           {result.overview.length > 140 
                             ? `${result.overview.substring(0, 140)}...`
                             : result.overview

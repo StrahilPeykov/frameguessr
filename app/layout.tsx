@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
+import { ThemeProvider } from '@/hooks/useTheme'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -117,7 +118,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
         {/* Preload critical fonts */}
         <link
@@ -184,29 +185,44 @@ export default function RootLayout({
             })
           }}
         />
+        
+        {/* Script to prevent FOUC for theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const theme = localStorage.getItem('frameguessr-theme') || 
+                  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.classList.add(theme);
+              })();
+            `,
+          }}
+        />
       </head>
       <body className={`${inter.className} antialiased`}>
-        {/* Cinema Theater Background */}
-        <div className="fixed inset-0 bg-gradient-to-br from-stone-50 via-amber-50/30 to-rose-50/20 dark:from-stone-950 dark:via-amber-950/20 dark:to-rose-950/10 transition-colors duration-500">
-          {/* Theater Curtain Effect */}
-          <div className="absolute inset-0 pointer-events-none">
-            {/* Ambient theater lighting */}
-            <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-amber-900/3 to-transparent dark:from-amber-900/5 dark:to-transparent" />
-            <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-stone-900/2 to-transparent dark:from-stone-900/5 dark:to-transparent" />
+        <ThemeProvider>
+          {/* Cinema Theater Background */}
+          <div className="fixed inset-0 bg-gradient-to-br from-stone-50 via-amber-50/30 to-rose-50/20 dark:from-stone-950 dark:via-amber-950/20 dark:to-rose-950/10 transition-colors duration-500">
+            {/* Theater Curtain Effect */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Ambient theater lighting */}
+              <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-amber-900/3 to-transparent dark:from-amber-900/5 dark:to-transparent" />
+              <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-stone-900/2 to-transparent dark:from-stone-900/5 dark:to-transparent" />
+            </div>
+            
+            {/* Theater Lighting Effects */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              {/* Subtle ambient orbs */}
+              <div className="absolute -top-32 -right-32 w-64 h-64 bg-amber-400/5 dark:bg-amber-400/8 rounded-full filter blur-3xl animate-blob" />
+              <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-rose-400/5 dark:bg-rose-400/8 rounded-full filter blur-3xl animate-blob animation-delay-2000" />
+            </div>
           </div>
           
-          {/* Theater Lighting Effects */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {/* Subtle ambient orbs */}
-            <div className="absolute -top-32 -right-32 w-64 h-64 bg-amber-400/5 dark:bg-amber-400/8 rounded-full filter blur-3xl animate-blob" />
-            <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-rose-400/5 dark:bg-rose-400/8 rounded-full filter blur-3xl animate-blob animation-delay-2000" />
+          {/* Main Content - Scrollable */}
+          <div className="relative z-10 min-h-screen">
+            {children}
           </div>
-        </div>
-        
-        {/* Main Content - Scrollable */}
-        <div className="relative z-10 min-h-screen">
-          {children}
-        </div>
+        </ThemeProvider>
         
         {/* Enhanced Service Worker Registration */}
         <script

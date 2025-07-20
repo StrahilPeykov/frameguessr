@@ -78,14 +78,14 @@ ${isToday ? '🎥 Tonight\'s feature:' : '🎞️ Catch this classic:'} ${url}
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="cinema-glass max-w-md w-full rounded-3xl shadow-2xl border border-amber-200/30 dark:border-amber-700/30 overflow-hidden">
+      <div className="cinema-glass max-w-md w-full rounded-3xl shadow-2xl border border-stone-200/30 dark:border-amber-700/30 overflow-hidden">
         {/* Theater Header */}
-        <div className="bg-gradient-to-r from-amber-900 via-red-900 to-amber-900 p-6 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-amber-100 via-red-100 to-amber-100 dark:from-amber-900 dark:via-red-900 dark:to-amber-900 p-6 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-amber-400/10 via-red-400/10 to-amber-400/10 animate-marquee" />
           
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 text-amber-200 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10 cinema-touch"
+            className="absolute right-4 top-4 text-stone-600 dark:text-amber-200 hover:text-stone-800 dark:hover:text-white transition-colors p-1 rounded-lg hover:bg-white/20 cinema-touch"
           >
             <X className="w-5 h-5" />
           </button>
@@ -99,8 +99,8 @@ ${isToday ? '🎥 Tonight\'s feature:' : '🎞️ Catch this classic:'} ${url}
               )}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Share Your Performance</h2>
-              <p className="text-amber-200 text-sm">
+              <h2 className="text-xl font-bold text-stone-800 dark:text-white">Share Your Performance</h2>
+              <p className="text-stone-600 dark:text-amber-200 text-sm">
                 {gameState.won ? 'Outstanding performance!' : 'Better luck next show'}
               </p>
             </div>
@@ -109,7 +109,7 @@ ${isToday ? '🎥 Tonight\'s feature:' : '🎞️ Catch this classic:'} ${url}
 
         <div className="p-6">
           {/* Cinema Preview */}
-          <div className="bg-stone-100 dark:bg-stone-800 rounded-2xl p-4 mb-6 font-mono text-sm whitespace-pre-line border border-amber-200/30 dark:border-amber-700/30 shadow-inner">
+          <div className="bg-stone-100 dark:bg-stone-800 rounded-2xl p-4 mb-6 font-mono text-sm whitespace-pre-line border border-stone-200/30 dark:border-amber-700/30 shadow-inner">
             <div className="text-stone-700 dark:text-stone-300">
               {shareText}
             </div>
@@ -145,7 +145,7 @@ ${isToday ? '🎥 Tonight\'s feature:' : '🎞️ Catch this classic:'} ${url}
             {typeof navigator !== 'undefined' && 'share' in navigator && (
               <button
                 onClick={handleNativeShare}
-                className="w-full flex items-center justify-center gap-3 cinema-glass hover:bg-stone-100/80 dark:hover:bg-stone-700/80 text-stone-700 dark:text-stone-200 px-6 py-4 rounded-2xl transition-all duration-300 font-bold border border-amber-200/50 dark:border-amber-700/50 cinema-btn group"
+                className="w-full flex items-center justify-center gap-3 cinema-glass hover:bg-stone-100/80 dark:hover:bg-stone-700/80 text-stone-700 dark:text-stone-200 px-6 py-4 rounded-2xl transition-all duration-300 font-bold border border-stone-200/50 dark:border-amber-700/50 cinema-btn group"
               >
                 <Share className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 Share with Others

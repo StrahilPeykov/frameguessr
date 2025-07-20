@@ -152,14 +152,14 @@ export default function StatsModal({ isOpen, onClose }: StatsModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="cinema-glass max-w-lg w-full rounded-3xl shadow-2xl border border-amber-200/30 dark:border-amber-700/30 overflow-hidden max-h-[90vh] overflow-y-auto cinema-scrollbar">
+      <div className="cinema-glass max-w-lg w-full rounded-3xl shadow-2xl border border-stone-200/30 dark:border-amber-700/30 overflow-hidden max-h-[90vh] overflow-y-auto cinema-scrollbar">
         {/* Theater Marquee Header */}
-        <div className="bg-gradient-to-r from-amber-900 via-red-900 to-amber-900 p-6 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-amber-100 via-red-100 to-amber-100 dark:from-amber-900 dark:via-red-900 dark:to-amber-900 p-6 relative overflow-hidden">
           <div className="absolute inset-0 cinema-pattern opacity-20" />
           
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 text-amber-200 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10 cinema-touch"
+            className="absolute right-4 top-4 text-stone-600 dark:text-amber-200 hover:text-stone-800 dark:hover:text-white transition-colors p-1 rounded-lg hover:bg-white/20 cinema-touch"
           >
             <X className="w-5 h-5" />
           </button>
@@ -169,8 +169,8 @@ export default function StatsModal({ isOpen, onClose }: StatsModalProps) {
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">Box Office Stats</h2>
-              <p className="text-amber-200 text-sm">Your cinema performance record</p>
+              <h2 className="text-2xl font-bold text-stone-800 dark:text-white">Box Office Stats</h2>
+              <p className="text-stone-600 dark:text-amber-200 text-sm">Your cinema performance record</p>
             </div>
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function StatsModal({ isOpen, onClose }: StatsModalProps) {
             </div>
 
             {/* Win Percentage */}
-            <div className="text-center p-4 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-2xl border border-amber-200/50 dark:border-amber-700/50">
+            <div className="text-center p-4 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-2xl border border-amber-300/50 dark:border-amber-700/50">
               <div className="text-3xl font-bold text-amber-700 dark:text-amber-300 mb-1">
                 {stats.winPercentage}%
               </div>
@@ -203,7 +203,7 @@ export default function StatsModal({ isOpen, onClose }: StatsModalProps) {
             {/* Current Streak */}
             <div className={`text-center p-4 rounded-2xl border ${
               stats.currentStreak >= 3 
-                ? 'bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 border-red-200/50 dark:border-red-700/50' 
+                ? 'bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 border-red-300/50 dark:border-red-700/50' 
                 : 'cinema-glass border-stone-200/50 dark:border-stone-700/50'
             }`}>
               <div className={`text-3xl font-bold mb-1 ${
