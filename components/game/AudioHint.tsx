@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
-import { Play, Pause, Volume2, VolumeX, Music2, AlertCircle, Disc3, Headphones } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, Music2, AlertCircle, Disc3, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface AudioHintProps {
   previewUrl: string
@@ -36,6 +36,7 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
   const [audioError, setAudioError] = useState(false)
   const [playbackTime, setPlaybackTime] = useState(0) // Time within our duration window
   const [showVolumeSlider, setShowVolumeSlider] = useState(false)
+  const [showExpandedMobile, setShowExpandedMobile] = useState(false)
   
   const audioRef = useRef<HTMLAudioElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -183,196 +184,303 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
 
   const progress = Math.min((playbackTime / duration) * 100, 100)
 
-  return (
-    <div className="space-y-3">
-      {/* Main Player Card - Fixed dimensions to prevent layout shift */}
-      <div className="cinema-glass rounded-2xl overflow-hidden border border-stone-200/30 dark:border-amber-700/30 shadow-xl transition-shadow duration-300 hover:shadow-2xl">
-        {!audioError && (
-          <audio
-            ref={audioRef}
-            src={previewUrl}
-            preload="metadata"
-            muted={isMuted}
-          />
-        )}
-        
-        {/* Header Section - Fixed height */}
-        <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-stone-900 dark:via-stone-800 dark:to-stone-900 p-4 border-b border-stone-200/30 dark:border-stone-700/50 min-h-[80px]">
-          <div className="flex items-center gap-3">
-            <div className="relative w-12 h-12 flex-shrink-0">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-300 ${
-                audioError 
-                  ? 'bg-gradient-to-br from-red-500 to-red-600' 
-                  : 'bg-gradient-to-br from-amber-500 to-red-600'
-                } ${isPlaying && !audioError ? 'scale-110' : ''}`}>
-                {audioError ? (
-                  <AlertCircle className="w-6 h-6 text-white" />
-                ) : (
-                  <Music2 className="w-6 h-6 text-white" />
-                )}
-              </div>
-              {isPlaying && !audioError && (
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500 to-red-600 animate-ping opacity-30" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-bold text-stone-800 dark:text-stone-100 text-sm">
-                {audioError ? 'Audio Unavailable' : gameCompleted ? 'Soundtrack' : 'Audio Hint'}
-              </h4>
-              <p className="text-xs text-stone-600 dark:text-stone-400">
-                {audioError ? 'Unable to load soundtrack' : `${duration} second preview`}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Player Section - Fixed height */}
-        <div className="p-6 bg-white/50 dark:bg-stone-950/50" style={{ minHeight: '280px' }}>
-          {audioError ? (
-            /* Error State - Centered in fixed space */
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
-                <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
-              </div>
-              <h4 className="font-bold text-red-800 dark:text-red-200 mb-2">Audio Unavailable</h4>
-              <p className="text-xs text-red-600 dark:text-red-300 opacity-80">The film's audio reel couldn't be loaded</p>
-            </div>
-          ) : (
-            <>
-              {/* Vinyl Record Visualization - Fixed dimensions */}
-              <div className="relative w-32 h-32 mx-auto mb-6 flex-shrink-0">
-                <div className={`absolute inset-0 rounded-full bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 shadow-2xl transition-transform duration-1000 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }}>
-                  {/* Vinyl grooves */}
-                  <div className="absolute inset-2 rounded-full border border-stone-700/30" />
-                  <div className="absolute inset-4 rounded-full border border-stone-700/30" />
-                  <div className="absolute inset-6 rounded-full border border-stone-700/30" />
-                  <div className="absolute inset-8 rounded-full border border-stone-700/30" />
-                  
-                  {/* Center label */}
-                  <div className="absolute inset-10 rounded-full bg-gradient-to-br from-amber-600 to-red-600 flex items-center justify-center">
-                    <Disc3 className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-                
-                {/* Play/Pause Button Overlay - Fixed size */}
-                <button
-                  onClick={togglePlay}
-                  disabled={isBuffering || audioError}
-                  className="absolute inset-0 w-full h-full rounded-full flex items-center justify-center group disabled:cursor-not-allowed"
-                  aria-label={isPlaying ? 'Pause soundtrack' : 'Play soundtrack'}
-                >
-                  <div className={`w-20 h-20 rounded-full bg-white/90 dark:bg-stone-900/90 shadow-2xl flex items-center justify-center transition-transform duration-300 ${!audioError && !isBuffering ? 'group-hover:scale-110' : ''} ${isBuffering ? 'opacity-50' : ''}`}>
-                    {isBuffering ? (
-                      <div className="cinema-spinner w-8 h-8" />
-                    ) : isPlaying ? (
-                      <Pause className="w-8 h-8 text-stone-800 dark:text-stone-200" />
-                    ) : (
-                      <Play className="w-8 h-8 ml-1 text-stone-800 dark:text-stone-200" />
-                    )}
-                  </div>
-                </button>
-              </div>
-
-              {/* Track Info - Fixed height space */}
-              <div className="text-center mb-4" style={{ minHeight: gameCompleted ? '48px' : '0px' }}>
-                {gameCompleted && (
-                  <>
-                    <h5 className="font-bold text-stone-900 dark:text-stone-100 text-sm truncate px-2">
-                      {trackTitle}
-                    </h5>
-                    <p className="text-xs text-stone-600 dark:text-stone-400 truncate px-2">
-                      {artistName}
-                    </p>
-                  </>
-                )}
-              </div>
-
-              {/* Progress Bar - Fixed height */}
-              <div className="mb-4">
-                <div className="relative w-full h-2 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
-                  <div 
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 to-red-500 rounded-full transition-all duration-200 ease-out"
-                    style={{ width: `${progress}%` }}
-                  />
-                  {/* Progress indicator dot */}
-                  <div 
-                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-amber-500 rounded-full shadow-lg transition-all duration-200"
-                    style={{ left: `calc(${progress}% - 8px)` }}
-                  />
-                </div>
-                
-                {/* Time Display */}
-                <div className="flex justify-between items-center text-xs text-stone-600 dark:text-stone-400 mt-2 font-mono">
-                  <span>{Math.floor(playbackTime)}s</span>
-                  <span>{duration}s</span>
-                </div>
-              </div>
-
-              {/* Visual Feedback - Fixed height container */}
-              <div className="flex justify-center items-center gap-1" style={{ height: '24px' }}>
-                {isPlaying && Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1 bg-gradient-to-t from-amber-500 to-red-500 rounded-full transition-all duration-300"
-                    style={{
-                      height: `${Math.random() * 16 + 8}px`,
-                      animationDelay: `${i * 0.1}s`
-                    }}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Volume Control - Fixed dimensions */}
-      <div className="cinema-glass rounded-xl p-4 border border-stone-200/30 dark:border-amber-700/30" style={{ minHeight: '64px' }}>
+  if (audioError) {
+    return (
+      <div className="cinema-glass rounded-xl p-4 border border-red-200 dark:border-red-700/30 bg-red-50/50 dark:bg-red-900/10">
         <div className="flex items-center gap-3">
-          <button
-            onClick={toggleMute}
-            onMouseEnter={() => setShowVolumeSlider(true)}
-            className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors duration-300 cinema-touch flex-shrink-0"
-            aria-label={isMuted ? 'Unmute' : 'Mute'}
-            disabled={audioError}
-          >
-            {isMuted || volume === 0 ? (
-              <VolumeX className="w-5 h-5 text-stone-600 dark:text-stone-400" />
-            ) : (
-              <Volume2 className="w-5 h-5 text-stone-600 dark:text-stone-400" />
-            )}
-          </button>
-          
-          <div 
-            className="flex-1"
-            onMouseEnter={() => setShowVolumeSlider(true)}
-            onMouseLeave={() => setShowVolumeSlider(false)}
-          >
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={isMuted ? 0 : volume}
-              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-              disabled={audioError}
-              className={`cinema-slider w-full h-2 bg-gradient-to-r from-stone-300 to-stone-400 dark:from-stone-700 dark:to-stone-600 rounded-lg appearance-none cursor-pointer transition-opacity duration-300 ${showVolumeSlider ? 'opacity-100' : 'opacity-50'} disabled:opacity-30 disabled:cursor-not-allowed`}
-              style={{
-                background: `linear-gradient(to right, 
-                  #D4A574 0%, 
-                  #D4A574 ${(isMuted ? 0 : volume) * 100}%, 
-                  #e5e5e5 ${(isMuted ? 0 : volume) * 100}%, 
-                  #e5e5e5 100%)`
-              }}
-            />
+          <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
           </div>
-          
-          <span className={`text-xs text-stone-500 dark:text-stone-400 w-10 text-right font-mono transition-opacity duration-300 ${showVolumeSlider ? 'opacity-100' : 'opacity-50'} flex-shrink-0`}>
-            {Math.round((isMuted ? 0 : volume) * 100)}%
-          </span>
+          <div>
+            <h4 className="font-medium text-red-800 dark:text-red-200 text-sm">Audio Unavailable</h4>
+            <p className="text-xs text-red-600 dark:text-red-400">Soundtrack couldn't be loaded</p>
+          </div>
         </div>
       </div>
-    </div>
+    )
+  }
+
+  return (
+    <>
+      {!audioError && (
+        <audio
+          ref={audioRef}
+          src={previewUrl}
+          preload="metadata"
+          muted={isMuted}
+        />
+      )}
+
+      {/* Mobile Compact Player (< lg screens) */}
+      <div className="lg:hidden space-y-3">
+        {/* Main Compact Player */}
+        <div className="cinema-glass rounded-xl p-3 border border-stone-200/30 dark:border-amber-700/30 shadow-sm">
+          <div className="flex items-center gap-3">
+            {/* Music Icon */}
+            <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-red-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Music2 className="w-4 h-4 text-white" />
+            </div>
+            
+            {/* Progress & Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between text-xs text-stone-600 dark:text-stone-400 mb-1">
+                <span className="truncate">
+                  {gameCompleted ? trackTitle : 'Audio Hint'}
+                </span>
+                <span className="ml-2 flex-shrink-0">{duration}s</span>
+              </div>
+              <div className="h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-amber-500 to-red-500 rounded-full transition-all duration-200"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+            
+            {/* Play Button */}
+            <button
+              onClick={togglePlay}
+              disabled={isBuffering}
+              className="w-8 h-8 bg-white dark:bg-stone-800 border border-amber-300 dark:border-amber-600/50 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 cinema-touch"
+              aria-label={isPlaying ? 'Pause soundtrack' : 'Play soundtrack'}
+            >
+              {isBuffering ? (
+                <div className="w-3 h-3 border border-amber-600 border-t-transparent rounded-full animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="w-4 h-4 text-amber-700 dark:text-amber-300" />
+              ) : (
+                <Play className="w-4 h-4 ml-0.5 text-amber-700 dark:text-amber-300" />
+              )}
+            </button>
+            
+            {/* Volume Toggle */}
+            <button
+              onClick={toggleMute}
+              className="w-6 h-6 flex items-center justify-center text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cinema-touch"
+              aria-label={isMuted ? 'Unmute' : 'Mute'}
+            >
+              {isMuted ? (
+                <VolumeX className="w-4 h-4" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
+            </button>
+            
+            {/* Expand Button */}
+            <button
+              onClick={() => setShowExpandedMobile(!showExpandedMobile)}
+              className="w-6 h-6 flex items-center justify-center text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cinema-touch"
+              aria-label="Show more controls"
+            >
+              {showExpandedMobile ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+        </div>
+        
+        {/* Expanded Mobile Controls */}
+        {showExpandedMobile && (
+          <div className="cinema-glass rounded-xl p-4 border border-stone-200/30 dark:border-amber-700/30 space-y-3 animate-fadeIn">
+            {gameCompleted && (
+              <div className="text-center">
+                <h5 className="font-medium text-stone-900 dark:text-stone-100 text-sm mb-1">
+                  {trackTitle}
+                </h5>
+                <p className="text-xs text-stone-600 dark:text-stone-400">
+                  {artistName}
+                </p>
+              </div>
+            )}
+            
+            {/* Volume Slider */}
+            <div className="flex items-center gap-3">
+              <VolumeX className="w-4 h-4 text-stone-400 flex-shrink-0" />
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={isMuted ? 0 : volume}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className="flex-1 h-2 bg-stone-200 dark:bg-stone-700 rounded-lg appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, 
+                    #D4A574 0%, 
+                    #D4A574 ${(isMuted ? 0 : volume) * 100}%, 
+                    #e5e5e5 ${(isMuted ? 0 : volume) * 100}%, 
+                    #e5e5e5 100%)`
+                }}
+              />
+              <Volume2 className="w-4 h-4 text-stone-400 flex-shrink-0" />
+            </div>
+            
+            {/* Time Display */}
+            <div className="flex justify-between text-xs text-stone-500 dark:text-stone-400 font-mono">
+              <span>{Math.floor(playbackTime)}s</span>
+              <span>{duration}s</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Full Player (lg+ screens) */}
+      <div className="hidden lg:block space-y-4">
+        {/* Header Section */}
+        <div className="cinema-glass rounded-2xl overflow-hidden border border-stone-200/30 dark:border-amber-700/30 shadow-xl">
+          <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-stone-900 dark:via-stone-800 dark:to-stone-900 p-4 border-b border-stone-200/30 dark:border-stone-700/50">
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10 flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-red-600 flex items-center justify-center shadow-lg">
+                  <Music2 className="w-5 h-5 text-white" />
+                </div>
+                {isPlaying && (
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500 to-red-600 animate-ping opacity-30" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-stone-800 dark:text-stone-100 text-sm">
+                  {gameCompleted ? 'Soundtrack' : 'Audio Hint'}
+                </h4>
+                <p className="text-xs text-stone-600 dark:text-stone-400">
+                  {duration} second preview
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Player Section */}
+          <div className="p-6 bg-white/50 dark:bg-stone-950/50">
+            {/* Vinyl Record Visualization */}
+            <div className="relative w-24 h-24 mx-auto mb-6 flex-shrink-0">
+              <div className={`absolute inset-0 rounded-full bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 shadow-2xl transition-transform duration-1000 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }}>
+                {/* Vinyl grooves */}
+                <div className="absolute inset-2 rounded-full border border-stone-700/30" />
+                <div className="absolute inset-4 rounded-full border border-stone-700/30" />
+                <div className="absolute inset-6 rounded-full border border-stone-700/30" />
+                
+                {/* Center label */}
+                <div className="absolute inset-8 rounded-full bg-gradient-to-br from-amber-600 to-red-600 flex items-center justify-center">
+                  <Disc3 className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              
+              {/* Play/Pause Button Overlay */}
+              <button
+                onClick={togglePlay}
+                disabled={isBuffering}
+                className="absolute inset-0 w-full h-full rounded-full flex items-center justify-center group disabled:cursor-not-allowed"
+                aria-label={isPlaying ? 'Pause soundtrack' : 'Play soundtrack'}
+              >
+                <div className={`w-16 h-16 rounded-full bg-white/90 dark:bg-stone-900/90 shadow-2xl flex items-center justify-center transition-transform duration-300 ${!isBuffering ? 'group-hover:scale-110' : ''} ${isBuffering ? 'opacity-50' : ''}`}>
+                  {isBuffering ? (
+                    <div className="w-6 h-6 border-2 border-stone-300 border-t-amber-600 rounded-full animate-spin" />
+                  ) : isPlaying ? (
+                    <Pause className="w-6 h-6 text-stone-800 dark:text-stone-200" />
+                  ) : (
+                    <Play className="w-6 h-6 ml-0.5 text-stone-800 dark:text-stone-200" />
+                  )}
+                </div>
+              </button>
+            </div>
+
+            {/* Track Info */}
+            {gameCompleted && (
+              <div className="text-center mb-4">
+                <h5 className="font-bold text-stone-900 dark:text-stone-100 text-sm truncate px-2">
+                  {trackTitle}
+                </h5>
+                <p className="text-xs text-stone-600 dark:text-stone-400 truncate px-2">
+                  {artistName}
+                </p>
+              </div>
+            )}
+
+            {/* Progress Bar */}
+            <div className="mb-4">
+              <div className="relative w-full h-2 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                <div 
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 to-red-500 rounded-full transition-all duration-200 ease-out"
+                  style={{ width: `${progress}%` }}
+                />
+                {/* Progress indicator dot */}
+                <div 
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-amber-500 rounded-full shadow-lg transition-all duration-200"
+                  style={{ left: `calc(${progress}% - 8px)` }}
+                />
+              </div>
+              
+              {/* Time Display */}
+              <div className="flex justify-between items-center text-xs text-stone-600 dark:text-stone-400 mt-2 font-mono">
+                <span>{Math.floor(playbackTime)}s</span>
+                <span>{duration}s</span>
+              </div>
+            </div>
+
+            {/* Visual Feedback */}
+            <div className="flex justify-center items-center gap-1 h-6">
+              {isPlaying && Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-1 bg-gradient-to-t from-amber-500 to-red-500 rounded-full transition-all duration-300"
+                  style={{
+                    height: `${Math.random() * 16 + 8}px`,
+                    animationDelay: `${i * 0.1}s`
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Volume Control */}
+        <div className="cinema-glass rounded-xl p-4 border border-stone-200/30 dark:border-amber-700/30">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleMute}
+              onMouseEnter={() => setShowVolumeSlider(true)}
+              className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors duration-300 cinema-touch flex-shrink-0"
+              aria-label={isMuted ? 'Unmute' : 'Mute'}
+            >
+              {isMuted || volume === 0 ? (
+                <VolumeX className="w-5 h-5 text-stone-600 dark:text-stone-400" />
+              ) : (
+                <Volume2 className="w-5 h-5 text-stone-600 dark:text-stone-400" />
+              )}
+            </button>
+            
+            <div 
+              className="flex-1"
+              onMouseEnter={() => setShowVolumeSlider(true)}
+              onMouseLeave={() => setShowVolumeSlider(false)}
+            >
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={isMuted ? 0 : volume}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className={`w-full h-2 bg-gradient-to-r from-stone-300 to-stone-400 dark:from-stone-700 dark:to-stone-600 rounded-lg appearance-none cursor-pointer transition-opacity duration-300 ${showVolumeSlider ? 'opacity-100' : 'opacity-50'}`}
+                style={{
+                  background: `linear-gradient(to right, 
+                    #D4A574 0%, 
+                    #D4A574 ${(isMuted ? 0 : volume) * 100}%, 
+                    #e5e5e5 ${(isMuted ? 0 : volume) * 100}%, 
+                    #e5e5e5 100%)`
+                }}
+              />
+            </div>
+            
+            <span className={`text-xs text-stone-500 dark:text-stone-400 w-10 text-right font-mono transition-opacity duration-300 ${showVolumeSlider ? 'opacity-100' : 'opacity-50'} flex-shrink-0`}>
+              {Math.round((isMuted ? 0 : volume) * 100)}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </>
   )
 })
 

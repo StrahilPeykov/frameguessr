@@ -338,7 +338,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
         </div>
       </nav>
 
-      {/* Main Theater - New Layout */}
+      {/* Main Theater */}
       <div className="min-h-screen pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-4">
           {/* Theater Header */}
