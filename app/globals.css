@@ -1,68 +1,73 @@
 @import "tailwindcss";
 
 :root {
-  /* Cinematic Color Palette - Light Mode */
-  --background: #FEFEFE;
-  --foreground: #1A1A1A;
-  --surface: #F5F5F5;
-  --surface-elevated: #FFFFFF;
+  /* DRAMATICALLY IMPROVED Light Mode - Vintage Cinema Lobby */
+  --background: linear-gradient(135deg, #FFF8F0 0%, #FEF5E7 25%, #FDF2E0 50%, #FCF0DD 75%, #FBEEDA 100%);
+  --background-solid: #FFF8F0;
+  --foreground: #1A0F08;
+  --surface: linear-gradient(135deg, #FEFCF8 0%, #FDF9F3 50%, #FCF6EE 100%);
+  --surface-solid: #FEFCF8;
+  --surface-elevated: linear-gradient(135deg, #FFFFFF 0%, #FFFEF9 50%, #FFFCF4 100%);
+  --surface-elevated-solid: #FFFFFF;
   
-  /* Classic Cinema Palette */
+  /* Rich, warm cinematic palette with better contrast */
   --cinema-burgundy: #8B1538;
   --cinema-burgundy-light: #A61E42;
   --cinema-burgundy-dark: #6B0E26;
-  --cinema-burgundy-muted: #8B153820;
+  --cinema-burgundy-muted: rgba(139, 21, 56, 0.12);
   
-  --cinema-gold: #D4A574;
-  --cinema-gold-light: #E6C08A;
-  --cinema-gold-dark: #B8925E;
-  --cinema-gold-muted: #D4A57420;
+  --cinema-gold: #B8925E;
+  --cinema-gold-light: #D4A574;
+  --cinema-gold-dark: #A67F52;
+  --cinema-gold-muted: rgba(184, 146, 94, 0.15);
   
   --cinema-copper: #B87333;
   --cinema-copper-light: #D4924D;
-  --cinema-copper-dark: #8B5A2B;
+  --cinema-copper-dark: #A66829;
   
-  /* Letterboxd-inspired Orange */
-  --cinema-orange: #FF8C00;
-  --cinema-orange-light: #FFA726;
-  --cinema-orange-dark: #E67E00;
-  --cinema-orange-muted: #FF8C0020;
+  /* Darker orange for better contrast */
+  --cinema-orange: #CC7000;
+  --cinema-orange-light: #E67E00;
+  --cinema-orange-dark: #B8640A;
+  --cinema-orange-muted: rgba(204, 112, 0, 0.12);
   
-  /* Neutral Cinema Tones */
-  --cinema-cream: #F8F6F0;
-  --cinema-warm-gray: #8B8680;
-  --cinema-charcoal: #2D2B28;
+  /* Better contrast warm neutrals */
+  --cinema-cream: #FDF9F3;
+  --cinema-warm-gray: #6B5D4F;
+  --cinema-charcoal: #1A0F08;
   --cinema-velvet: #1A1818;
   
-  /* Semantic Colors */
+  /* Enhanced light mode semantic colors */
   --success: #4F7942;
-  --warning: #D4A574;
+  --warning: #B8925E;
   --error: #B91C1C;
-  --info: #3B82F6;
+  --info: #2563EB;
 }
 
 .dark {
-  /* Dark Mode - Cinema Theater Aesthetic */
+  /* Keep existing dark mode */
   --background: #0F0F0F;
+  --background-solid: #0F0F0F;
   --foreground: #F8F6F0;
   --surface: #1A1818;
+  --surface-solid: #1A1818;
   --surface-elevated: #2D2B28;
+  --surface-elevated-solid: #2D2B28;
   
-  /* Adjust colors for dark mode */
   --cinema-burgundy: #A61E42;
   --cinema-burgundy-light: #C8285A;
   --cinema-burgundy-dark: #8B1538;
-  --cinema-burgundy-muted: #A61E4220;
+  --cinema-burgundy-muted: rgba(166, 30, 66, 0.2);
   
   --cinema-gold: #E6C08A;
   --cinema-gold-light: #F2D1A6;
   --cinema-gold-dark: #D4A574;
-  --cinema-gold-muted: #E6C08A20;
+  --cinema-gold-muted: rgba(230, 192, 138, 0.2);
   
   --cinema-orange: #FFA726;
   --cinema-orange-light: #FFB74D;
   --cinema-orange-dark: #FF8C00;
-  --cinema-orange-muted: #FFA72620;
+  --cinema-orange-muted: rgba(255, 167, 38, 0.2);
   
   --cinema-warm-gray: #A8A29E;
   --cinema-charcoal: #F8F6F0;
@@ -70,10 +75,10 @@
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --color-background: var(--background-solid);
   --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-  --color-surface-elevated: var(--surface-elevated);
+  --color-surface: var(--surface-solid);
+  --color-surface-elevated: var(--surface-elevated-solid);
   
   --color-cinema-burgundy: var(--cinema-burgundy);
   --color-cinema-burgundy-light: var(--cinema-burgundy-light);
@@ -119,8 +124,6 @@ body {
 }
 
 /* === CONSOLIDATED BLUR SYSTEM === */
-/* Generated from utils/blur.ts configuration */
-
 .blur-heavy {
   filter: blur(25px) brightness(0.75) contrast(1.05) saturate(1.1);
   transition: filter 0.5s ease-in-out;
@@ -136,27 +139,259 @@ body {
   transition: filter 0.5s ease-in-out;
 }
 
-/* Accessibility: Reduce blur for users who prefer reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .blur-heavy,
-  .blur-medium,
-  .blur-light {
-    transition: none !important;
+/* DRAMATICALLY IMPROVED Cinema Glass Effects */
+.cinema-glass {
+  backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.light .cinema-glass {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(254, 252, 248, 0.90) 50%, 
+    rgba(253, 249, 243, 0.85) 100%
+  );
+  border: 1px solid rgba(212, 167, 107, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(45, 27, 15, 0.08),
+    0 4px 16px rgba(154, 30, 63, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(212, 167, 107, 0.1);
+}
+
+.light .cinema-glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(212, 167, 107, 0.4) 50%, 
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.dark .cinema-glass {
+  background: rgba(26, 24, 24, 0.85);
+  border: 1px solid rgba(212, 165, 116, 0.2);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(212, 165, 116, 0.1);
+}
+
+/* Enhanced Navigation Blur */
+.cinema-nav-blur {
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  position: relative;
+}
+
+.light .cinema-nav-blur {
+  background: linear-gradient(180deg,
+    rgba(255, 248, 240, 0.95) 0%,
+    rgba(254, 245, 231, 0.92) 50%,
+    rgba(253, 242, 224, 0.90) 100%
+  );
+  border-bottom: 1px solid rgba(212, 167, 107, 0.25);
+  box-shadow: 
+    0 1px 3px rgba(45, 27, 15, 0.05),
+    0 4px 16px rgba(154, 30, 63, 0.03);
+}
+
+.light .cinema-nav-blur::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(154, 30, 63, 0.15) 50%, 
+    transparent 100%
+  );
+}
+
+.dark .cinema-nav-blur {
+  background: rgba(15, 15, 15, 0.90);
+  border-bottom: 1px solid rgba(166, 30, 66, 0.2);
+}
+
+/* BEAUTIFUL Button Styling */
+.cinema-btn {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+}
+
+.light .cinema-btn {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9) 0%, 
+    rgba(254, 252, 248, 0.8) 100%
+  );
+  border: 1px solid rgba(139, 21, 56, 0.25); /* Darker border for better definition */
+  color: var(--cinema-charcoal);
+  font-weight: 500; /* Better text weight for readability */
+  box-shadow: 
+    0 2px 8px rgba(26, 15, 8, 0.08), /* Darker shadow */
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.light .cinema-btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(254, 252, 248, 0.9) 100%
+  );
+  border-color: rgba(139, 21, 56, 0.4); /* Darker border on hover */
+  color: var(--cinema-charcoal); /* Ensure text stays dark */
+  box-shadow: 
+    0 8px 25px rgba(26, 15, 8, 0.15), /* Darker, more visible shadow */
+    0 4px 12px rgba(139, 21, 56, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.light .cinema-btn:active {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 4px 15px rgba(45, 27, 15, 0.15),
+    0 2px 8px rgba(154, 30, 63, 0.1);
+}
+
+/* ACCESSIBLE Status Dots */
+.cinema-status-pending {
+  position: relative;
+  overflow: hidden;
+}
+
+.light .cinema-status-pending {
+  background: linear-gradient(135deg, 
+    rgba(139, 21, 56, 0.15) 0%, /* Darker for better visibility */
+    rgba(184, 146, 94, 0.12) 100%
+  );
+  border: 1px solid rgba(139, 21, 56, 0.25); /* Visible border */
+  box-shadow: 
+    0 2px 8px rgba(26, 15, 8, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.dark .cinema-status-pending {
+  background: linear-gradient(135deg, #e5e5e5 0%, #d4d4d4 100%);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Beautiful Gradient Text with Accessibility Fallback */
+.cinema-gradient-text {
+  background: linear-gradient(135deg, 
+    var(--cinema-burgundy) 0%, 
+    var(--cinema-gold-dark) 30%,
+    var(--cinema-copper-dark) 60%,
+    var(--cinema-orange) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: var(--cinema-burgundy); /* Fallback for accessibility */
+  font-weight: 700;
+}
+
+.cinema-gradient-title {
+  background: linear-gradient(135deg, 
+    var(--cinema-burgundy) 0%, 
+    var(--cinema-gold-dark) 40%,
+    var(--cinema-copper-dark) 80%,
+    var(--cinema-orange-dark) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: var(--cinema-burgundy); /* Fallback for accessibility */
+  font-weight: 800;
+}
+
+/* High contrast mode - COMPREHENSIVE ACCESSIBILITY */
+@media (prefers-contrast: high) {
+  .light .cinema-glass {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 2px solid var(--cinema-charcoal) !important;
+  }
+  
+  .light .cinema-btn {
+    background: #ffffff !important;
+    border: 2px solid var(--cinema-charcoal) !important;
+    color: var(--cinema-charcoal) !important;
+  }
+  
+  .light .text-stone-400,
+  .light .text-stone-500,
+  .light .text-stone-600 {
+    color: #000000 !important;
+  }
+  
+  .light input,
+  .light textarea,
+  .light select {
+    border: 2px solid var(--cinema-charcoal) !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  .light .cinema-gradient-text,
+  .light .cinema-gradient-title {
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
+    color: var(--cinema-charcoal) !important;
   }
 }
 
-/* High contrast mode: Disable blur for better accessibility */
-@media (prefers-contrast: high) {
-  .blur-heavy,
-  .blur-medium,
-  .blur-light {
-    filter: contrast(2) !important;
-  }
+/* Enhanced Search Box with Better Accessibility */
+.light input[type="text"]:focus,
+.light input[type="search"]:focus,
+.light .cinema-focus:focus-visible {
+  outline: none;
+  border-color: var(--cinema-burgundy);
+  box-shadow: 
+    0 0 0 3px rgba(139, 21, 56, 0.25), /* More visible focus ring */
+    0 4px 16px rgba(26, 15, 8, 0.12), /* Darker shadow for depth */
+    0 8px 32px rgba(139, 21, 56, 0.08);
+}
+
+/* Ensure focus is visible for all interactive elements */
+.light button:focus-visible,
+.light a:focus-visible,
+.light [tabindex]:focus-visible {
+  outline: 2px solid var(--cinema-burgundy);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(139, 21, 56, 0.15);
 }
 
 /* Art Deco Skeleton Animation */
 .skeleton {
-  animation: skeleton-loading 1.8s ease-in-out infinite alternate;
+  animation: skeleton-loading 2s ease-in-out infinite alternate;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.light .skeleton {
+  background: linear-gradient(90deg, 
+    rgba(253, 249, 243, 0.6) 0%,
+    rgba(212, 167, 107, 0.2) 25%,
+    rgba(154, 30, 63, 0.1) 50%,
+    rgba(212, 167, 107, 0.2) 75%,
+    rgba(253, 249, 243, 0.6) 100%
+  );
+  background-size: 400% 100%;
+}
+
+.dark .skeleton {
   background: linear-gradient(90deg, 
     transparent, 
     var(--cinema-gold-muted), 
@@ -176,454 +411,146 @@ body {
   }
 }
 
-/* Smooth Cinema Fade-in */
+/* Enhanced fade-in animation */
 .animate-fadeIn {
-  animation: cinemaFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: cinemaFadeIn 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes cinemaFadeIn {
   from {
     opacity: 0;
-    transform: translateY(30px) scale(0.95);
+    transform: translateY(30px) scale(0.96);
+    filter: blur(8px);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+    filter: blur(0px);
   }
 }
 
-/* Cinema Blob Animations with Theater Colors */
-@keyframes cinemaBlob {
-  0% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
-  }
-  25% {
-    transform: translate(40px, -60px) scale(1.1) rotate(90deg);
-  }
-  50% {
-    transform: translate(-30px, 40px) scale(0.9) rotate(180deg);
-  }
-  75% {
-    transform: translate(20px, -20px) scale(1.05) rotate(270deg);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1) rotate(360deg);
-  }
-}
-
-.animate-blob {
-  animation: cinemaBlob 8s infinite ease-in-out;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
-/* Cinematic Audio Controls */
-.cinema-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(90deg, var(--cinema-charcoal) 0%, var(--cinema-warm-gray) 100%);
-  outline: none;
-  transition: all 0.3s ease;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.cinema-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
+/* Cinema Loading Spinner */
+.cinema-spinner {
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--cinema-gold) 0%, var(--cinema-copper) 100%);
-  cursor: pointer;
-  box-shadow: 
-    0 0 0 2px var(--cinema-burgundy-dark),
-    0 4px 12px rgba(212, 165, 116, 0.4),
-    inset 0 1px 2px rgba(255, 255, 255, 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  animation: cinemaSpinner 1.2s linear infinite;
 }
 
-.cinema-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 
-    0 0 0 3px var(--cinema-burgundy),
-    0 6px 20px rgba(212, 165, 116, 0.6),
-    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+.light .cinema-spinner {
+  border: 3px solid var(--cinema-burgundy-muted);
+  border-top: 3px solid var(--cinema-burgundy);
+  border-right: 3px solid var(--cinema-gold);
+  box-shadow: 0 4px 16px var(--cinema-burgundy-muted);
 }
 
-.cinema-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--cinema-gold) 0%, var(--cinema-copper) 100%);
-  cursor: pointer;
-  border: 2px solid var(--cinema-burgundy-dark);
-  box-shadow: 
-    0 4px 12px rgba(212, 165, 116, 0.4),
-    inset 0 1px 2px rgba(255, 255, 255, 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.dark .cinema-spinner {
+  border: 3px solid var(--cinema-burgundy-muted);
+  border-top: 3px solid var(--cinema-gold);
+  border-right: 3px solid var(--cinema-burgundy);
 }
 
-.cinema-slider::-moz-range-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 
-    0 6px 20px rgba(212, 165, 116, 0.6),
-    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+@keyframes cinemaSpinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* Cinema Waveform with Art Deco Style */
-.cinema-waveform-bar {
-  display: inline-block;
-  width: 3px;
-  height: 16px;
-  background: linear-gradient(180deg, var(--cinema-gold) 0%, var(--cinema-burgundy) 100%);
-  margin: 0 1px;
-  border-radius: 1.5px;
-  animation: cinemaWaveform 1.4s ease-in-out infinite;
-  box-shadow: 0 0 4px var(--cinema-gold-muted);
-}
-
-.cinema-waveform-bar:nth-child(2) { animation-delay: 0.1s; }
-.cinema-waveform-bar:nth-child(3) { animation-delay: 0.2s; }
-.cinema-waveform-bar:nth-child(4) { animation-delay: 0.3s; }
-.cinema-waveform-bar:nth-child(5) { animation-delay: 0.4s; }
-
-@keyframes cinemaWaveform {
-  0%, 100% {
-    transform: scaleY(0.3);
-    opacity: 0.6;
-  }
-  50% {
-    transform: scaleY(1);
-    opacity: 1;
-  }
-}
-
-/* Vintage Theater Scrollbar */
+/* Enhanced scrollbar */
 .cinema-scrollbar {
   scrollbar-width: thin;
+}
+
+.light .cinema-scrollbar {
   scrollbar-color: var(--cinema-burgundy) var(--cinema-cream);
 }
 
-.cinema-scrollbar::-webkit-scrollbar {
+.light .cinema-scrollbar::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-.cinema-scrollbar::-webkit-scrollbar-track {
+.light .cinema-scrollbar::-webkit-scrollbar-track {
   background: var(--cinema-cream);
   border-radius: 4px;
 }
 
-.cinema-scrollbar::-webkit-scrollbar-thumb {
+.light .cinema-scrollbar::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, var(--cinema-burgundy) 0%, var(--cinema-burgundy-dark) 100%);
   border-radius: 4px;
-  border: 1px solid var(--cinema-gold-dark);
+  border: 1px solid var(--cinema-gold);
 }
 
-.cinema-scrollbar::-webkit-scrollbar-thumb:hover {
+.light .cinema-scrollbar::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, var(--cinema-burgundy-light) 0%, var(--cinema-burgundy) 100%);
 }
 
-/* Enhanced Touch Feedback for Theater Experience */
+/* Film strip border */
+.film-strip-border {
+  position: relative;
+}
+
+.light .film-strip-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid transparent;
+  border-image: repeating-linear-gradient(90deg, 
+    var(--cinema-burgundy) 0px, 
+    var(--cinema-burgundy) 8px, 
+    transparent 8px, 
+    transparent 16px
+  ) 2;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Enhanced touch feedback */
 .cinema-touch {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: center;
 }
 
 .cinema-touch:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
-/* Art Deco Line Clamp */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.5;
-}
-
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.5;
-}
-
-/* Cinema Glassmorphism - Light mode adjustments */
-.cinema-glass {
-  backdrop-filter: blur(20px) saturate(180%);
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(212, 165, 116, 0.2);
+.light .cinema-touch:active {
   box-shadow: 
-    0 8px 32px rgba(139, 21, 56, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    0 2px 8px rgba(45, 27, 15, 0.15),
+    inset 0 2px 4px rgba(154, 30, 63, 0.1);
 }
 
-.dark .cinema-glass {
-  background: rgba(26, 24, 24, 0.85);
-  border: 1px solid rgba(212, 165, 116, 0.2);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(212, 165, 116, 0.1);
-}
-
-.cinema-glass-dark {
-  backdrop-filter: blur(20px) saturate(180%);
-  background: rgba(26, 24, 24, 0.85);
-  border: 1px solid var(--cinema-burgundy-muted);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(212, 165, 116, 0.1);
-}
-
-/* Cinema Navigation Blur */
-.cinema-nav-blur {
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-}
-
-/* Art Deco Gradient Text */
-.cinema-gradient-text {
-  background: linear-gradient(135deg, var(--cinema-burgundy) 0%, var(--cinema-gold) 50%, var(--cinema-orange) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 30px var(--cinema-gold-muted);
-}
-
-.cinema-gradient-title {
-  background: linear-gradient(135deg, var(--cinema-gold) 0%, var(--cinema-copper) 50%, var(--cinema-burgundy) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-}
-
-/* Theater Marquee Effect */
-.cinema-marquee {
-  background: linear-gradient(90deg, 
-    var(--cinema-burgundy) 0%, 
-    var(--cinema-gold) 25%, 
-    var(--cinema-burgundy) 50%, 
-    var(--cinema-gold) 75%, 
-    var(--cinema-burgundy) 100%
-  );
-  background-size: 200% 100%;
-  animation: marquee 3s ease-in-out infinite;
-}
-
-@keyframes marquee {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .animate-fadeIn,
+  .cinema-touch,
+  .cinema-btn,
+  .cinema-spinner {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
-/* Enhanced Theater Glow - Only for specific hover states */
-.cinema-glow-hover:hover {
-  box-shadow: 
-    0 0 20px var(--cinema-gold),
-    0 0 40px var(--cinema-burgundy),
-    0 0 60px var(--cinema-orange);
-  transform: scale(1.02);
-  transition: all 0.3s ease;
-}
-
-/* Success/Error with Cinema Colors */
-@keyframes cinemaSuccess {
-  0%, 20%, 53%, 80%, 100% {
-    transform: translate3d(0, 0, 0);
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
   }
-  40%, 43% {
-    transform: translate3d(0, -25px, 0);
-  }
-  70% {
-    transform: translate3d(0, -12px, 0);
-  }
-  90% {
-    transform: translate3d(0, -4px, 0);
+  
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
 }
 
-@keyframes cinemaError {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  10%, 30%, 50%, 70%, 90% {
-    transform: translateX(-10px);
-  }
-  20%, 40%, 60%, 80% {
-    transform: translateX(10px);
-  }
-}
-
-.animate-cinema-success {
-  animation: cinemaSuccess 1.2s ease-out;
-}
-
-.animate-cinema-error {
-  animation: cinemaError 0.6s ease-in-out;
-}
-
-/* Cinema Trophy Animation */
-.animate-cinema-trophy {
-  animation: cinemaTrophy 1.5s infinite;
-}
-
-@keyframes cinemaTrophy {
-  0%, 100% {
-    transform: translateY(-30%) rotate(-5deg);
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-  }
-  50% {
-    transform: translateY(0) rotate(5deg);
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-  }
-}
-
-/* Enhanced Cinema Focus */
-.cinema-focus {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-}
-
-.cinema-focus:focus-visible {
-  outline: 2px solid var(--cinema-burgundy);
-  outline-offset: 2px;
-  box-shadow: 
-    0 0 0 4px var(--cinema-burgundy-muted),
-    0 0 20px var(--cinema-gold-muted);
-}
-
-/* Theater Button Hover States */
-.cinema-btn {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateZ(0);
-  position: relative;
-  overflow: hidden;
-}
-
-.cinema-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, var(--cinema-gold-muted), transparent);
-  transition: left 0.5s;
-}
-
-.cinema-btn:hover::before {
-  left: 100%;
-}
-
-.cinema-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 
-    0 10px 30px rgba(139, 21, 56, 0.2),
-    0 0 20px var(--cinema-gold-muted);
-}
-
-.cinema-btn:active {
-  transform: translateY(-1px);
-  box-shadow: 
-    0 4px 15px rgba(139, 21, 56, 0.3),
-    0 0 10px var(--cinema-gold-muted);
-}
-
-/* Cinema Loading States */
-.cinema-loading {
-  background: linear-gradient(90deg, 
-    var(--cinema-cream) 25%, 
-    var(--cinema-gold-muted) 50%, 
-    var(--cinema-cream) 75%
-  );
-  background-size: 400% 100%;
-  animation: cinemaShimmer 2s infinite;
-}
-
-@keyframes cinemaShimmer {
-  0% {
-    background-position: -400% 0;
-  }
-  100% {
-    background-position: 400% 0;
-  }
-}
-
-/* Art Deco Pattern Background */
-.cinema-pattern {
-  background-image: 
-    radial-gradient(circle at 25% 25%, var(--cinema-burgundy-muted) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, var(--cinema-gold-muted) 0%, transparent 50%);
-  background-size: 100px 100px;
-  background-position: 0 0, 50px 50px;
-}
-
-/* Theater Status Dots */
-.cinema-status-correct {
-  background: linear-gradient(135deg, var(--cinema-gold) 0%, var(--cinema-gold-light) 100%);
-  box-shadow: 0 0 16px var(--cinema-gold-muted);
-}
-
-.cinema-status-incorrect {
-  background: linear-gradient(135deg, var(--cinema-burgundy) 0%, var(--cinema-burgundy-light) 100%);
-  box-shadow: 0 0 16px var(--cinema-burgundy-muted);
-}
-
-.cinema-status-pending {
-  background: linear-gradient(135deg, var(--cinema-warm-gray) 0%, var(--cinema-charcoal) 100%);
-  box-shadow: 0 0 8px rgba(139, 134, 128, 0.3);
-}
-
-.light .cinema-status-pending {
-  background: linear-gradient(135deg, #e5e5e5 0%, #d4d4d4 100%);
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Cinema Image Overlay */
-.cinema-overlay {
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(26, 24, 24, 0.3) 30%,
-    rgba(26, 24, 24, 0.7) 70%,
-    rgba(26, 24, 24, 0.9) 100%
-  );
-}
-
-/* Hint Level Indicators */
-.cinema-hint-1 {
-  background: linear-gradient(135deg, var(--cinema-burgundy) 0%, var(--cinema-burgundy-dark) 100%);
-  color: var(--cinema-cream);
-}
-
-.cinema-hint-2 {
-  background: linear-gradient(135deg, var(--cinema-copper) 0%, var(--cinema-copper-dark) 100%);
-  color: var(--cinema-cream);
-}
-
-.cinema-hint-3 {
-  background: linear-gradient(135deg, var(--cinema-gold) 0%, var(--cinema-gold-dark) 100%);
-  color: var(--cinema-charcoal);
-}
-
-/* Mobile Optimizations */
+/* Mobile optimizations */
 @media (max-width: 640px) {
   .cinema-mobile-safe {
     padding-left: max(1rem, env(safe-area-inset-left));
@@ -635,129 +562,15 @@ body {
     min-height: 44px;
     min-width: 44px;
   }
-
-  .cinema-audio-mobile-hidden {
-    display: none;
-  }
 }
 
-/* Reduced Motion Support */
-@media (prefers-reduced-motion: reduce) {
-  .skeleton,
-  .animate-fadeIn,
-  .animate-cinema-success,
-  .animate-cinema-error,
-  .animate-cinema-trophy,
-  .cinema-touch,
-  .cinema-btn,
-  .animate-blob,
-  .cinema-waveform-bar,
-  .cinema-marquee {
-    animation: none !important;
-    transition: none !important;
-  }
-}
-
-/* Print Styles */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  
-  * {
-    background: transparent !important;
-    color: black !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-}
-
-/* Backdrop Filter Fallback */
-@supports not (backdrop-filter: blur(1px)) {
-  .cinema-glass,
-  .cinema-glass-dark,
-  .cinema-nav-blur {
-    background: rgba(248, 246, 240, 0.95);
-  }
-  
-  .dark .cinema-glass,
-  .dark .cinema-glass-dark,
-  .dark .cinema-nav-blur {
-    background: rgba(26, 24, 24, 0.95);
-  }
-}
-
-/* iOS Safari Optimizations */
-@supports (-webkit-touch-callout: none) {
-  .cinema-nav-blur {
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-  }
-  
-  .cinema-glass,
-  .cinema-glass-dark {
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-  }
-}
-
-/* Cinema Loading Spinner */
-.cinema-spinner {
-  border: 3px solid var(--cinema-burgundy-muted);
-  border-radius: 50%;
-  border-top: 3px solid var(--cinema-gold);
-  border-right: 3px solid var(--cinema-burgundy);
-  width: 48px;
-  height: 48px;
-  animation: cinemaSpinner 1s linear infinite;
-}
-
-@keyframes cinemaSpinner {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Final Theater Optimizations */
-html {
-  -webkit-tap-highlight-color: transparent;
-  scroll-behavior: smooth;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  overflow-y: scroll;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-audio {
-  width: 100%;
-  height: 40px;
-}
-
-/* Cinema Layout Utilities */
+/* Layout utilities */
 .cinema-container {
   max-width: 48rem;
   margin-left: auto;
   margin-right: auto;
 }
 
-.cinema-section {
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-              opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-}
-
-/* Aspect Ratio Support */
 .cinema-aspect-video {
   aspect-ratio: 16 / 9;
 }
@@ -775,4 +588,102 @@ audio {
     width: 100%;
     height: 100%;
   }
+}
+
+/* Final polish */
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Light mode specific element improvements with ACCESSIBILITY FOCUS */
+.light .bg-gradient-to-br {
+  background: linear-gradient(135deg, 
+    rgba(255, 248, 240, 0.8) 0%, 
+    rgba(254, 245, 231, 0.6) 25%, 
+    rgba(253, 242, 224, 0.4) 50%, 
+    rgba(252, 240, 221, 0.6) 75%, 
+    rgba(251, 238, 218, 0.8) 100%
+  ) !important;
+}
+
+/* IMPROVED TEXT CONTRAST FOR ACCESSIBILITY */
+.light .text-stone-400 {
+  color: #6B5D4F !important; /* Much darker for better contrast */
+}
+
+.light .text-stone-500 {
+  color: #5D4A3A !important; /* Darker for accessibility */
+}
+
+.light .text-stone-600 {
+  color: #4A3729 !important; /* Even darker */
+}
+
+.light .text-stone-700 {
+  color: #3A2A1F !important; /* Very dark for good contrast */
+}
+
+.light .text-stone-800 {
+  color: #2A1D15 !important; /* Almost black */
+}
+
+.light .text-stone-900 {
+  color: var(--cinema-charcoal) !important; /* Pure dark */
+}
+
+/* Improved placeholder text contrast */
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #6B5D4F !important; /* Darker placeholder for readability */
+  opacity: 0.8;
+}
+
+/* Better secondary text contrast */
+.light .text-gray-500,
+.light .text-gray-600 {
+  color: #5D4A3A !important;
+}
+
+/* Improved muted text */
+.light .text-opacity-70,
+.light .opacity-70 {
+  color: #4A3729 !important;
+  opacity: 1 !important; /* Remove opacity, use darker color instead */
+}
+
+/* Better link contrast */
+.light a:not(.cinema-btn) {
+  color: var(--cinema-burgundy) !important;
+}
+
+.light a:not(.cinema-btn):hover {
+  color: var(--cinema-burgundy-dark) !important;
+}
+
+/* Improved button text contrast */
+.light .cinema-btn {
+  color: var(--cinema-charcoal) !important;
+  font-weight: 500;
+}
+
+/* Better hint text in cards */
+.light .text-sm {
+  color: #4A3729 !important;
+}
+
+/* Improved subtitle/caption text */
+.light .text-xs {
+  color: #5D4A3A !important;
+  font-weight: 500; /* Slightly bolder for better readability */
 }
