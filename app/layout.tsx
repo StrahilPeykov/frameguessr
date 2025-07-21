@@ -284,6 +284,10 @@ export default function RootLayout({
           
           {/* Main Content - Scrollable */}
           <div className="relative z-10 flex-1 flex flex-col">
+            {/* Main Content */}
+            <main id="main-content" className="flex-1">
+              {children}
+            </main>
             
             {/* Footer */}
             <Footer />
