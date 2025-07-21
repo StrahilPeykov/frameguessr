@@ -48,7 +48,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <a 
-                    href="mailto:dmca@frameguessr.com"
+                    href="mailto:strahil.peykov@gmail.com"
                     className="text-sm text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
                   >
                     DMCA/Copyright
@@ -87,7 +87,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <a 
-                    href="mailto:hello@frameguessr.com"
+                    href="mailto:strahil.peykov@gmail.com"
                     className="text-sm text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
                   >
                     Contact Us

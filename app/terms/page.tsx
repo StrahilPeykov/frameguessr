@@ -18,7 +18,7 @@ export default function TermsPage() {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-12">
-        <div className="cinema-glass rounded-3xl p-8 md:p-12 shadow-2xl border border-stone-200/30 dark:border-amber-700/30">
+        <div className="cinema-glass rounded-3xl p-8 md:p-12 border border-stone-200/30 dark:border-amber-700/30">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-stone-900 dark:text-stone-100 mb-2">
@@ -187,7 +187,7 @@ export default function TermsPage() {
                 <li>Your physical or electronic signature</li>
               </ol>
               <div className="mt-4 p-4 bg-stone-100 dark:bg-stone-800 rounded-xl">
-                <p className="font-mono text-sm">dmca@frameguessr.com</p>
+                <p className="font-mono text-sm">strahil.peykov@gmail.com</p>
               </div>
             </section>
 
@@ -222,7 +222,7 @@ export default function TermsPage() {
                 If you have any questions about these Terms, please contact us at:
               </p>
               <div className="p-4 bg-stone-100 dark:bg-stone-800 rounded-xl">
-                <p className="font-mono text-sm">legal@frameguessr.com</p>
+                <p className="font-mono text-sm">strahil.peykov@gmail.com</p>
               </div>
             </section>
           </div>

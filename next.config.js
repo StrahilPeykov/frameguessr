@@ -184,7 +184,7 @@ const nextConfig = {
   
   // Environment variables validation
   env: {
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://frameguessr.strahil.dev',
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://frameguessr.com',
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID || '',
   },
   

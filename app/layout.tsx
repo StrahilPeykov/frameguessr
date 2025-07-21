@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     // yandex: 'your-yandex-verification-code',
   },
   alternates: {
-    canonical: 'https://frameguessr.strahil.dev',
+    canonical: 'https://frameguessr.com',
   },
   appleWebApp: {
     capable: true,
@@ -81,7 +81,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'FrameGuessr - Daily Movie & TV Show Guessing Game',
     description: 'Can you identify today\'s movie or TV show? Test your cinema knowledge with our daily challenge.',
-    url: 'https://frameguessr.strahil.dev',
+    url: 'https://frameguessr.com',
     siteName: 'FrameGuessr',
     images: [
       {
@@ -196,7 +196,7 @@ export default function RootLayout({
               "@type": "WebApplication",
               "name": "FrameGuessr",
               "description": "Daily movie and TV show guessing game from film stills",
-              "url": "https://frameguessr.strahil.dev",
+              "url": "https://frameguessr.com",
               "applicationCategory": "GameApplication",
               "operatingSystem": "All",
               "offers": {
@@ -207,7 +207,7 @@ export default function RootLayout({
               "author": {
                 "@type": "Organization",
                 "name": "FrameGuessr",
-                "url": "https://frameguessr.strahil.dev"
+                "url": "https://frameguessr.com"
               },
               "aggregateRating": {
                 "@type": "AggregateRating",

@@ -63,7 +63,7 @@ export default function NotFound() {
           <p className="text-sm text-stone-600 dark:text-stone-400">
             Looking for something specific?{' '}
             <a 
-              href="mailto:support@frameguessr.com"
+              href="mailto:strahil.peykov@gmail.com"
               className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium"
             >
               Contact us
