@@ -11,7 +11,10 @@ import StatsModal from './StatsModal'
 import SearchBox from './SearchBox'
 import DatePicker from './DatePicker'
 import AudioHint from './AudioHint'
+import AuthModal from '@/components/auth/AuthModal'
+import UserMenu from '@/components/auth/UserMenu'
 import { useTheme } from '@/hooks/useTheme'
+import { gameStorage } from '@/lib/gameStorage'
 
 interface GameBoardProps {
   initialDate?: string
@@ -41,9 +44,13 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
   const [error, setError] = useState<string | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
   const [showStatsModal, setShowStatsModal] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin')
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [showGuesses, setShowGuesses] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle')
 
   // Get blur configuration for current state
   const blur = useBlur(
@@ -51,48 +58,66 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     gameState.completed || gameState.won
   )
 
+  // Initialize enhanced storage
+  useEffect(() => {
+    gameStorage.init().then(() => {
+      setIsAuthenticated(gameStorage.isAuthenticated())
+    })
+  }, [])
+
   // Handle date selection
   const handleDateSelect = (date: string) => {
     router.push(`/day/${date}`)
   }
 
-  // Load game state
+  // Load game state using enhanced storage
   useEffect(() => {
-    const savedState = localStorage.getItem(`frameguessr-${selectedDate}`)
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState)
-        setGameState(parsed)
-        setShowGuesses(parsed.guesses.length > 0)
-      } catch (error) {
-        console.error('Error parsing saved state:', error)
+    const loadGameState = async () => {
+      const savedState = await gameStorage.loadGameState(selectedDate)
+      if (savedState) {
+        setGameState(savedState)
+        setShowGuesses(savedState.guesses.length > 0)
+      } else {
+        setGameState({
+          currentDate: selectedDate,
+          attempts: 0,
+          maxAttempts: 3,
+          guesses: [],
+          completed: false,
+          won: false,
+          currentHintLevel: 1,
+        })
+        setShowGuesses(false)
       }
-    } else {
-      setGameState({
-        currentDate: selectedDate,
-        attempts: 0,
-        maxAttempts: 3,
-        guesses: [],
-        completed: false,
-        won: false,
-        currentHintLevel: 1,
-      })
-      setShowGuesses(false)
     }
+
+    loadGameState()
     fetchDailyChallenge(selectedDate)
     setImageLoaded(false)
     setImageError(false)
     setAudioHints(null)
   }, [selectedDate])
 
-  // Save game state
+  // Save game state using enhanced storage
   useEffect(() => {
-    if (gameState.attempts > 0 || gameState.completed) {
-      localStorage.setItem(
-        `frameguessr-${selectedDate}`,
-        JSON.stringify(gameState)
-      )
+    const saveGameState = async () => {
+      if (gameState.attempts > 0 || gameState.completed) {
+        setSyncStatus('syncing')
+        try {
+          await gameStorage.saveGameState(selectedDate, gameState)
+          setSyncStatus('synced')
+          
+          // Reset sync status after a delay
+          setTimeout(() => setSyncStatus('idle'), 2000)
+        } catch (error) {
+          console.error('Failed to save game state:', error)
+          setSyncStatus('error')
+          setTimeout(() => setSyncStatus('idle'), 3000)
+        }
+      }
     }
+
+    saveGameState()
   }, [gameState, selectedDate])
 
   // Stop audio when game completes
@@ -114,7 +139,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       
       if (response.ok) {
         const audioData = await response.json()
-        // Keep the original format with durations
         setAudioHints(audioData)
         console.log('[GameBoard] Audio hints loaded:', audioData.track.title)
       } else {
@@ -193,16 +217,19 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     const newAttempts = gameState.attempts + 1
     const newHintLevel = Math.min(newAttempts + 1, 3)
 
-    setGameState(prev => ({
-      ...prev,
+    const newGameState = {
+      ...gameState,
       attempts: newAttempts,
-      guesses: [...prev.guesses, newGuess],
+      guesses: [...gameState.guesses, newGuess],
       completed: isCorrect || newAttempts >= gameState.maxAttempts,
       won: isCorrect,
       currentHintLevel: newHintLevel,
-    }))
+    }
 
+    setGameState(newGameState)
     setShowGuesses(true)
+
+    // Save to database happens automatically via useEffect
 
     try {
       await fetch('/api/guess', {
@@ -210,13 +237,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           guess: newGuess, 
-          gameState: {
-            ...gameState, 
-            attempts: newAttempts,
-            completed: isCorrect || newAttempts >= gameState.maxAttempts,
-            won: isCorrect,
-            currentHintLevel: newHintLevel
-          } 
+          gameState: newGameState
         }),
       })
     } catch (error) {
@@ -243,6 +264,12 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       currentHintLevel: newHintLevel,
       completed: newAttempts >= gameState.maxAttempts,
     }))
+  }
+
+  // Auth success handler
+  const handleAuthSuccess = () => {
+    setIsAuthenticated(true)
+    setShowAuthModal(false)
   }
 
   if (isLoading) {
@@ -285,7 +312,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
 
   return (
     <>
-      {/* Cinematic Navigation Bar */}
+      {/* Enhanced Navigation Bar with Auth */}
       <nav className="fixed top-0 left-0 right-0 z-50 cinema-nav-blur bg-white/80 dark:bg-stone-950/80 border-b border-stone-200/30 dark:border-amber-900/30">
         <div className="max-w-5xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
@@ -303,6 +330,30 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                 onDateSelect={handleDateSelect}
                 compact
               />
+              
+              {/* Sync Status Indicator */}
+              {isAuthenticated && (
+                <div className="flex items-center gap-2">
+                  {syncStatus === 'syncing' && (
+                    <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+                      <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <span>Syncing...</span>
+                    </div>
+                  )}
+                  {syncStatus === 'synced' && (
+                    <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                      <Check className="w-3 h-3" />
+                      <span>Synced</span>
+                    </div>
+                  )}
+                  {syncStatus === 'error' && (
+                    <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                      <X className="w-3 h-3" />
+                      <span>Sync failed</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             
             <div className="flex items-center gap-2">
@@ -317,6 +368,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                   <Moon className="w-5 h-5" />
                 )}
               </button>
+              
               <button
                 onClick={() => setShowStatsModal(true)}
                 className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
@@ -324,6 +376,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
               >
                 <BarChart3 className="w-5 h-5" />
               </button>
+              
               {gameState.completed && (
                 <button
                   onClick={() => setShowShareModal(true)}
@@ -332,6 +385,32 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                 >
                   <Share2 className="w-5 h-5" />
                 </button>
+              )}
+              
+              {/* Auth Section */}
+              {isAuthenticated ? (
+                <UserMenu onStatsClick={() => setShowStatsModal(true)} />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setShowAuthModal(true)
+                      setAuthModalMode('signin')
+                    }}
+                    className="px-3 py-2 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg font-medium transition-colors text-sm"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowAuthModal(true)
+                      setAuthModalMode('signup')
+                    }}
+                    className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm"
+                  >
+                    Sign Up
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -662,6 +741,14 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
           )}
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+        initialMode={authModalMode}
+      />
 
       {/* Theater Modals */}
       <ShareModal

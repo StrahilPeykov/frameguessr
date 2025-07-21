@@ -1,7 +1,8 @@
+// components/game/ShareModal.tsx
 'use client'
 
 import { useState } from 'react'
-import { X, Twitter, Copy, Check, Share, Film, Sparkles, Award } from 'lucide-react'
+import { X, Copy, Check, Share } from 'lucide-react'
 import { GameState } from '@/types/game'
 import { format } from 'date-fns'
 
@@ -22,27 +23,25 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
     const attempts = gameState.attempts
     const maxAttempts = gameState.maxAttempts
     
-    // Cinema-themed emojis for results
+    // Simple emojis for results
     let grid = ''
     for (let i = 0; i < maxAttempts; i++) {
       if (i < gameState.guesses.length) {
-        grid += gameState.guesses[i].correct ? '🎬' : '🎭'
+        grid += gameState.guesses[i].correct ? '🟩' : '🟥'
       } else {
-        grid += '🎪'
+        grid += '⬜'
       }
     }
 
     const isToday = dateStr === format(new Date(), 'yyyy-MM-dd')
     const url = `frameguessr.com/day/${dateStr}`
 
-    return `🎬 FrameGuessr ${dateStr}
-${gameState.won ? `🏆 Solved in ${attempts}/${maxAttempts} guesses!` : `🎭 Final curtain ${attempts}/${maxAttempts}`}
+    return `FrameGuessr ${dateStr}
+${gameState.won ? `Solved in ${attempts}/${maxAttempts}!` : `${attempts}/${maxAttempts}`}
 
 ${grid}
 
-${isToday ? '🎥 Tonight\'s feature:' : '🎞️ Catch this classic:'} ${url}
-
-#FrameGuessr #MovieGame #Cinema`
+${url}`
   }
 
   const shareText = generateShareText()
@@ -51,22 +50,17 @@ ${isToday ? '🎥 Tonight\'s feature:' : '🎞️ Catch this classic:'} ${url}
     try {
       await navigator.clipboard.writeText(shareText)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2500)
+      setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       console.error('Failed to copy:', err)
     }
-  }
-
-  const handleTwitterShare = () => {
-    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
-    window.open(tweetUrl, '_blank')
   }
 
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'FrameGuessr - Cinema Challenge',
+          title: 'FrameGuessr',
           text: shareText,
           url: `https://frameguessr.com/day/${gameState.currentDate}`,
         })
@@ -77,106 +71,68 @@ ${isToday ? '🎥 Tonight\'s feature:' : '🎞️ Catch this classic:'} ${url}
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="cinema-glass max-w-md w-full rounded-3xl shadow-2xl border border-stone-200/30 dark:border-amber-700/30 overflow-hidden">
-        {/* Theater Header */}
-        <div className="bg-gradient-to-r from-amber-100 via-red-100 to-amber-100 dark:from-amber-900 dark:via-red-900 dark:to-amber-900 p-6 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-400/10 via-red-400/10 to-amber-400/10 animate-marquee" />
-          
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-stone-900 max-w-sm w-full rounded-xl shadow-xl border border-stone-200 dark:border-stone-700">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-700">
+          <div className="flex items-center gap-3">
+            <Share className="w-5 h-5 text-amber-600" />
+            <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+              Share Result
+            </h2>
+          </div>
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 text-stone-600 dark:text-amber-200 hover:text-stone-800 dark:hover:text-white transition-colors p-1 rounded-lg hover:bg-white/20 cinema-touch"
+            className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
           >
             <X className="w-5 h-5" />
           </button>
-
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center">
-              {gameState.won ? (
-                <Award className="w-6 h-6 text-white" />
-              ) : (
-                <Film className="w-6 h-6 text-white" />
-              )}
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-stone-800 dark:text-white">Share Your Performance</h2>
-              <p className="text-stone-600 dark:text-amber-200 text-sm">
-                {gameState.won ? 'Outstanding performance!' : 'Better luck next show'}
-              </p>
-            </div>
-          </div>
         </div>
 
-        <div className="p-6">
-          {/* Cinema Preview */}
-          <div className="bg-stone-100 dark:bg-stone-800 rounded-2xl p-4 mb-6 font-mono text-sm whitespace-pre-line border border-stone-200/30 dark:border-amber-700/30 shadow-inner">
-            <div className="text-stone-700 dark:text-stone-300">
-              {shareText}
-            </div>
+        <div className="p-4">
+          {/* Preview */}
+          <div className="bg-stone-100 dark:bg-stone-800 rounded-lg p-3 mb-4 font-mono text-sm whitespace-pre-line text-stone-700 dark:text-stone-300">
+            {shareText}
           </div>
 
           {/* Share Buttons */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <button
               onClick={handleCopy}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white px-6 py-4 rounded-2xl transition-all duration-300 font-bold shadow-lg hover:shadow-xl cinema-btn group"
+              className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-lg font-medium"
             >
               {copied ? (
                 <>
-                  <Check className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                  Copied to Clipboard!
+                  <Check className="w-4 h-4" />
+                  Copied!
                 </>
               ) : (
                 <>
-                  <Copy className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <Copy className="w-4 h-4" />
                   Copy to Clipboard
                 </>
               )}
             </button>
 
-            <button
-              onClick={handleTwitterShare}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-slate-800 to-black hover:from-slate-700 hover:to-slate-900 text-white px-6 py-4 rounded-2xl transition-all duration-300 font-bold shadow-lg hover:shadow-xl cinema-btn group"
-            >
-              <Twitter className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              Share on X (Twitter)
-            </button>
-
             {typeof navigator !== 'undefined' && 'share' in navigator && (
               <button
                 onClick={handleNativeShare}
-                className="w-full flex items-center justify-center gap-3 cinema-glass hover:bg-stone-100/80 dark:hover:bg-stone-700/80 text-stone-700 dark:text-stone-200 px-6 py-4 rounded-2xl transition-all duration-300 font-bold border border-stone-200/50 dark:border-amber-700/50 cinema-btn group"
+                className="w-full flex items-center justify-center gap-2 border border-stone-300 dark:border-stone-600 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-200 px-4 py-3 rounded-lg font-medium"
               >
-                <Share className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                Share with Others
+                <Share className="w-4 h-4" />
+                Share
               </button>
             )}
           </div>
 
-          {/* Movie Credit */}
+          {/* Movie Title */}
           {gameState.won && movieTitle && (
-            <div className="mt-6 pt-6 border-t border-stone-200 dark:border-stone-700">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400 mb-2">
-                  <Sparkles className="w-4 h-4" />
-                  <span className="text-sm font-medium">Featured Film</span>
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <p className="text-stone-600 dark:text-stone-400 text-sm">
-                  You correctly identified <span className="font-bold text-stone-900 dark:text-stone-100">"{movieTitle}"</span>
-                </p>
-              </div>
+            <div className="mt-4 pt-4 border-t border-stone-200 dark:border-stone-700 text-center">
+              <p className="text-sm text-stone-600 dark:text-stone-400">
+                Today's movie: <span className="font-medium text-stone-900 dark:text-stone-100">{movieTitle}</span>
+              </p>
             </div>
           )}
-        </div>
-
-        {/* Theater Footer */}
-        <div className="bg-gradient-to-r from-stone-100 to-amber-50 dark:from-stone-800 dark:to-amber-900/20 p-4 text-center border-t border-stone-200/50 dark:border-stone-700/50">
-          <p className="text-xs text-stone-500 dark:text-stone-400 flex items-center justify-center gap-2">
-            <Film className="w-3 h-3" />
-            FrameGuessr - Daily Cinema Challenge
-            <Film className="w-3 h-3" />
-          </p>
         </div>
       </div>
     </div>

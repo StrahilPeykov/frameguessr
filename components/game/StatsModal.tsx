@@ -1,105 +1,74 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { X, TrendingUp, Award, Calendar } from 'lucide-react'
+import { X, TrendingUp } from 'lucide-react'
+import { gameStorage } from '@/lib/gameStorage'
 
 interface StatsModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
-interface Stats {
+interface UserStats {
   gamesPlayed: number
   gamesWon: number
   winPercentage: number
   currentStreak: number
-  maxStreak: number
+  averageAttempts: number
   guessDistribution: number[]
 }
 
+interface LeaderboardEntry {
+  user_id: string
+  username?: string
+  display_name?: string
+  score: number
+  rank: number
+}
+
 export default function StatsModal({ isOpen, onClose }: StatsModalProps) {
-  const [stats, setStats] = useState<Stats>({
+  const [stats, setStats] = useState<UserStats>({
     gamesPlayed: 0,
     gamesWon: 0,
     winPercentage: 0,
     currentStreak: 0,
-    maxStreak: 0,
+    averageAttempts: 0,
     guessDistribution: [0, 0, 0],
   })
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [activeTab, setActiveTab] = useState<'stats' | 'leaderboard'>('stats')
+  const [loading, setLoading] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
-      calculateStats()
+      loadStats()
+      setIsAuthenticated(gameStorage.isAuthenticated())
+      if (gameStorage.isAuthenticated()) {
+        loadLeaderboard()
+      }
     }
   }, [isOpen])
 
-  const calculateStats = () => {
-    const allGames: any[] = []
-    
-    // Get all game data from localStorage
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      if (key?.startsWith('frameguessr-')) {
-        const gameData = localStorage.getItem(key)
-        if (gameData) {
-          try {
-            const parsed = JSON.parse(gameData)
-            allGames.push({
-              date: key.replace('frameguessr-', ''),
-              ...parsed
-            })
-          } catch (e) {
-            console.error('Error parsing game data:', e)
-          }
-        }
-      }
+  const loadStats = async () => {
+    setLoading(true)
+    try {
+      const userStats = await gameStorage.getUserStats()
+      setStats(userStats)
+    } catch (error) {
+      console.error('Failed to load stats:', error)
+    } finally {
+      setLoading(false)
     }
+  }
 
-    // Sort by date
-    allGames.sort((a, b) => a.date.localeCompare(b.date))
-
-    // Calculate stats
-    const gamesPlayed = allGames.filter(g => g.completed).length
-    const gamesWon = allGames.filter(g => g.won).length
-    const winPercentage = gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0
-
-    // Calculate guess distribution
-    const distribution = [0, 0, 0]
-    allGames.forEach(game => {
-      if (game.won && game.attempts > 0 && game.attempts <= 3) {
-        distribution[game.attempts - 1]++
-      }
-    })
-
-    // Calculate streaks
-    let currentStreak = 0
-    let maxStreak = 0
-    let tempStreak = 0
-    
-    for (let i = allGames.length - 1; i >= 0; i--) {
-      if (allGames[i].won) {
-        tempStreak++
-        if (i === allGames.length - 1) {
-          currentStreak = tempStreak
-        }
-      } else if (allGames[i].completed) {
-        maxStreak = Math.max(maxStreak, tempStreak)
-        tempStreak = 0
-        if (i === allGames.length - 1) {
-          currentStreak = 0
-        }
-      }
+  const loadLeaderboard = async () => {
+    try {
+      const leaderboardData = await gameStorage.getLeaderboard('streak')
+      setLeaderboard(leaderboardData)
+    } catch (error) {
+      console.error('Failed to load leaderboard:', error)
     }
-    maxStreak = Math.max(maxStreak, tempStreak, currentStreak)
-
-    setStats({
-      gamesPlayed,
-      gamesWon,
-      winPercentage,
-      currentStreak,
-      maxStreak,
-      guessDistribution: distribution,
-    })
   }
 
   if (!isOpen) return null
@@ -107,91 +76,152 @@ export default function StatsModal({ isOpen, onClose }: StatsModalProps) {
   const maxDistribution = Math.max(...stats.guessDistribution, 1)
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-sm w-full p-6 relative border border-yellow-200/20 dark:border-yellow-700/20">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100">Your Statistics</h2>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.gamesPlayed}</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Played</div>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-stone-900 max-w-md w-full rounded-xl shadow-xl border border-stone-200 dark:border-stone-700">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-700">
+          <div className="flex items-center gap-3">
+            <TrendingUp className="w-5 h-5 text-amber-600" />
+            <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+              Statistics
+            </h2>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.winPercentage}%</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Win %</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.currentStreak}</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Current Streak</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.maxStreak}</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Max Streak</div>
-          </div>
+          <button
+            onClick={onClose}
+            className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Guess Distribution */}
-        <div className="mb-4">
-          <h3 className="font-semibold mb-3 flex items-center gap-2 text-gray-900 dark:text-gray-100">
-            <Award className="w-4 h-4 text-yellow-600" />
-            Guess Distribution
-          </h3>
-          <div className="space-y-2">
-            {stats.guessDistribution.map((count, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div className="w-4 text-sm font-medium text-gray-700 dark:text-gray-300">{index + 1}</div>
-                <div className="flex-1 relative bg-gray-200 dark:bg-gray-700 h-6 rounded">
-                  <div
-                    className="absolute inset-y-0 left-0 bg-yellow-500 rounded transition-all duration-500"
-                    style={{
-                      width: `${maxDistribution > 0 ? (count / maxDistribution) * 100 : 0}%`,
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-end pr-2">
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{count}</span>
-                  </div>
+        {/* Tabs */}
+        {isAuthenticated && (
+          <div className="flex border-b border-stone-200 dark:border-stone-700">
+            <button
+              onClick={() => setActiveTab('stats')}
+              className={`flex-1 px-4 py-2 text-sm font-medium ${
+                activeTab === 'stats'
+                  ? 'text-amber-600 border-b-2 border-amber-600'
+                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+              }`}
+            >
+              Your Stats
+            </button>
+            <button
+              onClick={() => setActiveTab('leaderboard')}
+              className={`flex-1 px-4 py-2 text-sm font-medium ${
+                activeTab === 'leaderboard'
+                  ? 'text-amber-600 border-b-2 border-amber-600'
+                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+              }`}
+            >
+              Leaderboard
+            </button>
+          </div>
+        )}
+
+        <div className="p-4">
+          {activeTab === 'stats' && (
+            <div className="space-y-4">
+              {/* Main Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center p-3 bg-stone-100 dark:bg-stone-800 rounded-lg">
+                  <div className="text-xl font-bold text-stone-900 dark:text-stone-100">{stats.gamesPlayed}</div>
+                  <div className="text-xs text-stone-500 dark:text-stone-400">Games Played</div>
+                </div>
+                <div className="text-center p-3 bg-stone-100 dark:bg-stone-800 rounded-lg">
+                  <div className="text-xl font-bold text-stone-900 dark:text-stone-100">{stats.winPercentage}%</div>
+                  <div className="text-xs text-stone-500 dark:text-stone-400">Win Rate</div>
+                </div>
+                <div className="text-center p-3 bg-stone-100 dark:bg-stone-800 rounded-lg">
+                  <div className="text-xl font-bold text-stone-900 dark:text-stone-100">{stats.currentStreak}</div>
+                  <div className="text-xs text-stone-500 dark:text-stone-400">Current Streak</div>
+                </div>
+                <div className="text-center p-3 bg-stone-100 dark:bg-stone-800 rounded-lg">
+                  <div className="text-xl font-bold text-stone-900 dark:text-stone-100">{stats.averageAttempts}</div>
+                  <div className="text-xs text-stone-500 dark:text-stone-400">Avg. Attempts</div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Achievements */}
-        <div className="border-t dark:border-gray-700 pt-4">
-          <h3 className="font-semibold mb-2 flex items-center gap-2 text-gray-900 dark:text-gray-100">
-            <TrendingUp className="w-4 h-4 text-yellow-600" />
-            Achievements
-          </h3>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            {stats.currentStreak >= 3 && (
-              <div className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded">
-                🔥 Hot Streak!
+              {/* Guess Distribution */}
+              <div>
+                <h3 className="font-medium mb-2 text-stone-900 dark:text-stone-100">
+                  Guess Distribution
+                </h3>
+                <div className="space-y-2">
+                  {stats.guessDistribution.map((count, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-4 text-sm font-medium text-stone-700 dark:text-stone-300">{index + 1}</div>
+                      <div className="flex-1 relative bg-stone-200 dark:bg-stone-700 h-4 rounded">
+                        <div
+                          className="absolute inset-y-0 left-0 bg-amber-500 rounded"
+                          style={{
+                            width: `${maxDistribution > 0 ? (count / maxDistribution) * 100 : 0}%`,
+                          }}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-end pr-2">
+                          <span className="text-xs font-medium text-stone-700 dark:text-stone-300">{count}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
-            {stats.winPercentage >= 80 && stats.gamesPlayed >= 5 && (
-              <div className="bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 px-2 py-1 rounded">
-                🎯 Sharpshooter
-              </div>
-            )}
-            {stats.gamesPlayed >= 10 && (
-              <div className="bg-gray-100 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200 px-2 py-1 rounded">
-                🎬 Regular
-              </div>
-            )}
-            {stats.guessDistribution[0] >= 5 && (
-              <div className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded">
-                ⚡ Quick Eye
-              </div>
-            )}
-          </div>
+
+              {/* Sign In CTA */}
+              {!isAuthenticated && (
+                <div className="bg-stone-100 dark:bg-stone-800 p-3 rounded-lg">
+                  <p className="text-sm text-stone-600 dark:text-stone-400 mb-2">
+                    Sign in to sync your progress across devices.
+                  </p>
+                  <button className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-medium">
+                    Sign In
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'leaderboard' && isAuthenticated && (
+            <div className="space-y-3">
+              <h3 className="font-medium text-stone-900 dark:text-stone-100">Current Streaks</h3>
+              
+              {loading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="flex items-center gap-3 p-2 bg-stone-100 dark:bg-stone-800 rounded">
+                      <div className="w-6 h-6 bg-stone-200 dark:bg-stone-700 rounded" />
+                      <div className="flex-1 h-3 bg-stone-200 dark:bg-stone-700 rounded" />
+                      <div className="w-8 h-3 bg-stone-200 dark:bg-stone-700 rounded" />
+                    </div>
+                  ))}
+                </div>
+              ) : leaderboard.length > 0 ? (
+                <div className="space-y-1">
+                  {leaderboard.slice(0, 10).map((entry, index) => (
+                    <div
+                      key={entry.user_id}
+                      className="flex items-center gap-3 p-2 bg-stone-100 dark:bg-stone-800 rounded"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-stone-300 dark:bg-stone-600 flex items-center justify-center text-xs font-bold">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 text-sm font-medium text-stone-900 dark:text-stone-100 truncate">
+                        {entry.display_name || entry.username || 'Anonymous'}
+                      </div>
+                      <div className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                        {entry.score}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-stone-500 dark:text-stone-400">
+                  <p className="text-sm">No leaderboard data available yet.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
