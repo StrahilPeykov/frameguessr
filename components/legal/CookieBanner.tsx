@@ -6,6 +6,11 @@ import { Cookie, X, Shield, Info } from 'lucide-react'
 
 const COOKIE_CONSENT_KEY = 'frameguessr-cookie-consent'
 
+// Type guard for gtag
+function hasGtag(): boolean {
+  return typeof window !== 'undefined' && 'gtag' in window && typeof window.gtag === 'function'
+}
+
 export default function CookieBanner() {
   const [showBanner, setShowBanner] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
@@ -31,10 +36,14 @@ export default function CookieBanner() {
     setShowBanner(false)
     
     // Enable/disable analytics based on consent
-    if (type === 'all' && typeof window !== 'undefined' && window.gtag) {
-      window.gtag('consent', 'update', {
-        'analytics_storage': 'granted'
-      })
+    if (type === 'all' && hasGtag()) {
+      try {
+        window.gtag('consent', 'update', {
+          'analytics_storage': 'granted'
+        })
+      } catch (error) {
+        console.error('Failed to update gtag consent:', error)
+      }
     }
   }
 

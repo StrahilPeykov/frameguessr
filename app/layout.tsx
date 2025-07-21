@@ -237,21 +237,23 @@ export default function RootLayout({
                 document.documentElement.classList.add(theme);
                 
                 // Initialize analytics consent based on cookie preferences
-                const cookieConsent = localStorage.getItem('frameguessr-cookie-consent');
-                if (cookieConsent) {
-                  try {
+                try {
+                  const cookieConsent = localStorage.getItem('frameguessr-cookie-consent');
+                  if (cookieConsent) {
                     const consent = JSON.parse(cookieConsent);
-                    if (window.gtag && consent.analytics === false) {
+                    if (typeof window.gtag === 'function' && consent.analytics === false) {
                       window.gtag('consent', 'default', {
                         'analytics_storage': 'denied'
                       });
                     }
-                  } catch (e) {}
-                } else if (window.gtag) {
-                  // Default to denied until consent given
-                  window.gtag('consent', 'default', {
-                    'analytics_storage': 'denied'
-                  });
+                  } else if (typeof window.gtag === 'function') {
+                    // Default to denied until consent given
+                    window.gtag('consent', 'default', {
+                      'analytics_storage': 'denied'
+                    });
+                  }
+                } catch (e) {
+                  console.error('Analytics consent error:', e);
                 }
               })();
             `,
