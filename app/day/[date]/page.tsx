@@ -93,7 +93,7 @@ export async function generateMetadata({ params }: PageProps) {
       siteName: 'FrameGuessr',
       images: [
         {
-          url: '/og-image.png',
+          url: '/images/og-image.jpg',
           width: 1200,
           height: 630,
           alt: 'FrameGuessr - Daily Movie & TV Show Guessing Game',
@@ -110,7 +110,7 @@ export async function generateMetadata({ params }: PageProps) {
       description: isToday
         ? 'Can you guess today\'s movie or TV show?'
         : `Challenge from ${formattedDate}`,
-      images: ['/og-image.png'],
+      images: ['/images/og-image.jpg'],
       creator: '@frameguessr',
     }
   }

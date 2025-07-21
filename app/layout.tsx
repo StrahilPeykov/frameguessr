@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     siteName: 'FrameGuessr',
     images: [
       {
-        url: '/og-image.png',
+        url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'FrameGuessr - Daily Cinema Challenge for Film Enthusiasts',
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'FrameGuessr - Classic Cinema Challenge',
     description: 'Can you identify tonight\'s feature film? Test your cinema knowledge daily.',
-    images: ['/og-image.png'],
+    images: ['/images/og-image.jpg'],
     creator: '@frameguessr',
     site: '@frameguessr',
   },
@@ -362,7 +362,7 @@ export default function RootLayout({
                 // Preload critical cinema assets
                 const criticalImages = [
                   '/placeholder-movie.svg',
-                  '/og-image.png'
+                  '/images/og-image.jpg'
                 ];
                 
                 criticalImages.forEach(src => {
