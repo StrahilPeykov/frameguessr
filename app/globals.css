@@ -1,68 +1,74 @@
 @import "tailwindcss";
 
 :root {
-  /* Cinematic Color Palette - Light Mode */
-  --background: #FEFEFE;
-  --foreground: #1A1A1A;
-  --surface: #F5F5F5;
-  --surface-elevated: #FFFFFF;
+  /* DRAMATICALLY IMPROVED Light Mode - Vintage Cinema Lobby */
+  --background: linear-gradient(135deg, #FFF8F0 0%, #FEF5E7 25%, #FDF2E0 50%, #FCF0DD 75%, #FBEEDA 100%);
+  --background-solid: #FFF8F0;
+  --foreground: #2D1B0F;
+  --surface: linear-gradient(135deg, #FEFCF8 0%, #FDF9F3 50%, #FCF6EE 100%);
+  --surface-solid: #FEFCF8;
+  --surface-elevated: linear-gradient(135deg, #FFFFFF 0%, #FFFEF9 50%, #FFFCF4 100%);
+  --surface-elevated-solid: #FFFFFF;
   
-  /* Classic Cinema Palette */
-  --cinema-burgundy: #8B1538;
-  --cinema-burgundy-light: #A61E42;
-  --cinema-burgundy-dark: #6B0E26;
-  --cinema-burgundy-muted: #8B153820;
+  /* Rich, warm cinematic palette */
+  --cinema-burgundy: #9A1E3F;
+  --cinema-burgundy-light: #B8285A;
+  --cinema-burgundy-dark: #7A1730;
+  --cinema-burgundy-muted: rgba(154, 30, 63, 0.12);
   
-  --cinema-gold: #D4A574;
+  --cinema-gold: #D4A76B;
   --cinema-gold-light: #E6C08A;
   --cinema-gold-dark: #B8925E;
-  --cinema-gold-muted: #D4A57420;
+  --cinema-gold-muted: rgba(212, 167, 107, 0.15);
   
-  --cinema-copper: #B87333;
+  --cinema-copper: #C87F35;
   --cinema-copper-light: #D4924D;
-  --cinema-copper-dark: #8B5A2B;
+  --cinema-copper-dark: #B87333;
   
-  /* Letterboxd-inspired Orange */
-  --cinema-orange: #FF8C00;
-  --cinema-orange-light: #FFA726;
-  --cinema-orange-dark: #E67E00;
-  --cinema-orange-muted: #FF8C0020;
+  /* Warmer orange for light mode */
+  --cinema-orange: #E67E00;
+  --cinema-orange-light: #FF8C00;
+  --cinema-orange-dark: #CC7000;
+  --cinema-orange-muted: rgba(230, 126, 0, 0.12);
   
-  /* Neutral Cinema Tones */
-  --cinema-cream: #F8F6F0;
-  --cinema-warm-gray: #8B8680;
-  --cinema-charcoal: #2D2B28;
+  /* Light mode specific warm neutrals */
+  --cinema-cream: #FDF9F3;
+  --cinema-warm-gray: #8B7A6B;
+  --cinema-charcoal: #2D1B0F;
   --cinema-velvet: #1A1818;
   
-  /* Semantic Colors */
-  --success: #4F7942;
-  --warning: #D4A574;
-  --error: #B91C1C;
-  --info: #3B82F6;
+  /* Enhanced light mode semantic colors */
+  --success: #5F8A4F;
+  --warning: #D4A76B;
+  --error: #C73E1D;
+  --info: #4A90E2;
 }
 
 .dark {
   /* Dark Mode - Cinema Theater Aesthetic */
   --background: #0F0F0F;
+  --background-solid: #0F0F0F;
   --foreground: #F8F6F0;
   --surface: #1A1818;
+  --surface-solid: #1A1818;
   --surface-elevated: #2D2B28;
+  --surface-elevated-solid: #2D2B28;
   
   /* Adjust colors for dark mode */
   --cinema-burgundy: #A61E42;
   --cinema-burgundy-light: #C8285A;
   --cinema-burgundy-dark: #8B1538;
-  --cinema-burgundy-muted: #A61E4220;
+  --cinema-burgundy-muted: rgba(166, 30, 66, 0.2);
   
   --cinema-gold: #E6C08A;
   --cinema-gold-light: #F2D1A6;
   --cinema-gold-dark: #D4A574;
-  --cinema-gold-muted: #E6C08A20;
+  --cinema-gold-muted: rgba(230, 192, 138, 0.2);
   
   --cinema-orange: #FFA726;
   --cinema-orange-light: #FFB74D;
   --cinema-orange-dark: #FF8C00;
-  --cinema-orange-muted: #FFA72620;
+  --cinema-orange-muted: rgba(255, 167, 38, 0.2);
   
   --cinema-warm-gray: #A8A29E;
   --cinema-charcoal: #F8F6F0;
@@ -70,10 +76,10 @@
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --color-background: var(--background-solid);
   --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-  --color-surface-elevated: var(--surface-elevated);
+  --color-surface: var(--surface-solid);
+  --color-surface-elevated: var(--surface-elevated-solid);
   
   --color-cinema-burgundy: var(--cinema-burgundy);
   --color-cinema-burgundy-light: var(--cinema-burgundy-light);
@@ -101,12 +107,14 @@
 }
 
 body {
-  background: var(--background);
+  background: var(--background-solid);
   color: var(--foreground);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
   overflow-x: hidden;
   overflow-y: auto;
+  margin: 0;
+  padding: 0;
 }
 
 /* Light mode specific adjustments */
@@ -157,6 +165,20 @@ body {
 /* Art Deco Skeleton Animation */
 .skeleton {
   animation: skeleton-loading 1.8s ease-in-out infinite alternate;
+  background-size: 400% 100%;
+}
+
+.light .skeleton {
+  background: linear-gradient(90deg, 
+    rgba(253, 249, 243, 0.6) 0%,
+    rgba(212, 167, 107, 0.2) 25%,
+    rgba(230, 126, 0, 0.1) 50%,
+    rgba(212, 167, 107, 0.2) 75%,
+    rgba(253, 249, 243, 0.6) 100%
+  );
+}
+
+.dark .skeleton {
   background: linear-gradient(90deg, 
     transparent, 
     var(--cinema-gold-muted), 
@@ -164,7 +186,6 @@ body {
     var(--cinema-gold-muted),
     transparent
   );
-  background-size: 400% 100%;
 }
 
 @keyframes skeleton-loading {
@@ -359,14 +380,23 @@ body {
   line-height: 1.5;
 }
 
-/* Cinema Glassmorphism - Light mode adjustments */
+/* BEAUTIFUL Cinema Glass Effects - Light Mode Optimized */
 .cinema-glass {
   backdrop-filter: blur(20px) saturate(180%);
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(212, 165, 116, 0.2);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.light .cinema-glass {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.85) 0%, 
+    rgba(254, 252, 248, 0.80) 50%, 
+    rgba(253, 249, 243, 0.75) 100%
+  );
+  border: 1px solid rgba(212, 167, 107, 0.25);
   box-shadow: 
-    0 8px 32px rgba(139, 21, 56, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    0 4px 16px rgba(212, 167, 107, 0.08),
+    0 2px 8px rgba(230, 126, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .dark .cinema-glass {
@@ -386,28 +416,52 @@ body {
     inset 0 1px 0 rgba(212, 165, 116, 0.1);
 }
 
-/* Cinema Navigation Blur */
+/* Clean Cinema Navigation Blur */
 .cinema-nav-blur {
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.light .cinema-nav-blur {
+  background: linear-gradient(180deg,
+    rgba(255, 248, 240, 0.90) 0%,
+    rgba(254, 245, 231, 0.85) 100%
+  );
+  border-bottom: 1px solid rgba(212, 167, 107, 0.15);
+}
+
+.dark .cinema-nav-blur {
+  background: rgba(15, 15, 15, 0.90);
+  border-bottom: 1px solid rgba(166, 30, 66, 0.2);
 }
 
 /* Art Deco Gradient Text */
 .cinema-gradient-text {
-  background: linear-gradient(135deg, var(--cinema-burgundy) 0%, var(--cinema-gold) 50%, var(--cinema-orange) 100%);
+  background: linear-gradient(135deg, 
+    var(--cinema-burgundy) 0%, 
+    var(--cinema-gold) 30%,
+    var(--cinema-copper) 60%,
+    var(--cinema-orange) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 30px var(--cinema-gold-muted);
+  font-weight: 700;
 }
 
 .cinema-gradient-title {
-  background: linear-gradient(135deg, var(--cinema-gold) 0%, var(--cinema-copper) 50%, var(--cinema-burgundy) 100%);
+  background: linear-gradient(135deg, 
+    var(--cinema-gold) 0%, 
+    var(--cinema-copper) 40%,
+    var(--cinema-burgundy) 80%,
+    var(--cinema-orange) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   color: transparent;
+  font-weight: 800;
 }
 
 /* Theater Marquee Effect */
@@ -494,14 +548,20 @@ body {
   }
 }
 
-/* Enhanced Cinema Focus */
+/* Clean Cinema Focus */
 .cinema-focus {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
 
-.cinema-focus:focus-visible {
+.light .cinema-focus:focus-visible {
+  outline: 2px solid var(--cinema-burgundy);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--cinema-burgundy-muted);
+}
+
+.dark .cinema-focus:focus-visible {
   outline: 2px solid var(--cinema-burgundy);
   outline-offset: 2px;
   box-shadow: 
@@ -509,12 +569,12 @@ body {
     0 0 20px var(--cinema-gold-muted);
 }
 
-/* Theater Button Hover States */
+/* Clean Button Styling */
 .cinema-btn {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateZ(0);
   position: relative;
   overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
 }
 
 .cinema-btn::before {
@@ -532,14 +592,33 @@ body {
   left: 100%;
 }
 
-.cinema-btn:hover {
+.light .cinema-btn {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(212, 167, 107, 0.2);
+  color: var(--cinema-charcoal);
+  box-shadow: 0 1px 3px rgba(212, 167, 107, 0.1);
+}
+
+.light .cinema-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(154, 30, 63, 0.3);
+  box-shadow: 0 4px 12px rgba(212, 167, 107, 0.15);
+}
+
+.light .cinema-btn:active {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(212, 167, 107, 0.2);
+}
+
+.dark .cinema-btn:hover {
   transform: translateY(-3px);
   box-shadow: 
     0 10px 30px rgba(139, 21, 56, 0.2),
     0 0 20px var(--cinema-gold-muted);
 }
 
-.cinema-btn:active {
+.dark .cinema-btn:active {
   transform: translateY(-1px);
   box-shadow: 
     0 4px 15px rgba(139, 21, 56, 0.3),
@@ -575,23 +654,33 @@ body {
   background-position: 0 0, 50px 50px;
 }
 
-/* Theater Status Dots */
+/* Theater Status Dots - Clean Light Mode */
 .cinema-status-correct {
   background: linear-gradient(135deg, var(--cinema-gold) 0%, var(--cinema-gold-light) 100%);
-  box-shadow: 0 0 16px var(--cinema-gold-muted);
+  box-shadow: 0 0 12px var(--cinema-gold-muted);
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .cinema-status-incorrect {
   background: linear-gradient(135deg, var(--cinema-burgundy) 0%, var(--cinema-burgundy-light) 100%);
-  box-shadow: 0 0 16px var(--cinema-burgundy-muted);
+  box-shadow: 0 0 12px var(--cinema-burgundy-muted);
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .cinema-status-pending {
-  background: linear-gradient(135deg, var(--cinema-warm-gray) 0%, var(--cinema-charcoal) 100%);
-  box-shadow: 0 0 8px rgba(139, 134, 128, 0.3);
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .light .cinema-status-pending {
+  background: linear-gradient(135deg, rgba(212, 167, 107, 0.2) 0%, rgba(200, 127, 53, 0.15) 100%);
+  border: 1px solid rgba(212, 167, 107, 0.3);
+  box-shadow: 0 0 6px rgba(212, 167, 107, 0.1);
+}
+
+.dark .cinema-status-pending {
   background: linear-gradient(135deg, #e5e5e5 0%, #d4d4d4 100%);
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }
@@ -700,15 +789,24 @@ body {
   }
 }
 
-/* Cinema Loading Spinner */
+/* Clean Cinema Loading Spinner */
 .cinema-spinner {
-  border: 3px solid var(--cinema-burgundy-muted);
   border-radius: 50%;
-  border-top: 3px solid var(--cinema-gold);
-  border-right: 3px solid var(--cinema-burgundy);
   width: 48px;
   height: 48px;
   animation: cinemaSpinner 1s linear infinite;
+}
+
+.light .cinema-spinner {
+  border: 3px solid var(--cinema-burgundy-muted);
+  border-top: 3px solid var(--cinema-burgundy);
+  border-right: 3px solid var(--cinema-gold);
+}
+
+.dark .cinema-spinner {
+  border: 3px solid var(--cinema-burgundy-muted);
+  border-top: 3px solid var(--cinema-gold);
+  border-right: 3px solid var(--cinema-burgundy);
 }
 
 @keyframes cinemaSpinner {
