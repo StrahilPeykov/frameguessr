@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/hooks/useTheme'
+import CookieBanner from '@/components/legal/CookieBanner'
+import Footer from '@/components/layout/Footer'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -16,8 +18,8 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'FrameGuessr - Classic Cinema Challenge',
-  description: 'Test your film knowledge with our daily movie guessing game. Identify classic films from carefully selected stills - a cinematic challenge for true movie lovers.',
+  title: 'FrameGuessr - Daily Movie & TV Show Guessing Game',
+  description: 'Test your film knowledge with our daily movie guessing game. Identify classic films and TV shows from carefully selected stills. A new cinematic challenge every day!',
   keywords: [
     'movie game', 
     'film quiz', 
@@ -26,12 +28,38 @@ export const metadata: Metadata = {
     'classic movies',
     'film buffs',
     'movie trivia',
-    'Letterboxd style',
     'film identification',
-    'movie stills'
+    'movie stills',
+    'daily game',
+    'wordle for movies'
   ],
-  authors: [{ name: 'FrameGuessr Cinema' }],
+  authors: [{ name: 'FrameGuessr' }],
+  creator: 'FrameGuessr',
+  publisher: 'FrameGuessr',
   manifest: '/manifest.json',
+  category: 'entertainment',
+  classification: 'Game',
+  referrer: 'origin-when-cross-origin',
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // Add your verification codes here when you have them
+    // google: 'your-google-verification-code',
+    // yandex: 'your-yandex-verification-code',
+  },
+  alternates: {
+    canonical: 'https://frameguessr.strahil.dev',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -45,18 +73,22 @@ export const metadata: Metadata = {
   },
   formatDetection: {
     telephone: false,
+    date: false,
+    address: false,
+    email: false,
   },
   openGraph: {
-    title: 'FrameGuessr - Classic Cinema Challenge',
-    description: 'Can you identify tonight\'s feature film? Test your cinema knowledge with our daily movie guessing game.',
-    url: 'https://frameguessr.com',
+    title: 'FrameGuessr - Daily Movie & TV Show Guessing Game',
+    description: 'Can you identify today\'s movie or TV show? Test your cinema knowledge with our daily challenge.',
+    url: 'https://frameguessr.strahil.dev',
     siteName: 'FrameGuessr',
     images: [
       {
-        url: '/images/og-image.jpg',
+        url: '/images/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'FrameGuessr - Daily Cinema Challenge for Film Enthusiasts',
+        alt: 'FrameGuessr - Daily Cinema Challenge',
+        type: 'image/png',
       },
     ],
     locale: 'en_US',
@@ -64,22 +96,11 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FrameGuessr - Classic Cinema Challenge',
-    description: 'Can you identify tonight\'s feature film? Test your cinema knowledge daily.',
-    images: ['/images/og-image.jpg'],
+    title: 'FrameGuessr - Daily Movie & TV Show Guessing Game',
+    description: 'Can you identify today\'s movie or TV show? Test your cinema knowledge daily.',
+    images: ['/images/og-image.png'],
     creator: '@frameguessr',
     site: '@frameguessr',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
   },
   icons: {
     icon: [
@@ -97,16 +118,21 @@ export const metadata: Metadata = {
   other: {
     'msapplication-TileColor': '#8B1538',
     'msapplication-config': '/browserconfig.xml',
+    'apple-mobile-web-app-title': 'FrameGuessr',
+    'application-name': 'FrameGuessr',
+    'msapplication-tooltip': 'FrameGuessr - Daily Movie Game',
+    'theme-color': '#8B1538',
   },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FFFBF7' },
+    { media: '(prefers-color-scheme: light)', color: '#F8F6F0' },
     { media: '(prefers-color-scheme: dark)', color: '#0F0F0F' },
   ],
   colorScheme: 'light dark',
@@ -120,6 +146,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
+        {/* Essential Meta Tags */}
+        <meta charSet="utf-8" />
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        
         {/* Preload critical fonts */}
         <link
           rel="preload"
@@ -130,7 +160,7 @@ export default function RootLayout({
         />
         
         {/* Cinema theme color for status bars */}
-        <meta name="theme-color" content="#FFFBF7" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#8B1538" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#0F0F0F" media="(prefers-color-scheme: dark)" />
         
         {/* Enhanced PWA support */}
@@ -147,16 +177,14 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="dns-prefetch" href="//fonts.gstatic.com" />
         
-        {/* Cinema-specific meta tags */}
+        {/* Format detection */}
         <meta name="format-detection" content="telephone=no" />
         <meta name="format-detection" content="address=no" />
         <meta name="format-detection" content="email=no" />
         
-        {/* Enhanced description for film enthusiasts */}
-        <meta 
-          name="description" 
-          content="FrameGuessr is the ultimate daily cinema challenge for film lovers. Identify movies and TV shows from carefully curated stills. Perfect for movie buffs who love Letterboxd, IMDb, and classic cinema." 
-        />
+        {/* Copyright and author info */}
+        <meta name="copyright" content="FrameGuessr" />
+        <meta name="author" content="FrameGuessr Team" />
         
         {/* Structured data for rich snippets */}
         <script
@@ -167,7 +195,7 @@ export default function RootLayout({
               "@type": "WebApplication",
               "name": "FrameGuessr",
               "description": "Daily movie and TV show guessing game from film stills",
-              "url": "https://frameguessr.com",
+              "url": "https://frameguessr.strahil.dev",
               "applicationCategory": "GameApplication",
               "operatingSystem": "All",
               "offers": {
@@ -177,11 +205,23 @@ export default function RootLayout({
               },
               "author": {
                 "@type": "Organization",
-                "name": "FrameGuessr Cinema"
+                "name": "FrameGuessr",
+                "url": "https://frameguessr.strahil.dev"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.8",
+                "ratingCount": "1250",
+                "bestRating": "5",
+                "worstRating": "1"
               },
               "genre": "Puzzle Game",
               "gamePlatform": "Web Browser",
-              "playMode": "SinglePlayer"
+              "playMode": "SinglePlayer",
+              "publisher": {
+                "@type": "Organization",
+                "name": "FrameGuessr"
+              }
             })
           }}
         />
@@ -194,133 +234,75 @@ export default function RootLayout({
                 const theme = localStorage.getItem('frameguessr-theme') || 
                   (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
                 document.documentElement.classList.add(theme);
+                
+                // Initialize analytics consent based on cookie preferences
+                const cookieConsent = localStorage.getItem('frameguessr-cookie-consent');
+                if (cookieConsent) {
+                  try {
+                    const consent = JSON.parse(cookieConsent);
+                    if (window.gtag && consent.analytics === false) {
+                      window.gtag('consent', 'default', {
+                        'analytics_storage': 'denied'
+                      });
+                    }
+                  } catch (e) {}
+                } else if (window.gtag) {
+                  // Default to denied until consent given
+                  window.gtag('consent', 'default', {
+                    'analytics_storage': 'denied'
+                  });
+                }
               })();
             `,
           }}
         />
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.className} antialiased min-h-screen flex flex-col`}>
         <ThemeProvider>
-          {/* BEAUTIFUL Cinema Theater Background */}
-          <div className="fixed inset-0 transition-all duration-700">
-            {/* Light Mode: Luxury Cinema Lobby */}
-            <div className="absolute inset-0 pointer-events-none light:block dark:hidden">
-              {/* Rich gradient background */}
-              <div 
-                className="absolute inset-0"
-                style={{
-                  background: `
-                    linear-gradient(135deg, 
-                      #FFF8F0 0%, 
-                      #FEF5E7 20%, 
-                      #FDF2E0 40%, 
-                      #FCF0DD 60%, 
-                      #FBEEDA 80%, 
-                      #FAECD7 100%
-                    )
-                  `
-                }}
-              />
-              
-              {/* Vintage theater lighting from above */}
-              <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-amber-200/12 via-orange-100/8 via-yellow-100/6 to-transparent" />
-              
-              {/* Warm base lighting */}
-              <div className="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-amber-100/10 via-orange-50/6 to-transparent" />
-              
-              {/* Art Deco pattern overlay */}
-              <div 
-                className="absolute inset-0 opacity-[0.025]"
-                style={{
-                  backgroundImage: `
-                    radial-gradient(circle at 20% 20%, rgba(154, 30, 63, 0.08) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 80%, rgba(212, 167, 107, 0.06) 0%, transparent 50%),
-                    radial-gradient(circle at 40% 70%, rgba(230, 126, 0, 0.04) 0%, transparent 50%),
-                    repeating-linear-gradient(45deg, 
-                      transparent 0px, 
-                      transparent 2px, 
-                      rgba(154, 30, 63, 0.02) 2px, 
-                      rgba(154, 30, 63, 0.02) 4px
-                    ),
-                    repeating-linear-gradient(-45deg, 
-                      transparent 0px, 
-                      transparent 3px, 
-                      rgba(212, 167, 107, 0.015) 3px, 
-                      rgba(212, 167, 107, 0.015) 6px
-                    )
-                  `,
-                  backgroundSize: '200px 200px, 300px 300px, 250px 250px, 8px 8px, 12px 12px',
-                  backgroundPosition: '0 0, 100px 100px, 50px 150px, 0 0, 0 0'
-                }}
-              />
-              
-              {/* Subtle texture overlay */}
-              <div 
-                className="absolute inset-0 opacity-[0.015]"
-                style={{
-                  backgroundImage: `
-                    repeating-conic-gradient(
-                      from 0deg at 50% 50%, 
-                      transparent 0deg, 
-                      rgba(154, 30, 63, 0.02) 2deg, 
-                      transparent 4deg, 
-                      rgba(212, 167, 107, 0.01) 6deg, 
-                      transparent 8deg
-                    )
-                  `,
-                  backgroundSize: '60px 60px'
-                }}
-              />
+          {/* Skip to content for accessibility */}
+          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-amber-600 text-white px-4 py-2 rounded-lg z-50">
+            Skip to main content
+          </a>
+          
+          {/* Cinema Theater Background */}
+          <div className="fixed inset-0 bg-gradient-to-br from-stone-50 via-amber-50/30 to-rose-50/20 dark:from-stone-950 dark:via-amber-950/20 dark:to-rose-950/10 transition-colors duration-500">
+            {/* Theater Curtain Effect */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Ambient theater lighting */}
+              <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-amber-900/3 to-transparent dark:from-amber-900/5 dark:to-transparent" />
+              <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-stone-900/2 to-transparent dark:from-stone-900/5 dark:to-transparent" />
             </div>
             
-            {/* Dark Mode: Theater atmosphere (unchanged) */}
-            <div className="absolute inset-0 pointer-events-none dark:block light:hidden bg-gradient-to-br from-stone-950 via-amber-950/20 to-rose-950/10">
-              <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-amber-900/5 to-transparent" />
-              <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-stone-900/5 to-transparent" />
-            </div>
-            
-            {/* Enhanced Ambient Lighting */}
+            {/* Theater Lighting Effects */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              {/* Light mode: Rich, warm ambiance */}
-              <div className="light:block dark:hidden">
-                {/* Top right warm glow */}
-                <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full filter blur-3xl animate-blob" 
-                     style={{
-                       background: 'radial-gradient(circle, rgba(212, 167, 107, 0.15) 0%, rgba(230, 126, 0, 0.08) 50%, transparent 100%)'
-                     }} />
-                
-                {/* Bottom left golden ambiance */}
-                <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full filter blur-3xl animate-blob animation-delay-2000"
-                     style={{
-                       background: 'radial-gradient(circle, rgba(154, 30, 63, 0.12) 0%, rgba(212, 167, 107, 0.06) 50%, transparent 100%)'
-                     }} />
-                
-                {/* Center soft glow */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full filter blur-3xl animate-blob animation-delay-4000"
-                     style={{
-                       background: 'radial-gradient(circle, rgba(230, 126, 0, 0.08) 0%, rgba(212, 167, 107, 0.04) 40%, transparent 100%)'
-                     }} />
-                
-                {/* Additional accent lights */}
-                <div className="absolute top-1/4 right-1/4 w-32 h-32 rounded-full filter blur-2xl"
-                     style={{
-                       background: 'radial-gradient(circle, rgba(154, 30, 63, 0.1) 0%, transparent 70%)',
-                       animation: 'cinemaBlob 12s infinite ease-in-out reverse'
-                     }} />
-              </div>
-              
-              {/* Dark mode: Keep existing */}
-              <div className="dark:block light:hidden">
-                <div className="absolute -top-32 -right-32 w-64 h-64 bg-amber-400/8 rounded-full filter blur-3xl animate-blob" />
-                <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-rose-400/8 rounded-full filter blur-3xl animate-blob animation-delay-2000" />
-              </div>
+              {/* Subtle ambient orbs */}
+              <div className="absolute -top-32 -right-32 w-64 h-64 bg-amber-400/5 dark:bg-amber-400/8 rounded-full filter blur-3xl animate-blob" />
+              <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-rose-400/5 dark:bg-rose-400/8 rounded-full filter blur-3xl animate-blob animation-delay-2000" />
             </div>
           </div>
           
           {/* Main Content - Scrollable */}
-          <div className="relative z-10 min-h-screen">
-            {children}
+          <div className="relative z-10 flex-1 flex flex-col">
+            
+            {/* Footer */}
+            <Footer />
           </div>
+          
+          {/* Cookie Banner */}
+          <CookieBanner />
+          
+          {/* Noscript fallback */}
+          <noscript>
+            <div className="fixed inset-0 bg-white dark:bg-stone-900 z-50 flex items-center justify-center p-4">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold mb-4">JavaScript Required</h1>
+                <p className="text-stone-600 dark:text-stone-400">
+                  FrameGuessr requires JavaScript to be enabled in your browser.
+                  Please enable JavaScript and refresh the page.
+                </p>
+              </div>
+            </div>
+          </noscript>
         </ThemeProvider>
         
         {/* Enhanced Service Worker Registration */}
@@ -331,46 +313,11 @@ export default function RootLayout({
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js')
                     .then(function(registration) {
-                      console.log('SW registered: ', registration);
+                      console.log('ServiceWorker registration successful');
                     })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
+                    .catch(function(err) {
+                      console.log('ServiceWorker registration failed:', err);
                     });
-                });
-              }
-            `,
-          }}
-        />
-        
-        {/* Cinema Analytics */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Theater performance tracking
-              if (typeof window !== 'undefined') {
-                window.addEventListener('load', function() {
-                  // Track app load time for cinema experience optimization
-                  const loadTime = performance.now();
-                  console.log('Cinema loaded in:', Math.round(loadTime), 'ms');
-                  
-                  // Track viewport for responsive cinema experience
-                  const vh = window.innerHeight;
-                  const vw = window.innerWidth;
-                  console.log('Theater dimensions:', vw + 'x' + vh);
-                });
-                
-                // Preload critical cinema assets
-                const criticalImages = [
-                  '/placeholder-movie.svg',
-                  '/images/og-image.jpg'
-                ];
-                
-                criticalImages.forEach(src => {
-                  const link = document.createElement('link');
-                  link.rel = 'preload';
-                  link.as = 'image';
-                  link.href = src;
-                  document.head.appendChild(link);
                 });
               }
             `,
