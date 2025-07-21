@@ -599,7 +599,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                     You identified <span className="font-bold text-stone-900 dark:text-stone-100">"{dailyChallenge?.title}"</span>
                   </p>
                   <p className="text-sm text-stone-500 dark:text-stone-500">
-                    Solved in {gameState.attempts} {gameState.attempts === 1 ? 'scene' : 'scenes'}
+                    Solved in {gameState.attempts} {gameState.attempts === 1 ? 'guess' : 'guesses'}
                   </p>
                 </>
               ) : (
