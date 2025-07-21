@@ -28,6 +28,7 @@ export const metadata: Metadata = {
     'classic movies',
     'film buffs',
     'movie trivia',
+    'TV show quiz',
     'film identification',
     'movie stills',
     'daily game',
