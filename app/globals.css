@@ -500,6 +500,38 @@ body {
   }
 }
 
+/* Mobile Menu Animations */
+.mobile-menu-overlay {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.mobile-menu-enter {
+  opacity: 0;
+  transform: translateY(-1rem);
+}
+
+.mobile-menu-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mobile-menu-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mobile-menu-exit-active {
+  opacity: 0;
+  transform: translateY(-1rem);
+}
+
+/* Prevent body scroll when mobile menu is open */
+body.mobile-menu-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   .skeleton,
