@@ -236,13 +236,13 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
         />
       )}
 
-      {/* Subtle Cinema Media Player */}
+      {/* Rethought Cinema Media Player */}
       <div className="cinema-glass rounded-xl overflow-hidden border border-stone-200/30 dark:border-amber-700/30">
         
-        {/* Main Player Row */}
+        {/* Main Player Row - Clean and Focused */}
         <div className="flex items-center gap-4 p-4">
           
-          {/* Audio Icon with Animation */}
+          {/* Audio Icon with Play Status */}
           <div className="relative flex-shrink-0">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 dark:from-amber-600/30 dark:to-orange-600/30 flex items-center justify-center border border-amber-300/30 dark:border-amber-600/30">
               <Music2 className="w-5 h-5 text-amber-700 dark:text-amber-400" />
@@ -260,13 +260,12 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
                   {gameCompleted ? trackTitle : 'Mystery Soundtrack'}
                 </h4>
                 <p className="text-stone-600 dark:text-stone-400 text-xs truncate">
-                  {gameCompleted ? artistName : `${duration}s preview • Level ${hintLevel}`}
+                  {gameCompleted ? `by ${artistName}` : `Level ${hintLevel} • ${duration}s preview`}
                 </p>
               </div>
               
-              <div className="text-xs text-stone-500 dark:text-stone-400 ml-2 flex items-center gap-1">
-                <Headphones className="w-3 h-3" />
-                {Math.floor(playbackTime)}s / {duration}s
+              <div className="text-xs text-stone-500 dark:text-stone-400 ml-2 tabular-nums">
+                {Math.floor(playbackTime)}s/{duration}s
               </div>
             </div>
             
@@ -276,71 +275,32 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
                 className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-200 ease-out"
                 style={{ width: `${progress}%` }}
               />
-              {/* Progress dot */}
-              <div 
-                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border border-amber-500 rounded-full shadow-sm transition-all duration-200"
-                style={{ left: `calc(${progress}% - 6px)` }}
-              />
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {/* Volume Control - Reasonable Size */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleMute}
-                className="p-1.5 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors cinema-touch"
-                aria-label={isMuted ? 'Unmute' : 'Mute'}
-              >
-                {isMuted ? (
-                  <VolumeX className="w-4 h-4 text-stone-600 dark:text-stone-400" />
-                ) : (
-                  <Volume2 className="w-4 h-4 text-stone-600 dark:text-stone-400" />
-                )}
-              </button>
-              
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={isMuted ? 0 : volume}
-                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                className="w-20 h-1 bg-stone-300 dark:bg-stone-600 rounded-lg appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, 
-                    #D4A574 0%, 
-                    #D4A574 ${(isMuted ? 0 : volume) * 100}%, 
-                    #e5e5e5 ${(isMuted ? 0 : volume) * 100}%, 
-                    #e5e5e5 100%)`
-                }}
-              />
-            </div>
-
-            {/* Play/Pause Button */}
-            <button
-              onClick={togglePlay}
-              disabled={isBuffering}
-              className="w-12 h-12 bg-gradient-to-br from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 disabled:from-amber-800 disabled:to-orange-800 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl cinema-btn disabled:opacity-50 disabled:cursor-not-allowed group flex items-center justify-center"
-              aria-label={isPlaying ? 'Pause soundtrack' : 'Play soundtrack'}
-            >
-              {isBuffering ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : isPlaying ? (
-                <Pause className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
-              ) : (
-                <Play className="w-5 h-5 ml-0.5 text-white group-hover:scale-110 transition-transform" />
-              )}
-            </button>
-          </div>
+          {/* Play Button Only - Clean */}
+          <button
+            onClick={togglePlay}
+            disabled={isBuffering}
+            className="w-12 h-12 bg-gradient-to-br from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 disabled:from-amber-800 disabled:to-orange-800 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl cinema-btn disabled:opacity-50 disabled:cursor-not-allowed group flex items-center justify-center"
+            aria-label={isPlaying ? 'Pause soundtrack' : 'Play soundtrack'}
+          >
+            {isBuffering ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : isPlaying ? (
+              <Pause className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+            ) : (
+              <Play className="w-5 h-5 ml-0.5 text-white group-hover:scale-110 transition-transform" />
+            )}
+          </button>
         </div>
 
-        {/* Simple Visualizer - Always Present to Maintain Height */}
-        <div className="px-4 pb-3 h-6 flex items-center justify-center">
-          {isPlaying ? (
-            <div className="flex items-center justify-center gap-1">
-              {Array.from({ length: 8 }).map((_, i) => (
+        {/* Bottom Bar with Visualizer and Volume */}
+        <div className="flex items-center justify-between px-4 pb-3 border-t border-stone-200/20 dark:border-stone-700/20">
+          {/* Left: Mini Visualizer */}
+          <div className="flex items-center gap-0.5">
+            {isPlaying ? (
+              Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
                   className="w-0.5 bg-gradient-to-t from-amber-500 to-orange-500 rounded-full transition-all duration-300"
@@ -349,18 +309,48 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
                     animationDelay: `${i * 0.1}s`
                   }}
                 />
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 opacity-30">
-              {Array.from({ length: 8 }).map((_, i) => (
+              ))
+            ) : (
+              Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="w-0.5 h-1 bg-stone-300 dark:bg-stone-600 rounded-full"
+                  className="w-0.5 h-1 bg-stone-300 dark:bg-stone-600 rounded-full opacity-30"
                 />
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
+          
+          {/* Right: Volume Control - Better Placement */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleMute}
+              className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors cinema-touch"
+              aria-label={isMuted ? 'Unmute' : 'Mute'}
+            >
+              {isMuted ? (
+                <VolumeX className="w-4 h-4 text-stone-600 dark:text-stone-400" />
+              ) : (
+                <Volume2 className="w-4 h-4 text-stone-600 dark:text-stone-400" />
+              )}
+            </button>
+            
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={isMuted ? 0 : volume}
+              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+              className="w-20 h-1.5 bg-stone-300 dark:bg-stone-600 rounded-lg appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, 
+                  #D4A574 0%, 
+                  #D4A574 ${(isMuted ? 0 : volume) * 100}%, 
+                  #e5e5e5 ${(isMuted ? 0 : volume) * 100}%, 
+                  #e5e5e5 100%)`
+              }}
+            />
+          </div>
         </div>
       </div>
     </>

@@ -213,7 +213,7 @@ export default function SearchBox({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={placeholder}
-          className={`w-full pl-14 pr-14 py-5 text-lg cinema-glass rounded-2xl 
+          className={`w-full pl-14 pr-14 py-4 text-lg cinema-glass rounded-xl 
             border-2 transition-all duration-300 shadow-lg hover:shadow-xl cinema-focus
             ${hasFocus || showResults 
               ? 'border-amber-500 dark:border-amber-400' 
@@ -253,7 +253,7 @@ export default function SearchBox({
       {shouldShowResults && (
         <div 
           ref={resultsRef}
-          className="absolute top-full left-0 right-0 mt-4 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50 cinema-scrollbar"
+          className="absolute top-full left-0 right-0 mt-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl shadow-2xl max-h-96 overflow-y-auto z-50 cinema-scrollbar"
           role="listbox"
         >
           {error && (
