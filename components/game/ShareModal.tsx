@@ -3,7 +3,7 @@
 
 import { useState } from 'react'
 import { X, Copy, Check, Share } from 'lucide-react'
-import { GameState } from '@/types/game'
+import { GameState } from '@/types'
 import { format } from 'date-fns'
 
 interface ShareModalProps {

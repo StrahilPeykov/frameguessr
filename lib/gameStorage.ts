@@ -1,4 +1,4 @@
-import { GameState, Guess } from '@/types/game'
+import { GameState, Guess } from '@/types'
 import { supabase } from '@/lib/supabase'
 
 export interface UserProgressRow {
@@ -25,11 +25,9 @@ export class GameStorage {
   }
 
   async init() {
-    // Check for existing session
     const { data: { user } } = await supabase.auth.getUser()
     this.user = user
     
-    // Listen for auth changes
     supabase.auth.onAuthStateChange((event, session) => {
       this.user = session?.user || null
       
@@ -39,24 +37,19 @@ export class GameStorage {
     })
   }
 
-  // Save game state (hybrid approach)
   async saveGameState(date: string, state: GameState): Promise<void> {
-    // Always save to localStorage first (for offline support)
     this.saveToLocalStorage(date, state)
     
-    // Sync to database if user is authenticated
     if (this.user) {
       await this.saveToDatabaseWithRetry(date, state)
     }
   }
 
-  // Load game state (prioritize database if available)
   async loadGameState(date: string): Promise<GameState | null> {
     if (this.user) {
       try {
         const dbState = await this.loadFromDatabase(date)
         if (dbState) {
-          // Update localStorage with latest from database
           this.saveToLocalStorage(date, dbState)
           return dbState
         }
@@ -65,11 +58,9 @@ export class GameStorage {
       }
     }
     
-    // Fallback to localStorage
     return this.loadFromLocalStorage(date)
   }
 
-  // Private methods
   private saveToLocalStorage(date: string, state: GameState): void {
     try {
       localStorage.setItem(`frameguessr-${date}`, JSON.stringify(state))
@@ -97,7 +88,6 @@ export class GameStorage {
         console.warn(`Database save attempt ${i + 1} failed:`, error)
         if (i === retries - 1) throw error
         
-        // Wait before retry
         await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)))
       }
     }
@@ -139,17 +129,15 @@ export class GameStorage {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        // No data found - this is normal for new dates
         return null
       }
       throw new Error(`Database load failed: ${error.message}`)
     }
 
-    // Convert database row to GameState
     return {
       currentDate: date,
       attempts: data.attempts,
-      maxAttempts: 3, // This should probably be configurable
+      maxAttempts: 3,
       guesses: data.guesses || [],
       completed: data.completed,
       won: data.won || false,
@@ -157,7 +145,6 @@ export class GameStorage {
     }
   }
 
-  // Sync all localStorage data to database (called when user signs in)
   async syncLocalToDatabase(): Promise<void> {
     if (!this.user) return
 
@@ -174,10 +161,8 @@ export class GameStorage {
         const localState = this.loadFromLocalStorage(date)
         
         if (localState && localState.attempts > 0) {
-          // Check if database already has this data
           const dbState = await this.loadFromDatabase(date)
           
-          // Only sync if database doesn't have data or local is more recent
           if (!dbState || localState.attempts >= dbState.attempts) {
             await this.saveToDatabase(date, localState)
             console.log(`Synced ${date} to database`)
@@ -191,7 +176,6 @@ export class GameStorage {
     }
   }
 
-  // Get user statistics
   async getUserStats(): Promise<{
     gamesPlayed: number
     gamesWon: number
@@ -201,7 +185,6 @@ export class GameStorage {
     guessDistribution: number[]
   }> {
     if (!this.user) {
-      // Fallback to localStorage stats
       return this.getLocalStorageStats()
     }
 
@@ -219,7 +202,6 @@ export class GameStorage {
       const gamesWon = data.filter(game => game.won).length
       const winPercentage = gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0
 
-      // Calculate current streak
       let currentStreak = 0
       for (let i = data.length - 1; i >= 0; i--) {
         if (data[i].won) {
@@ -229,13 +211,11 @@ export class GameStorage {
         }
       }
 
-      // Calculate average attempts for won games
       const wonGames = data.filter(game => game.won)
       const averageAttempts = wonGames.length > 0 
         ? wonGames.reduce((sum, game) => sum + game.attempts, 0) / wonGames.length 
         : 0
 
-      // Calculate guess distribution
       const guessDistribution = [0, 0, 0]
       wonGames.forEach(game => {
         if (game.attempts >= 1 && game.attempts <= 3) {
@@ -258,7 +238,6 @@ export class GameStorage {
   }
 
   private getLocalStorageStats() {
-    // Fallback to localStorage-based stats (existing implementation)
     const allGames: any[] = []
     
     for (let i = 0; i < localStorage.length; i++) {
@@ -293,7 +272,6 @@ export class GameStorage {
     })
 
     let currentStreak = 0
-    // Simple streak calculation for localStorage
     allGames.sort((a, b) => a.date.localeCompare(b.date))
     for (let i = allGames.length - 1; i >= 0; i--) {
       if (allGames[i].won) {
@@ -318,7 +296,6 @@ export class GameStorage {
     }
   }
 
-  // Get leaderboard data (new feature!)
   async getLeaderboard(type: 'streak' | 'speed' | 'accuracy' = 'streak'): Promise<any[]> {
     if (!this.user) return []
 
@@ -338,7 +315,6 @@ export class GameStorage {
         .eq('completed', true)
 
       if (type === 'speed') {
-        // Fastest solvers (lowest attempts for won games)
         query = query
           .eq('won', true)
           .order('attempts', { ascending: true })
@@ -356,16 +332,13 @@ export class GameStorage {
     }
   }
 
-  // Check if user is authenticated
   isAuthenticated(): boolean {
     return !!this.user
   }
 
-  // Get current user
   getCurrentUser() {
     return this.user
   }
 }
 
-// Singleton instance
 export const gameStorage = GameStorage.getInstance()

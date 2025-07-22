@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { GameState, DailyChallenge, SearchResult, AudioHintData } from '@/types/game'
-import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, ChevronLeft, ChevronRight, Sparkles, User, Play, Sun, Moon } from 'lucide-react'
+import { GameState, DailyChallenge, SearchResult, AudioHintData } from '@/types'
+import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, User, Sun, Moon } from 'lucide-react'
 import { useBlur, type HintLevel } from '@/utils/blur'
 import ShareModal from './ShareModal'
 import StatsModal from './StatsModal'
@@ -52,25 +52,21 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle')
 
-  // Get blur configuration for current state
   const blur = useBlur(
     gameState.currentHintLevel as HintLevel, 
     gameState.completed || gameState.won
   )
 
-  // Initialize enhanced storage
   useEffect(() => {
     gameStorage.init().then(() => {
       setIsAuthenticated(gameStorage.isAuthenticated())
     })
   }, [])
 
-  // Handle date selection
   const handleDateSelect = (date: string) => {
     router.push(`/day/${date}`)
   }
 
-  // Load game state using enhanced storage
   useEffect(() => {
     const loadGameState = async () => {
       const savedState = await gameStorage.loadGameState(selectedDate)
@@ -98,7 +94,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     setAudioHints(null)
   }, [selectedDate])
 
-  // Save game state using enhanced storage
   useEffect(() => {
     const saveGameState = async () => {
       if (gameState.attempts > 0 || gameState.completed) {
@@ -106,8 +101,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
         try {
           await gameStorage.saveGameState(selectedDate, gameState)
           setSyncStatus('synced')
-          
-          // Reset sync status after a delay
           setTimeout(() => setSyncStatus('idle'), 2000)
         } catch (error) {
           console.error('Failed to save game state:', error)
@@ -120,14 +113,12 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     saveGameState()
   }, [gameState, selectedDate])
 
-  // Stop audio when game completes
   useEffect(() => {
     if (gameState.completed && audioRef.current) {
       audioRef.current.stopAudio()
     }
   }, [gameState.completed])
 
-  // Fetch audio hints using Deezer track ID
   const fetchAudioHints = async (trackId: number) => {
     try {
       setAudioLoading(true)
@@ -170,7 +161,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       const data = await response.json()
       setDailyChallenge(data)
       
-      // Fetch audio hints if Deezer track ID is available
       if (data.deezerTrackId) {
         fetchAudioHints(data.deezerTrackId)
       } else {
@@ -196,7 +186,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       return
     }
 
-    // Stop audio when making a guess
     if (audioRef.current) {
       audioRef.current.stopAudio()
     }
@@ -229,8 +218,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     setGameState(newGameState)
     setShowGuesses(true)
 
-    // Save to database happens automatically via useEffect
-
     try {
       await fetch('/api/guess', {
         method: 'POST',
@@ -250,7 +237,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       return
     }
 
-    // Stop audio when skipping
     if (audioRef.current) {
       audioRef.current.stopAudio()
     }
@@ -266,7 +252,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     }))
   }
 
-  // Auth success handler
   const handleAuthSuccess = () => {
     setIsAuthenticated(true)
     setShowAuthModal(false)
@@ -312,7 +297,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
 
   return (
     <>
-      {/* Enhanced Navigation Bar with Auth */}
       <nav className="fixed top-0 left-0 right-0 z-50 cinema-nav-blur bg-white/80 dark:bg-stone-950/80 border-b border-stone-200/30 dark:border-amber-900/30">
         <div className="max-w-5xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
@@ -331,7 +315,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                 compact
               />
               
-              {/* Sync Status Indicator */}
               {isAuthenticated && (
                 <div className="flex items-center gap-2">
                   {syncStatus === 'syncing' && (
@@ -387,7 +370,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                 </button>
               )}
               
-              {/* Auth Section */}
               {isAuthenticated ? (
                 <UserMenu onStatsClick={() => setShowStatsModal(true)} />
               ) : (
@@ -417,13 +399,10 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
         </div>
       </nav>
 
-      {/* Main Theater */}
       <div className="min-h-screen pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-4">
-          {/* Theater Header */}
           <div className="flex items-center justify-between mb-6 mt-6">
             <div className="flex items-center gap-6">
-              {/* Film Reel Dots */}
               <div className="flex gap-3">
                 {Array.from({ length: gameState.maxAttempts }).map((_, i) => (
                   <div
@@ -439,7 +418,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                 ))}
               </div>
               
-              {/* Hint Level Badge */}
               <div className="px-2 py-1 rounded-md text-xs font-medium bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700">
                 Hint {gameState.currentHintLevel}/3
               </div>
@@ -449,7 +427,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
               <div className="text-right">
                 {gameState.won ? (
                   <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold">
-                    <Trophy className="w-5 h-5 animate-cinema-trophy" />
+                    <Trophy className="w-5 h-5" />
                     <span>Standing Ovation!</span>
                   </div>
                 ) : (
@@ -461,9 +439,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             )}
           </div>
 
-          {/* Main Content Area with New Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-            {/* Left Column - Hints */}
             <div className="lg:col-span-2 space-y-4">
               {gameState.currentHintLevel >= 2 && dailyChallenge && (
                 <div className="cinema-glass rounded-2xl p-4 space-y-3">
@@ -500,7 +476,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
               )}
             </div>
 
-            {/* Center Column - Image */}
             <div className="lg:col-span-8">
               <div className="relative bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-stone-200/20 dark:border-amber-700/30">
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-amber-900/10 via-transparent to-amber-900/10 pointer-events-none z-10" />
@@ -514,10 +489,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                         className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
                           imageLoaded ? 'opacity-100' : 'opacity-0'
                         } ${blur.className}`}
-                        style={{ 
-                          filter: blur.filter,
-                          transition: 'filter 0.8s ease-in-out, opacity 1s ease-in-out'
-                        }}
                         onLoad={() => setImageLoaded(true)}
                         onError={() => setImageError(true)}
                       />
@@ -542,7 +513,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
               </div>
             </div>
 
-            {/* Right Column - Audio */}
             <div className="lg:col-span-2">
               {audioHints && (
                 <AudioHint
@@ -557,12 +527,12 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
               )}
 
               {audioLoading && (
-                <div className="bg-gradient-to-r from-slate-900/95 to-stone-900/95 cinema-glass-dark rounded-2xl p-6 text-white animate-pulse">
+                <div className="bg-gradient-to-r from-slate-900/95 to-stone-900/95 cinema-glass rounded-2xl p-6 text-white">
                   <div className="flex items-center gap-4">
                     <div className="cinema-spinner" />
                     <div className="flex-1">
-                      <div className="h-5 bg-amber-800/30 rounded-lg mb-3" />
-                      <div className="h-4 bg-amber-800/20 rounded-lg w-2/3" />
+                      <div className="h-5 bg-amber-800/30 rounded-lg mb-3 skeleton" />
+                      <div className="h-4 bg-amber-800/20 rounded-lg w-2/3 skeleton" />
                     </div>
                   </div>
                 </div>
@@ -570,7 +540,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             </div>
           </div>
 
-          {/* Controls Section */}
           {!gameState.completed ? (
             <div className="space-y-4 mb-8 max-w-3xl mx-auto">
               <SearchBox 
@@ -619,7 +588,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                 </>
               )}
 
-              {/* Full Movie Details - Always shown when completed */}
               {dailyChallenge?.details && (
                 <div className="mt-8 pt-6 border-t border-stone-200 dark:border-stone-700">
                   <div className="text-left space-y-4">
@@ -687,7 +655,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             </div>
           )}
 
-          {/* Theater Program - Previous Guesses */}
           {gameState.guesses.length > 0 && (
             <div className="cinema-glass rounded-2xl p-6 border border-stone-200/50 dark:border-stone-800/50 max-w-3xl mx-auto">
               <button
@@ -698,18 +665,20 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                   <Film className="w-5 h-5 text-amber-600" />
                   Your Guesses ({gameState.guesses.length})
                 </h3>
-                <ChevronRight className={`w-5 h-5 text-stone-500 transition-transform duration-300 ${showGuesses ? 'rotate-90' : ''} group-hover:text-amber-600`} />
+                <div className={`w-5 h-5 text-stone-500 transition-transform duration-300 ${showGuesses ? 'rotate-90' : ''} group-hover:text-amber-600`}>
+                  →
+                </div>
               </button>
               
               {showGuesses && (
-                <div className="space-y-3 cinema-section">
+                <div className="space-y-3">
                   {gameState.guesses.map((guess, index) => (
                     <div
                       key={guess.id}
                       className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 cinema-touch ${
                         guess.correct 
-                          ? 'bg-amber-50/80 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700 shadow-amber-100 dark:shadow-amber-900/20' 
-                          : 'bg-red-50/80 dark:bg-red-900/20 border-red-300 dark:border-red-700 shadow-red-100 dark:shadow-red-900/20'
+                          ? 'bg-amber-50/80 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700' 
+                          : 'bg-red-50/80 dark:bg-red-900/20 border-red-300 dark:border-red-700'
                       } shadow-sm`}
                     >
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-700 text-sm font-bold text-stone-600 dark:text-stone-300">
@@ -742,7 +711,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
         </div>
       </div>
 
-      {/* Auth Modal */}
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
@@ -750,7 +718,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
         initialMode={authModalMode}
       />
 
-      {/* Theater Modals */}
       <ShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
@@ -766,7 +733,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
   )
 }
 
-// Countdown Timer Component
 function CountdownTimer() {
   const [timeLeft, setTimeLeft] = useState('')
 

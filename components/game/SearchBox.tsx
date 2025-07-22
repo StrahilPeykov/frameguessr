@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, Loader2, Film, Tv, Calendar, X } from 'lucide-react'
-import { SearchResult } from '@/types/game'
+import { SearchResult } from '@/types'
 
 interface SearchBoxProps {
   onSelect: (result: SearchResult) => void
