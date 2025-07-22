@@ -81,7 +81,10 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
     audio.addEventListener('error', handleError)
     audio.addEventListener('waiting', handleWaiting)
     audio.addEventListener('canplay', handleCanPlay)
+    
+    // Apply initial volume and muted state
     audio.volume = volume
+    audio.muted = isMuted
 
     return () => {
       audio.removeEventListener('loadeddata', handleLoadedData)
@@ -95,27 +98,44 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
         intervalRef.current = null
       }
     }
-  }, [previewUrl, volume, duration, hintLevel])
+  }, [previewUrl, duration, hintLevel]) // Removed volume and isMuted from dependencies
+
+  // Separate effect for volume/muted changes - don't reset the whole audio element
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    audio.volume = volume
+    audio.muted = isMuted
+  }, [volume, isMuted])
 
   // Clean stop function - properly resets everything
   const handleStop = () => {
     const audio = audioRef.current
+    
+    // Clear interval first to prevent race conditions
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+    
     if (!audio) return
 
     // Stop the audio
     audio.pause()
     setIsPlaying(false)
     
-    // Clear interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-    
     // Reset to start position
-    audio.currentTime = startTimeRef.current
-    setCurrentTime(startTimeRef.current)
-    setPlaybackTime(0)
+    try {
+      audio.currentTime = startTimeRef.current
+      setCurrentTime(startTimeRef.current)
+      setPlaybackTime(0)
+    } catch (error) {
+      // Some browsers may throw errors when setting currentTime
+      console.warn('Error resetting audio position:', error)
+      setCurrentTime(startTimeRef.current)
+      setPlaybackTime(0)
+    }
     
     onPlayEnd?.()
   }
@@ -129,7 +149,13 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
         // Pause/Stop
         handleStop()
       } else {
-        // Play from start
+        // Clear any existing interval first
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current)
+          intervalRef.current = null
+        }
+
+        // Reset audio position
         audio.currentTime = startTimeRef.current
         setCurrentTime(startTimeRef.current)
         setPlaybackTime(0)
@@ -142,12 +168,31 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
 
         // Set up timer to track progress and stop after specified duration
         intervalRef.current = setInterval(() => {
-          const elapsed = audio.currentTime - startTimeRef.current
-          setCurrentTime(audio.currentTime)
-          setPlaybackTime(elapsed)
+          // Check if audio is still valid and playing
+          if (!audio || audio.paused || audio.ended || audio.error) {
+            if (audio?.error) {
+              console.error('Audio error detected in interval:', audio.error)
+              setAudioError(true)
+            }
+            handleStop()
+            return
+          }
 
-          // Stop exactly at duration limit
-          if (elapsed >= duration) {
+          try {
+            const currentAudioTime = audio.currentTime
+            const elapsed = currentAudioTime - startTimeRef.current
+            
+            // Ensure we don't go beyond our duration limit
+            if (elapsed >= duration) {
+              handleStop()
+              return
+            }
+
+            // Update state
+            setCurrentTime(currentAudioTime)
+            setPlaybackTime(elapsed)
+          } catch (error) {
+            console.error('Error in audio interval:', error)
             handleStop()
           }
         }, 100)
@@ -157,28 +202,23 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
       setIsPlaying(false)
       setIsBuffering(false)
       setAudioError(true)
+      // Clear interval on error
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
     }
   }
 
   const toggleMute = () => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    if (isMuted) {
-      audio.muted = false
-      setIsMuted(false)
-    } else {
-      audio.muted = true
-      setIsMuted(true)
-    }
+    setIsMuted(!isMuted)
   }
 
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume)
-    setIsMuted(newVolume === 0)
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume
-      audioRef.current.muted = newVolume === 0
+    // If user sets volume > 0 while muted, unmute automatically
+    if (newVolume > 0 && isMuted) {
+      setIsMuted(false)
     }
   }
 
@@ -444,7 +484,7 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
               className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors duration-300 cinema-touch flex-shrink-0"
               aria-label={isMuted ? 'Unmute' : 'Mute'}
             >
-              {isMuted || volume === 0 ? (
+              {isMuted ? (
                 <VolumeX className="w-5 h-5 text-stone-600 dark:text-stone-400" />
               ) : (
                 <Volume2 className="w-5 h-5 text-stone-600 dark:text-stone-400" />
@@ -475,7 +515,7 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
             </div>
             
             <span className={`text-xs text-stone-500 dark:text-stone-400 w-10 text-right font-mono transition-opacity duration-300 ${showVolumeSlider ? 'opacity-100' : 'opacity-50'} flex-shrink-0`}>
-              {Math.round((isMuted ? 0 : volume) * 100)}%
+              {isMuted ? '0%' : Math.round(volume * 100) + '%'}
             </span>
           </div>
         </div>
