@@ -298,7 +298,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 cinema-nav-blur bg-white/80 dark:bg-stone-950/80 border-b border-stone-200/30 dark:border-amber-900/30">
-        <div className="max-w-5xl mx-auto px-4">
+        <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -399,9 +399,12 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
         </div>
       </nav>
 
+      {/* Single Column Cinema Experience */}
       <div className="min-h-screen pt-16 pb-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-6 mt-6">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          
+          {/* Game Progress Header */}
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-6">
               <div className="flex gap-3">
                 {Array.from({ length: gameState.maxAttempts }).map((_, i) => (
@@ -418,8 +421,8 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                 ))}
               </div>
               
-              <div className="px-2 py-1 rounded-md text-xs font-medium bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700">
-                Hint {gameState.currentHintLevel}/3
+              <div className="px-3 py-1 rounded-lg text-sm font-medium bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700">
+                Scene {gameState.currentHintLevel}/3
               </div>
             </div>
             
@@ -439,109 +442,114 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-            <div className="lg:col-span-2 space-y-4">
-              {gameState.currentHintLevel >= 2 && dailyChallenge && (
-                <div className="cinema-glass rounded-2xl p-4 space-y-3">
-                  <h3 className="font-bold text-sm text-stone-700 dark:text-stone-300 flex items-center gap-2">
-                    <Film className="w-4 h-4 text-amber-600" />
-                    Hints
-                  </h3>
-                  
-                  {dailyChallenge.hints.level2.data.tagline && (
-                    <div className="bg-stone-100/50 dark:bg-stone-800/50 p-3 rounded-xl">
-                      <p className="text-sm italic text-stone-600 dark:text-stone-400">
-                        "{dailyChallenge.hints.level2.data.tagline}"
-                      </p>
-                    </div>
-                  )}
-                  
-                  {gameState.currentHintLevel >= 3 && (
-                    <div className="space-y-2">
-                      {dailyChallenge.hints.level3.data.year && (
-                        <div className="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-400">
-                          <Calendar className="w-4 h-4 text-amber-600" />
-                          <span>{dailyChallenge.hints.level3.data.year}</span>
-                        </div>
-                      )}
-                      {dailyChallenge.hints.level3.data.genre && (
-                        <div className="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-400">
-                          <Film className="w-4 h-4 text-amber-600" />
-                          <span>{dailyChallenge.hints.level3.data.genre}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="lg:col-span-8">
-              <div className="relative bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-stone-200/20 dark:border-amber-700/30">
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-amber-900/10 via-transparent to-amber-900/10 pointer-events-none z-10" />
-                
-                <div className="relative w-full cinema-aspect-video">
-                  {dailyChallenge?.imageUrl && !imageError ? (
-                    <>
-                      <img
-                        src={dailyChallenge.imageUrl}
-                        alt={blur.description}
-                        className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
-                          imageLoaded ? 'opacity-100' : 'opacity-0'
-                        } ${blur.className}`}
-                        onLoad={() => setImageLoaded(true)}
-                        onError={() => setImageError(true)}
-                      />
-                      {!imageLoaded && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                          <div className="text-center">
-                            <div className="cinema-spinner mb-4" />
-                            <p className="text-white/80 text-sm">Loading film reel...</p>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-                      <div className="text-center text-white/60">
-                        <Film className="w-16 h-16 mx-auto mb-3" />
-                        <p>No film available</p>
+          {/* Main Cinema Screen */}
+          <div className="relative bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-stone-200/20 dark:border-amber-700/30 mb-6">
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-amber-900/10 via-transparent to-amber-900/10 pointer-events-none z-10" />
+            
+            <div className="relative w-full cinema-aspect-video">
+              {dailyChallenge?.imageUrl && !imageError ? (
+                <>
+                  <img
+                    src={dailyChallenge.imageUrl}
+                    alt={blur.description}
+                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
+                      imageLoaded ? 'opacity-100' : 'opacity-0'
+                    } ${blur.className}`}
+                    onLoad={() => setImageLoaded(true)}
+                    onError={() => setImageError(true)}
+                  />
+                  {!imageLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+                      <div className="text-center">
+                        <div className="cinema-spinner mb-4" />
+                        <p className="text-white/80 text-sm">Loading film reel...</p>
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-2">
-              {audioHints && (
-                <AudioHint
-                  ref={audioRef}
-                  previewUrl={audioHints.track.streamUrl || audioHints.track.previewUrl}
-                  duration={gameState.completed ? 15 : audioHints.durations[`level${gameState.currentHintLevel}` as keyof typeof audioHints.durations]}
-                  trackTitle={audioHints.track.title}
-                  artistName={audioHints.track.artist}
-                  hintLevel={gameState.currentHintLevel}
-                  gameCompleted={gameState.completed}
-                />
-              )}
-
-              {audioLoading && (
-                <div className="bg-gradient-to-r from-slate-900/95 to-stone-900/95 cinema-glass rounded-2xl p-6 text-white">
-                  <div className="flex items-center gap-4">
-                    <div className="cinema-spinner" />
-                    <div className="flex-1">
-                      <div className="h-5 bg-amber-800/30 rounded-lg mb-3 skeleton" />
-                      <div className="h-4 bg-amber-800/20 rounded-lg w-2/3 skeleton" />
-                    </div>
+                </>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+                  <div className="text-center text-white/60">
+                    <Film className="w-16 h-16 mx-auto mb-3" />
+                    <p>No film available</p>
                   </div>
                 </div>
               )}
             </div>
           </div>
 
+          {/* Subtle Cinema Audio Player */}
+          {audioHints && (
+            <div className="mb-4">
+              <AudioHint
+                ref={audioRef}
+                previewUrl={audioHints.track.streamUrl || audioHints.track.previewUrl}
+                duration={gameState.completed ? 15 : audioHints.durations[`level${gameState.currentHintLevel}` as keyof typeof audioHints.durations]}
+                trackTitle={audioHints.track.title}
+                artistName={audioHints.track.artist}
+                hintLevel={gameState.currentHintLevel}
+                gameCompleted={gameState.completed}
+              />
+            </div>
+          )}
+
+          {audioLoading && (
+            <div className="mb-4">
+              <div className="cinema-glass rounded-xl p-4 border border-stone-200/30 dark:border-amber-700/30">
+                <div className="flex items-center gap-3">
+                  <div className="cinema-spinner" />
+                  <div className="flex-1">
+                    <div className="h-4 bg-amber-800/30 rounded mb-2 skeleton" />
+                    <div className="h-3 bg-amber-800/20 rounded w-2/3 skeleton" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Minimal Inline Hints */}
+          {(gameState.currentHintLevel >= 2 || gameState.completed) && dailyChallenge && (
+            <div className="mb-4">
+              <div className="flex flex-wrap gap-3 text-sm">
+                {/* Tagline */}
+                {gameState.currentHintLevel >= 2 && dailyChallenge.hints.level2.data.tagline && (
+                  <div className="cinema-glass rounded-lg px-4 py-2 border border-stone-200/30 dark:border-amber-700/30">
+                    <span className="text-stone-500 dark:text-stone-400 mr-2">Quote:</span>
+                    <span className="text-stone-700 dark:text-stone-300 italic">
+                      "{dailyChallenge.hints.level2.data.tagline}"
+                    </span>
+                  </div>
+                )}
+
+                {/* Year & Genre */}
+                {gameState.currentHintLevel >= 3 && (
+                  <>
+                    {dailyChallenge.hints.level3.data.year && (
+                      <div className="cinema-glass rounded-lg px-4 py-2 border border-stone-200/30 dark:border-amber-700/30">
+                        <span className="text-stone-500 dark:text-stone-400 mr-2">Year:</span>
+                        <span className="text-stone-700 dark:text-stone-300 font-medium">
+                          {dailyChallenge.hints.level3.data.year}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {dailyChallenge.hints.level3.data.genre && (
+                      <div className="cinema-glass rounded-lg px-4 py-2 border border-stone-200/30 dark:border-amber-700/30">
+                        <span className="text-stone-500 dark:text-stone-400 mr-2">Genre:</span>
+                        <span className="text-stone-700 dark:text-stone-300 font-medium">
+                          {dailyChallenge.hints.level3.data.genre}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Game Controls */}
           {!gameState.completed ? (
-            <div className="space-y-4 mb-8 max-w-3xl mx-auto">
+            <div className="space-y-4 mb-8">
               <SearchBox 
                 onSelect={handleGuess} 
                 disabled={gameState.completed}
@@ -557,7 +565,7 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
               </button>
             </div>
           ) : (
-            <div className="cinema-glass rounded-3xl p-8 text-center mb-8 shadow-xl border border-stone-200/50 dark:border-stone-800/50 max-w-3xl mx-auto">
+            <div className="cinema-glass rounded-3xl p-8 text-center mb-8 shadow-xl border border-stone-200/50 dark:border-stone-800/50">
               {gameState.won ? (
                 <>
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -655,8 +663,9 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
             </div>
           )}
 
+          {/* Guess History */}
           {gameState.guesses.length > 0 && (
-            <div className="cinema-glass rounded-2xl p-6 border border-stone-200/50 dark:border-stone-800/50 max-w-3xl mx-auto">
+            <div className="cinema-glass rounded-2xl p-6 border border-stone-200/50 dark:border-stone-800/50">
               <button
                 onClick={() => setShowGuesses(!showGuesses)}
                 className="flex items-center justify-between w-full text-left mb-4 group"
