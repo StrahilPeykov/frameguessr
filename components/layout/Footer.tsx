@@ -9,13 +9,13 @@ export default function Footer() {
   return (
     <footer className="relative z-20 mt-auto">
       {/* Main Footer */}
-      <div className="cinema-glass border-t border-stone-200/30 dark:border-amber-900/30">
+      <div className="bg-white dark:bg-stone-900 border-t border-stone-200 dark:border-stone-800">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* About */}
             <div>
               <h3 className="font-bold text-stone-800 dark:text-stone-100 mb-3 flex items-center gap-2">
-                <Film className="w-4 h-4 text-amber-600" />
+                <Film className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 About FrameGuessr
               </h3>
               <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
@@ -98,16 +98,16 @@ export default function Footer() {
           </div>
 
           {/* Bottom Bar */}
-          <div className="mt-8 pt-8 border-t border-stone-200/20 dark:border-stone-700/20">
+          <div className="mt-8 pt-8 border-t border-stone-200 dark:border-stone-700">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="text-sm text-stone-500 dark:text-stone-500 text-center md:text-left">
+              <div className="text-sm text-stone-600 dark:text-stone-400 text-center md:text-left">
                 © {currentYear} FrameGuessr. Made with{' '}
                 <Heart className="inline-block w-4 h-4 text-red-500 mx-1" fill="currentColor" />
                 for movie lovers.
               </div>
               
               {/* Fair Use Notice */}
-              <div className="text-xs text-stone-400 dark:text-stone-600 text-center md:text-right max-w-md">
+              <div className="text-xs text-stone-500 dark:text-stone-500 text-center md:text-right max-w-md">
                 All movie and TV content used under Fair Use for educational purposes. 
                 FrameGuessr is not affiliated with any movie studios or distributors.
               </div>
@@ -117,7 +117,7 @@ export default function Footer() {
       </div>
 
       {/* Attribution Bar */}
-      <div className="bg-stone-100 dark:bg-stone-900 border-t border-stone-200/20 dark:border-stone-800/20">
+      <div className="bg-stone-100 dark:bg-stone-950 border-t border-stone-200 dark:border-stone-800">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <p className="text-xs text-stone-500 dark:text-stone-500 text-center">
             This product uses the TMDB API but is not endorsed or certified by TMDB.

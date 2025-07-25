@@ -1,4 +1,3 @@
-// components/auth/UserMenu.tsx
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -66,18 +65,18 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
         onClick={() => setShowMenu(!showMenu)}
         className="flex items-center gap-2 px-3 py-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors text-sm"
       >
-        <div className="w-7 h-7 rounded-full bg-amber-600 flex items-center justify-center">
+        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
           <User className="w-4 h-4 text-white" />
         </div>
         <span className="hidden sm:block text-stone-700 dark:text-stone-200 font-medium">
           {displayName}
         </span>
-        <ChevronDown className={`w-4 h-4 text-stone-500 transition-transform ${showMenu ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-stone-500 dark:text-stone-400 transition-transform ${showMenu ? 'rotate-180' : ''}`} />
       </button>
 
       {showMenu && (
-        <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-stone-800 rounded-lg shadow-lg border border-stone-200 dark:border-stone-700 py-1 z-50">
-          <div className="px-3 py-2 border-b border-stone-200 dark:border-stone-700">
+        <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-stone-800 rounded-lg shadow-xl border border-stone-200 dark:border-stone-700 py-1 z-50 overflow-hidden">
+          <div className="px-3 py-2 border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900/50">
             <p className="text-sm font-medium text-stone-900 dark:text-stone-100 truncate">
               {userEmail}
             </p>
@@ -85,9 +84,9 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
           
           <button 
             onClick={handleStatsClick}
-            className="w-full text-left px-3 py-2 text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 flex items-center gap-2"
+            className="w-full text-left px-3 py-2 text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 flex items-center gap-2 transition-colors"
           >
-            <BarChart3 className="w-4 h-4" />
+            <BarChart3 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             Statistics
           </button>
           
@@ -95,7 +94,7 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
           
           <button
             onClick={handleSignOut}
-            className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+            className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors"
           >
             <LogOut className="w-4 h-4" />
             Sign Out

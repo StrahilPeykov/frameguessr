@@ -51,7 +51,7 @@ export default function CookieBanner() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 animate-fadeIn max-w-sm mx-auto sm:max-w-md sm:left-auto">
-      <div className="cinema-glass rounded-xl shadow-lg border border-stone-200/30 dark:border-amber-700/30 overflow-hidden">
+      <div className="bg-white dark:bg-stone-900 rounded-xl shadow-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
         {/* Compact Main Content */}
         <div className="p-4">
           <div className="flex items-start gap-3 mb-3">
@@ -66,7 +66,7 @@ export default function CookieBanner() {
                 We use cookies to save your game progress locally. 
                 <button 
                   onClick={() => setShowDetails(!showDetails)}
-                  className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 ml-1 underline"
+                  className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 ml-1 underline transition-colors"
                 >
                   Learn more
                 </button>
@@ -83,12 +83,14 @@ export default function CookieBanner() {
 
           {/* Expanded Details */}
           {showDetails && (
-            <div className="mb-3 p-3 bg-stone-50 dark:bg-stone-900/50 rounded-lg text-xs space-y-2 animate-fadeIn">
+            <div className="mb-3 p-3 bg-stone-50 dark:bg-stone-800 rounded-lg text-xs space-y-2 animate-fadeIn border border-stone-200 dark:border-stone-700">
               <div>
-                <strong className="text-stone-700 dark:text-stone-300">Essential cookies:</strong> Game progress, settings, theme preference (always active)
+                <strong className="text-stone-700 dark:text-stone-300">Essential cookies:</strong>
+                <span className="text-stone-600 dark:text-stone-400"> Game progress, settings, theme preference (always active)</span>
               </div>
               <div>
-                <strong className="text-stone-700 dark:text-stone-300">Analytics (optional):</strong> Anonymous usage data to improve the game
+                <strong className="text-stone-700 dark:text-stone-300">Analytics (optional):</strong>
+                <span className="text-stone-600 dark:text-stone-400"> Anonymous usage data to improve the game</span>
               </div>
             </div>
           )}
@@ -97,20 +99,20 @@ export default function CookieBanner() {
           <div className="flex gap-2">
             <button
               onClick={() => acceptCookies('necessary')}
-              className="flex-1 px-3 py-2 text-xs font-medium bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 rounded-lg transition-colors"
+              className="flex-1 px-3 py-2 text-xs font-medium bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 rounded-lg transition-all duration-300 shadow-sm"
             >
               Essential Only
             </button>
             <button
               onClick={() => acceptCookies('all')}
-              className="flex-1 px-3 py-2 text-xs font-medium bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-lg transition-colors"
+              className="flex-1 px-3 py-2 text-xs font-medium bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-lg transition-all duration-300 transform hover:scale-[1.02] shadow-lg"
             >
               Accept All
             </button>
           </div>
 
           {/* Legal Links */}
-          <div className="mt-3 pt-3 border-t border-stone-200/50 dark:border-stone-700/50 flex items-center justify-center gap-3 text-xs">
+          <div className="mt-3 pt-3 border-t border-stone-200 dark:border-stone-700 flex items-center justify-center gap-3 text-xs">
             <Link 
               href="/privacy" 
               className="text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"

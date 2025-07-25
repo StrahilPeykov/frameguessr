@@ -93,7 +93,7 @@ export default function MobileMenu({
       />
       
       {/* Menu Panel */}
-      <div className={`fixed top-0 right-0 h-full w-72 bg-white dark:bg-stone-900 shadow-2xl z-[70] transform transition-transform duration-300 ease-out md:hidden ${
+      <div className={`fixed top-0 right-0 h-full w-72 bg-white dark:bg-stone-900 shadow-2xl z-[70] transform transition-transform duration-300 ease-out md:hidden border-l border-stone-200 dark:border-stone-700 ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}>
         {/* Header */}

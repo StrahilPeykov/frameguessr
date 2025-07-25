@@ -26,6 +26,32 @@
   --cinema-charcoal: #2D1B0F;
 }
 
+.light {
+  --background: #FFF8F0;
+  --foreground: #2D1B0F;
+  --surface: #FEFCF8;
+  --surface-elevated: #FFFFFF;
+  
+  --cinema-burgundy: #9A1E3F;
+  --cinema-burgundy-light: #B8285A;
+  --cinema-burgundy-dark: #7A1730;
+  --cinema-burgundy-muted: rgba(154, 30, 63, 0.12);
+  
+  --cinema-gold: #D4A76B;
+  --cinema-gold-light: #E6C08A;
+  --cinema-gold-dark: #B8925E;
+  --cinema-gold-muted: rgba(212, 167, 107, 0.15);
+  
+  --cinema-orange: #E67E00;
+  --cinema-orange-light: #FF8C00;
+  --cinema-orange-dark: #CC7000;
+  --cinema-orange-muted: rgba(230, 126, 0, 0.12);
+  
+  --cinema-cream: #FDF9F3;
+  --cinema-warm-gray: #8B7A6B;
+  --cinema-charcoal: #2D1B0F;
+}
+
 .dark {
   --background: #0F0F0F;
   --foreground: #F8F6F0;
@@ -258,8 +284,12 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, var(--cinema-gold-muted), transparent);
+  background: linear-gradient(90deg, transparent, rgba(212, 167, 107, 0.3), transparent);
   transition: left 0.6s;
+}
+
+.dark .cinema-btn::before {
+  background: linear-gradient(90deg, transparent, var(--cinema-gold-muted), transparent);
 }
 
 .cinema-btn:hover::before {
@@ -473,6 +503,104 @@ body {
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
 }
 
+/* Modal Overlays */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 50;
+}
+
+.light .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.dark .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Modal Panels */
+.modal-panel {
+  background-color: var(--surface-elevated);
+  border-color: var(--border-color);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.light .modal-panel {
+  --border-color: rgba(212, 167, 107, 0.2);
+  box-shadow: 0 25px 50px -12px rgba(139, 21, 56, 0.15);
+}
+
+.dark .modal-panel {
+  --border-color: rgba(212, 165, 116, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Mobile Menu Overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 60;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Mobile Menu Panel */
+.mobile-menu-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 18rem;
+  background-color: var(--background);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
+  z-index: 70;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-menu-panel.open {
+  transform: translateX(0);
+}
+
+/* Prevent body scroll when menu is open */
+body.menu-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* Mobile Menu Animation */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.mobile-menu-enter {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+.mobile-menu-exit {
+  animation: slideOutRight 0.3s ease-in forwards;
+}
+
 /* Enhanced Mobile Optimizations */
 @media (max-width: 640px) {
   .cinema-mobile-safe {
@@ -482,8 +610,8 @@ body {
   }
   
   .cinema-btn, .cinema-touch {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 48px;
+    min-width: 48px;
   }
 
   /* Reduce blur on mobile for better performance */
@@ -500,38 +628,6 @@ body {
   }
 }
 
-/* Mobile Menu Animations */
-.mobile-menu-overlay {
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-}
-
-.mobile-menu-enter {
-  opacity: 0;
-  transform: translateY(-1rem);
-}
-
-.mobile-menu-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.mobile-menu-exit {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.mobile-menu-exit-active {
-  opacity: 0;
-  transform: translateY(-1rem);
-}
-
-/* Prevent body scroll when mobile menu is open */
-body.mobile-menu-open {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-}
-
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   .skeleton,
@@ -542,7 +638,9 @@ body.mobile-menu-open {
   .cinema-touch,
   .cinema-btn,
   .cinema-waveform-bar,
-  .animate-blob {
+  .animate-blob,
+  .mobile-menu-enter,
+  .mobile-menu-exit {
     animation: none !important;
     transition: none !important;
   }
