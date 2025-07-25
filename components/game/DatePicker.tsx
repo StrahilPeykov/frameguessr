@@ -77,16 +77,16 @@ export default function DatePicker({
   
   const isToday = currentDate === today
 
-  // Mobile compact version
+  // Mobile compact version - centered properly
   if (mobile) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center">
         <Link
           href={prevDay ? `/day/${prevDay}` : '#'}
-          className={`p-2 rounded-xl transition-all duration-300 cinema-touch ${
+          className={`p-1.5 rounded-lg transition-all duration-300 cinema-touch ${
             prevDay 
               ? 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-amber-600 dark:hover:text-amber-400' 
-              : 'text-stone-300 dark:text-stone-600 pointer-events-none'
+              : 'text-stone-300 dark:text-stone-600 pointer-events-none opacity-50'
           }`}
           aria-label="Previous screening"
         >
@@ -95,17 +95,17 @@ export default function DatePicker({
         
         <button
           onClick={() => setShowPicker(!showPicker)}
-          className="text-sm font-medium px-3 py-1.5 hover:text-amber-600 dark:hover:text-amber-400 transition-colors rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800/50 cinema-touch"
+          className="text-sm font-medium px-2 py-1 hover:text-amber-600 dark:hover:text-amber-400 transition-colors rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800/50 cinema-touch min-w-[80px] text-center"
         >
-          {isToday ? 'Tonight' : formatDate(current, 'MMM d')}
+          {isToday ? 'Today' : formatDate(current, 'MMM d')}
         </button>
         
         <Link
           href={nextDay ? `/day/${nextDay}` : '#'}
-          className={`p-2 rounded-xl transition-all duration-300 cinema-touch ${
+          className={`p-1.5 rounded-lg transition-all duration-300 cinema-touch ${
             nextDay
               ? 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-amber-600 dark:hover:text-amber-400'
-              : 'text-stone-300 dark:text-stone-600 pointer-events-none'
+              : 'text-stone-300 dark:text-stone-600 pointer-events-none opacity-50'
           }`}
           aria-label="Next screening"
         >
@@ -113,7 +113,7 @@ export default function DatePicker({
         </Link>
         
         {showPicker && (
-          <div className="absolute top-full mt-2 right-4 z-50">
+          <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-50">
             <div className="cinema-glass rounded-xl shadow-2xl border border-stone-200 dark:border-amber-700/30 p-4">
               <input
                 type="date"

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { GameState, DailyChallenge, SearchResult, AudioHintData } from '@/types'
-import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, User, Sun, Moon, Menu, LogOut } from 'lucide-react'
+import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, User, Sun, Moon, Menu } from 'lucide-react'
 import { useBlur, type HintLevel } from '@/utils/blur'
 import ShareModal from './ShareModal'
 import StatsModal from './StatsModal'
@@ -13,9 +13,9 @@ import DatePicker from './DatePicker'
 import AudioHint from './AudioHint'
 import AuthModal from '@/components/auth/AuthModal'
 import UserMenu from '@/components/auth/UserMenu'
+import MobileMenu from './MobileMenu'
 import { useTheme } from '@/hooks/useTheme'
 import { gameStorage } from '@/lib/gameStorage'
-import { supabase } from '@/lib/supabase'
 
 interface GameBoardProps {
   initialDate?: string
@@ -64,31 +64,6 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
       setIsAuthenticated(gameStorage.isAuthenticated())
     })
   }, [])
-
-  // Close mobile menu on window resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) { // md breakpoint
-        setShowMobileMenu(false)
-      }
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  // Prevent body scroll when mobile menu is open
-  useEffect(() => {
-    if (showMobileMenu) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [showMobileMenu])
 
   const handleDateSelect = (date: string) => {
     router.push(`/day/${date}`)
@@ -325,229 +300,97 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 cinema-nav-blur bg-white/80 dark:bg-stone-950/80 border-b border-stone-200/30 dark:border-amber-900/30">
-        <div className="relative">
-          <div className="max-w-4xl mx-auto px-4">
-            <div className="flex items-center justify-between h-16">
-              {/* Left: Logo and Date Picker (Desktop) */}
-              <div className="flex items-center gap-4">
-                <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-600 to-red-700 flex items-center justify-center">
-                    <Film className="w-5 h-5 text-white" />
-                  </div>
-                  <h1 className="text-xl font-bold cinema-gradient-title">
-                    FrameGuessr
-                  </h1>
-                </Link>
-                
-                {/* Desktop Date Picker */}
-                <div className="hidden md:block">
-                  <DatePicker 
-                    currentDate={selectedDate}
-                    onDateSelect={handleDateSelect}
-                    compact
-                  />
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Left side - Logo and Date (Desktop) */}
+            <div className="flex items-center gap-4">
+              <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-600 to-red-700 flex items-center justify-center">
+                  <Film className="w-5 h-5 text-white" />
                 </div>
-                
-                {/* Sync Status */}
-                {isAuthenticated && (
-                  <div className="hidden sm:flex items-center gap-2">
-                    {syncStatus === 'syncing' && (
-                      <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
-                        <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin" />
-                        <span>Syncing...</span>
-                      </div>
-                    )}
-                    {syncStatus === 'synced' && (
-                      <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                        <Check className="w-3 h-3" />
-                        <span>Synced</span>
-                      </div>
-                    )}
-                    {syncStatus === 'error' && (
-                      <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                        <X className="w-3 h-3" />
-                        <span>Sync failed</span>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <h1 className="text-xl font-bold cinema-gradient-title">
+                  FrameGuessr
+                </h1>
+              </Link>
+              
+              {/* Desktop Date Picker */}
+              <div className="hidden md:block">
+                <DatePicker 
+                  currentDate={selectedDate}
+                  onDateSelect={handleDateSelect}
+                  compact
+                />
               </div>
               
-              {/* Right: Desktop Navigation */}
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={toggleTheme}
-                  className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
-                  aria-label="Toggle theme"
-                >
-                  {theme === 'dark' ? (
-                    <Sun className="w-5 h-5" />
-                  ) : (
-                    <Moon className="w-5 h-5" />
+              {/* Sync Status */}
+              {isAuthenticated && syncStatus !== 'idle' && (
+                <div className="hidden sm:flex items-center gap-2">
+                  {syncStatus === 'syncing' && (
+                    <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+                      <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <span>Syncing...</span>
+                    </div>
                   )}
-                </button>
-                
-                <button
-                  onClick={() => setShowStatsModal(true)}
-                  className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
-                  aria-label="View statistics"
-                >
-                  <BarChart3 className="w-5 h-5" />
-                </button>
-                
-                {gameState.completed && (
-                  <button
-                    onClick={() => setShowShareModal(true)}
-                    className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
-                    aria-label="Share result"
-                  >
-                    <Share2 className="w-5 h-5" />
-                  </button>
-                )}
-                
-                {isAuthenticated ? (
-                  <UserMenu onStatsClick={() => setShowStatsModal(true)} />
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setShowAuthModal(true)
-                        setAuthModalMode('signin')
-                      }}
-                      className="px-3 py-2 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg font-medium transition-colors text-sm"
-                    >
-                      Sign In
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowAuthModal(true)
-                        setAuthModalMode('signup')
-                      }}
-                      className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm"
-                    >
-                      Sign Up
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="md:hidden p-2 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300"
-                aria-label="Toggle menu"
-              >
-                {showMobileMenu ? (
-                  <X className="w-6 h-6" />
-                ) : (
-                  <Menu className="w-6 h-6" />
-                )}
-              </button>
+                  {syncStatus === 'synced' && (
+                    <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                      <Check className="w-3 h-3" />
+                      <span>Synced</span>
+                    </div>
+                  )}
+                  {syncStatus === 'error' && (
+                    <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                      <X className="w-3 h-3" />
+                      <span>Sync failed</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             
-            {/* Mobile Date Picker - Below main nav */}
-            <div className="md:hidden pb-2">
-              <DatePicker 
-                currentDate={selectedDate}
-                onDateSelect={handleDateSelect}
-                mobile
-              />
-            </div>
-          </div>
-          
-          {/* Mobile Menu Backdrop */}
-          {showMobileMenu && (
-            <div 
-              className="md:hidden fixed inset-0 bg-black/20 z-40"
-              onClick={() => setShowMobileMenu(false)}
-            />
-          )}
-          
-          {/* Mobile Menu Dropdown */}
-          <div className={`md:hidden fixed top-16 left-0 right-0 bg-white dark:bg-stone-950 border-b border-stone-200/30 dark:border-amber-900/30 shadow-lg transition-all duration-300 transform z-50 max-h-[calc(100vh-4rem)] overflow-y-auto ${
-            showMobileMenu ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0 pointer-events-none'
-          }`}>
-            <div className="px-4 py-3 space-y-1">
-              {/* Theme Toggle */}
+            {/* Right side - Desktop Controls */}
+            <div className="hidden md:flex items-center gap-2">
               <button
-                onClick={() => {
-                  toggleTheme()
-                  setShowMobileMenu(false)
-                }}
-                className="w-full flex items-center gap-3 px-3 py-3 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300"
+                onClick={toggleTheme}
+                className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
+                aria-label="Toggle theme"
               >
                 {theme === 'dark' ? (
-                  <>
-                    <Sun className="w-5 h-5" />
-                    <span className="font-medium">Light Mode</span>
-                  </>
+                  <Sun className="w-5 h-5" />
                 ) : (
-                  <>
-                    <Moon className="w-5 h-5" />
-                    <span className="font-medium">Dark Mode</span>
-                  </>
+                  <Moon className="w-5 h-5" />
                 )}
               </button>
               
-              {/* Stats */}
               <button
-                onClick={() => {
-                  setShowStatsModal(true)
-                  setShowMobileMenu(false)
-                }}
-                className="w-full flex items-center gap-3 px-3 py-3 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300"
+                onClick={() => setShowStatsModal(true)}
+                className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
+                aria-label="View statistics"
               >
                 <BarChart3 className="w-5 h-5" />
-                <span className="font-medium">Statistics</span>
               </button>
               
-              {/* Share (if completed) */}
               {gameState.completed && (
                 <button
-                  onClick={() => {
-                    setShowShareModal(true)
-                    setShowMobileMenu(false)
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-3 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300"
+                  onClick={() => setShowShareModal(true)}
+                  className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
+                  aria-label="Share result"
                 >
                   <Share2 className="w-5 h-5" />
-                  <span className="font-medium">Share Result</span>
                 </button>
               )}
               
-              {/* Divider */}
-              <div className="my-2 border-t border-stone-200/50 dark:border-stone-700/50" />
-              
-              {/* Auth Section */}
               {isAuthenticated ? (
-                <>
-                  <div className="px-3 py-2">
-                    <p className="text-sm text-stone-500 dark:text-stone-400">Signed in as</p>
-                    <p className="text-sm font-medium text-stone-700 dark:text-stone-300 truncate">
-                      {gameStorage.getCurrentUser()?.email || 'User'}
-                    </p>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      await supabase.auth.signOut()
-                      setIsAuthenticated(false)
-                      setShowMobileMenu(false)
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-300"
-                  >
-                    <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Sign Out</span>
-                  </button>
-                </>
+                <div className="hidden md:block">
+                  <UserMenu onStatsClick={() => setShowStatsModal(true)} />
+                </div>
               ) : (
-                <div className="space-y-2 pt-2">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => {
                       setShowAuthModal(true)
                       setAuthModalMode('signin')
-                      setShowMobileMenu(false)
                     }}
-                    className="w-full px-4 py-3 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl font-medium transition-colors"
+                    className="px-3 py-2 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg font-medium transition-colors text-sm"
                   >
                     Sign In
                   </button>
@@ -555,49 +398,72 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                     onClick={() => {
                       setShowAuthModal(true)
                       setAuthModalMode('signup')
-                      setShowMobileMenu(false)
                     }}
-                    className="w-full px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-colors"
+                    className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm"
                   >
                     Sign Up
                   </button>
                 </div>
               )}
+            </div>
+
+            {/* Mobile controls */}
+            <div className="flex md:hidden items-center gap-2">
+              {/* Mobile Date Picker */}
+              <DatePicker 
+                currentDate={selectedDate}
+                onDateSelect={handleDateSelect}
+                mobile
+              />
               
-              {/* Sync Status (Mobile) */}
-              {isAuthenticated && syncStatus !== 'idle' && (
-                <div className="px-3 py-2 text-xs">
-                  {syncStatus === 'syncing' && (
-                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                      <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin" />
-                      <span>Syncing your progress...</span>
-                    </div>
-                  )}
-                  {syncStatus === 'synced' && (
-                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                      <Check className="w-3 h-3" />
-                      <span>Progress synced</span>
-                    </div>
-                  )}
-                  {syncStatus === 'error' && (
-                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
-                      <X className="w-3 h-3" />
-                      <span>Sync failed - saved locally</span>
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Hamburger Menu Button */}
+              <button
+                onClick={() => setShowMobileMenu(true)}
+                className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
       </nav>
 
+      {/* Mobile Menu */}
+      <MobileMenu
+        isOpen={showMobileMenu}
+        onClose={() => setShowMobileMenu(false)}
+        theme={theme}
+        onThemeToggle={toggleTheme}
+        isAuthenticated={isAuthenticated}
+        gameCompleted={gameState.completed}
+        syncStatus={syncStatus}
+        onStatsClick={() => {
+          setShowMobileMenu(false)
+          setShowStatsModal(true)
+        }}
+        onShareClick={() => {
+          setShowMobileMenu(false)
+          setShowShareModal(true)
+        }}
+        onSignInClick={() => {
+          setShowMobileMenu(false)
+          setShowAuthModal(true)
+          setAuthModalMode('signin')
+        }}
+        onSignUpClick={() => {
+          setShowMobileMenu(false)
+          setShowAuthModal(true)
+          setAuthModalMode('signup')
+        }}
+      />
+
       {/* Optimized Single Column Layout */}
-      <div className="min-h-screen pt-16 md:pt-16 pb-6">
-        <div className="max-w-4xl mx-auto px-4 py-4 md:py-4">
+      <div className="min-h-screen pt-16 pb-6">
+        <div className="max-w-4xl mx-auto px-4 py-4">
           
-          {/* Game Progress Header - Now shows on mobile too */}
-          <div className="flex items-center justify-between mb-4 md:mb-6 mt-8 md:mt-0">
+          {/* Game Progress Header */}
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-6">
               <div className="flex gap-3">
                 {Array.from({ length: gameState.maxAttempts }).map((_, i) => (
@@ -624,11 +490,13 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                 {gameState.won ? (
                   <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold">
                     <Trophy className="w-5 h-5" />
-                    <span>Standing Ovation!</span>
+                    <span className="hidden sm:inline">Standing Ovation!</span>
+                    <span className="sm:hidden">Won!</span>
                   </div>
                 ) : (
                   <div className="text-red-600 dark:text-red-400 font-medium">
-                    <span>The Credits Roll</span>
+                    <span className="hidden sm:inline">The Credits Roll</span>
+                    <span className="sm:hidden">Game Over</span>
                   </div>
                 )}
               </div>
