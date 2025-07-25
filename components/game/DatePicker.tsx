@@ -77,7 +77,7 @@ export default function DatePicker({
   
   const isToday = currentDate === today
 
-  // Mobile compact version - centered properly
+  // Mobile compact version
   if (mobile) {
     return (
       <div className="flex items-center">
