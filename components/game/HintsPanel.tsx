@@ -1,49 +1,47 @@
 'use client'
 
-import { Film } from 'lucide-react'
-import { useBlur, type HintLevel } from '@/utils/blur'
 import { useGameContext } from '@/contexts/GameContext'
 
-export default function CinemaScreen() {
-  const { gameState, dailyChallenge, imageLoaded, imageError } = useGameContext()
-  
-  const blur = useBlur(
-    gameState.currentHintLevel as HintLevel, 
-    gameState.completed || gameState.won
-  )
+export default function HintsPanel() {
+  const { gameState, dailyChallenge } = useGameContext()
+
+  if (!dailyChallenge || gameState.currentHintLevel < 2) {
+    return null
+  }
 
   return (
-    <div className="relative bg-black rounded-2xl overflow-hidden shadow-xl border-2 border-stone-200/20 dark:border-amber-700/30 mb-4">
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-900/10 via-transparent to-amber-900/10 pointer-events-none z-10" />
-      
-      {/* Cinema Screen - Responsive sizing */}
-      <div className="relative w-full h-64 sm:h-80 md:h-96 lg:h-[28rem]">
-        {dailyChallenge?.imageUrl && !imageError ? (
-          <>
-            <img
-              src={dailyChallenge.imageUrl}
-              alt={blur.description}
-              className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
-                imageLoaded ? 'opacity-100' : 'opacity-0'
-              } ${blur.className}`}
-            />
-            {!imageLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mb-2" />
-                  <p className="text-white/80 text-xs">Loading projection...</p>
-                </div>
+    <div className="mb-3">
+      <div className="flex flex-wrap gap-2 text-sm">
+        {/* Tagline */}
+        {gameState.currentHintLevel >= 2 && dailyChallenge.hints.level2.data.tagline && (
+          <div className="cinema-glass rounded-lg px-3 py-1.5 border border-stone-200/30 dark:border-amber-700/30">
+            <span className="text-stone-500 dark:text-stone-400 text-xs">Quote:</span>
+            <span className="text-stone-700 dark:text-stone-300 italic ml-2">
+              "{dailyChallenge.hints.level2.data.tagline}"
+            </span>
+          </div>
+        )}
+
+        {/* Year & Genre - Inline */}
+        {gameState.currentHintLevel >= 3 && (
+          <div className="flex gap-2">
+            {dailyChallenge.hints.level3.data.year && (
+              <div className="cinema-glass rounded-lg px-3 py-1.5 border border-stone-200/30 dark:border-amber-700/30">
+                <span className="text-stone-500 dark:text-stone-400 text-xs mr-1">Year:</span>
+                <span className="text-stone-700 dark:text-stone-300 font-medium">
+                  {dailyChallenge.hints.level3.data.year}
+                </span>
               </div>
             )}
-          </>
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-            <div className="text-center text-white/60">
-              <Film className="w-12 h-12 mx-auto mb-2" />
-              <p className="text-sm">
-                {imageError ? 'Failed to load film reel' : 'No film available'}
-              </p>
-            </div>
+            
+            {dailyChallenge.hints.level3.data.genre && (
+              <div className="cinema-glass rounded-lg px-3 py-1.5 border border-stone-200/30 dark:border-amber-700/30">
+                <span className="text-stone-500 dark:text-stone-400 text-xs mr-1">Genre:</span>
+                <span className="text-stone-700 dark:text-stone-300 font-medium">
+                  {dailyChallenge.hints.level3.data.genre}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
