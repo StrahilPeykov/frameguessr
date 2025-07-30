@@ -29,6 +29,9 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
   const audioRef = useRef<{ stopAudio: () => void } | null>(null)
   const { theme, toggleTheme } = useTheme()
   
+  // Navigation scroll state
+  const [isScrolled, setIsScrolled] = useState(false)
+  
   const [gameState, setGameState] = useState<GameState>({
     currentDate: selectedDate,
     attempts: 0,
@@ -59,6 +62,17 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
     gameState.currentHintLevel as HintLevel, 
     gameState.completed || gameState.won
   )
+
+  // Scroll listener for navigation transparency
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      setIsScrolled(scrollY > 20)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   useEffect(() => {
     gameStorage.init().then(() => {
@@ -300,11 +314,15 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 cinema-nav-blur bg-white/80 dark:bg-stone-950/80 border-b border-stone-200/30 dark:border-amber-900/30">
-        <div className="max-w-4xl mx-auto px-4">
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
+        isScrolled 
+          ? 'bg-white/75 dark:bg-stone-950/75 backdrop-blur-xl border-stone-200/40 dark:border-amber-900/40 shadow-lg' 
+          : 'bg-white/50 dark:bg-stone-950/50 backdrop-blur-md border-stone-200/20 dark:border-amber-900/20'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Left side - Logo and Date (Desktop) */}
-            <div className="flex items-center gap-4">
+            {/* Left side - Logo only */}
+            <div className="flex items-center">
               <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-600 to-red-700 flex items-center justify-center">
                   <Film className="w-5 h-5 text-white" />
@@ -313,7 +331,10 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                   FrameGuessr
                 </h1>
               </Link>
-              
+            </div>
+            
+            {/* Right side - All controls */}
+            <div className="flex items-center gap-3">
               {/* Desktop Date Picker */}
               <div className="hidden md:block">
                 <DatePicker 
@@ -346,85 +367,85 @@ export default function GameBoard({ initialDate }: GameBoardProps) {
                   )}
                 </div>
               )}
-            </div>
-            
-            {/* Right side - Desktop Controls */}
-            <div className="hidden md:flex items-center gap-2">
-              <button
-                onClick={toggleTheme}
-                className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
-                aria-label="Toggle theme"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Moon className="w-5 h-5" />
-                )}
-              </button>
-              
-              <button
-                onClick={() => setShowStatsModal(true)}
-                className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
-                aria-label="View statistics"
-              >
-                <BarChart3 className="w-5 h-5" />
-              </button>
-              
-              {gameState.completed && (
-                <button
-                  onClick={() => setShowShareModal(true)}
-                  className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
-                  aria-label="Share result"
-                >
-                  <Share2 className="w-5 h-5" />
-                </button>
-              )}
-              
-              {isAuthenticated ? (
-                <div className="hidden md:block">
-                  <UserMenu onStatsClick={() => setShowStatsModal(true)} />
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setShowAuthModal(true)
-                      setAuthModalMode('signin')
-                    }}
-                    className="px-3 py-2 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg font-medium transition-colors text-sm"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowAuthModal(true)
-                      setAuthModalMode('signup')
-                    }}
-                    className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm"
-                  >
-                    Sign Up
-                  </button>
-                </div>
-              )}
-            </div>
 
-            {/* Mobile controls */}
-            <div className="flex md:hidden items-center gap-2">
-              {/* Mobile Date Picker */}
-              <DatePicker 
-                currentDate={selectedDate}
-                onDateSelect={handleDateSelect}
-                mobile
-              />
-              
-              {/* Hamburger Menu Button */}
-              <button
-                onClick={() => setShowMobileMenu(true)}
-                className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
+              {/* Desktop Controls */}
+              <div className="hidden md:flex items-center gap-2">
+                <button
+                  onClick={toggleTheme}
+                  className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
+                  aria-label="Toggle theme"
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="w-5 h-5" />
+                  ) : (
+                    <Moon className="w-5 h-5" />
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => setShowStatsModal(true)}
+                  className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
+                  aria-label="View statistics"
+                >
+                  <BarChart3 className="w-5 h-5" />
+                </button>
+                
+                {gameState.completed && (
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
+                    aria-label="Share result"
+                  >
+                    <Share2 className="w-5 h-5" />
+                  </button>
+                )}
+                
+                {isAuthenticated ? (
+                  <div className="hidden md:block">
+                    <UserMenu onStatsClick={() => setShowStatsModal(true)} />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setShowAuthModal(true)
+                        setAuthModalMode('signin')
+                      }}
+                      className="px-3 py-2 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg font-medium transition-colors text-sm"
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAuthModal(true)
+                        setAuthModalMode('signup')
+                      }}
+                      className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm"
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile controls */}
+              <div className="flex md:hidden items-center gap-2">
+                {/* Mobile Date Picker */}
+                <DatePicker 
+                  currentDate={selectedDate}
+                  onDateSelect={handleDateSelect}
+                  mobile
+                />
+                
+                {/* Hamburger Menu Button */}
+                <button
+                  onClick={() => setShowMobileMenu(true)}
+                  className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
+                  aria-label="Open menu"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
