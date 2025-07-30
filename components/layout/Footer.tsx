@@ -103,7 +103,7 @@ export default function Footer() {
               <div className="text-sm text-stone-600 dark:text-stone-400 text-center md:text-left">
                 © {currentYear} FrameGuessr. Made with{' '}
                 <Heart className="inline-block w-4 h-4 text-red-500 mx-1" fill="currentColor" />
-                for movie lovers.
+                for movie lovers and my girlfriend Ally.
               </div>
               
               {/* Fair Use Notice */}
