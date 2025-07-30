@@ -2,20 +2,20 @@
 
 import { useState } from 'react'
 import { X, Copy, Check, Share } from 'lucide-react'
-import { GameState } from '@/types'
-import { getTodayLocal, isToday } from '@/utils/dateUtils'
+import { useGameContext } from '@/contexts/GameContext'
+import { isToday } from '@/utils/dateUtils'
 
 interface ShareModalProps {
   isOpen: boolean
   onClose: () => void
-  gameState: GameState
-  movieTitle: string
+  currentDate: string
 }
 
-export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: ShareModalProps) {
+export default function ShareModal({ isOpen, onClose, currentDate }: ShareModalProps) {
+  const { gameState, dailyChallenge } = useGameContext()
   const [copied, setCopied] = useState(false)
 
-  if (!isOpen) return null
+  if (!isOpen || !dailyChallenge) return null
 
   const generateShareText = () => {
     const dateStr = gameState.currentDate
@@ -127,10 +127,10 @@ ${url}`
           </div>
 
           {/* Movie Title */}
-          {gameState.won && movieTitle && (
+          {gameState.won && dailyChallenge.title && (
             <div className="mt-4 pt-4 border-t border-stone-200 dark:border-stone-700 text-center">
               <p className="text-sm text-stone-600 dark:text-stone-400">
-                You correctly guessed: <span className="font-medium text-stone-900 dark:text-stone-100">{movieTitle}</span>
+                You correctly guessed: <span className="font-medium text-stone-900 dark:text-stone-100">{dailyChallenge.title}</span>
               </p>
             </div>
           )}
