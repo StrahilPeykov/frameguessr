@@ -81,10 +81,10 @@ export default function DatePicker({
   // Mobile compact version
   if (mobile) {
     return (
-      <div className="flex items-center">
+      <div className="relative flex items-center justify-center">
         <Link
           href={prevDay ? `/day/${prevDay}` : '#'}
-          className={`p-1.5 rounded-lg transition-all duration-300 cinema-touch ${
+          className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 cinema-touch ${
             prevDay 
               ? 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-amber-600 dark:hover:text-amber-400' 
               : 'text-stone-300 dark:text-stone-600 pointer-events-none opacity-50'
@@ -96,14 +96,14 @@ export default function DatePicker({
         
         <button
           onClick={() => setShowPicker(!showPicker)}
-          className="text-sm font-medium px-2 py-1 hover:text-amber-600 dark:hover:text-amber-400 transition-colors rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800/50 cinema-touch min-w-[80px] text-center"
+          className="flex items-center justify-center text-sm font-medium px-3 py-1.5 mx-2 hover:text-amber-600 dark:hover:text-amber-400 transition-colors rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800/50 cinema-touch min-w-[70px] h-8"
         >
           {isTodayDate ? 'Today' : formatDate(current, 'MMM d')}
         </button>
         
         <Link
           href={nextDay ? `/day/${nextDay}` : '#'}
-          className={`p-1.5 rounded-lg transition-all duration-300 cinema-touch ${
+          className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 cinema-touch ${
             nextDay
               ? 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-amber-600 dark:hover:text-amber-400'
               : 'text-stone-300 dark:text-stone-600 pointer-events-none opacity-50'
