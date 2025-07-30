@@ -39,6 +39,7 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
   const audioRef = useRef<HTMLAudioElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number>(8) // Start from 8 seconds by default
+  const isSeekingRef = useRef<boolean>(false) // Track if we're currently seeking
 
   // Expose stop function to parent
   useImperativeHandle(ref, () => ({
@@ -53,7 +54,8 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
       // Start from the most engaging part (around 8-12 seconds in)
       const startTime = Math.min(8, Math.max(0, audio.duration - duration - 2))
       startTimeRef.current = startTime
-      audio.currentTime = startTime
+      
+      // Don't set currentTime here, do it when play is clicked
       setCurrentTime(startTime)
       setPlaybackTime(0)
       setIsBuffering(false)
@@ -74,11 +76,18 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
     const handleWaiting = () => setIsBuffering(true)
     const handleCanPlay = () => setIsBuffering(false)
 
+    // Handle seek completion
+    const handleSeeked = () => {
+      isSeekingRef.current = false
+      console.log('Seek completed, currentTime:', audio.currentTime)
+    }
+
     audio.addEventListener('loadeddata', handleLoadedData)
     audio.addEventListener('ended', handleEnded)
     audio.addEventListener('error', handleError)
     audio.addEventListener('waiting', handleWaiting)
     audio.addEventListener('canplay', handleCanPlay)
+    audio.addEventListener('seeked', handleSeeked)
     
     // Apply initial volume and muted state
     audio.volume = volume
@@ -90,6 +99,7 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
       audio.removeEventListener('error', handleError)
       audio.removeEventListener('waiting', handleWaiting)
       audio.removeEventListener('canplay', handleCanPlay)
+      audio.removeEventListener('seeked', handleSeeked)
       
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
@@ -121,15 +131,11 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
     audio.pause()
     setIsPlaying(false)
     
-    try {
-      audio.currentTime = startTimeRef.current
-      setCurrentTime(startTimeRef.current)
-      setPlaybackTime(0)
-    } catch (error) {
-      console.warn('Error resetting audio position:', error)
-      setCurrentTime(startTimeRef.current)
-      setPlaybackTime(0)
-    }
+    // Reset to start position
+    isSeekingRef.current = true
+    audio.currentTime = startTimeRef.current
+    setCurrentTime(startTimeRef.current)
+    setPlaybackTime(0)
     
     onPlayEnd?.()
   }
@@ -147,7 +153,13 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
           intervalRef.current = null
         }
 
+        // Ensure we're at the start position before playing
+        isSeekingRef.current = true
         audio.currentTime = startTimeRef.current
+        
+        // Wait a bit for the seek to complete
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
         setCurrentTime(startTimeRef.current)
         setPlaybackTime(0)
 
@@ -167,9 +179,16 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
             return
           }
 
+          // Skip updates while seeking to avoid negative values
+          if (isSeekingRef.current) {
+            return
+          }
+
           try {
             const currentAudioTime = audio.currentTime
-            const elapsed = currentAudioTime - startTimeRef.current
+            const elapsed = Math.max(0, currentAudioTime - startTimeRef.current) // Ensure non-negative
+            
+            console.log('Audio time:', currentAudioTime, 'Start:', startTimeRef.current, 'Elapsed:', elapsed)
             
             if (elapsed >= duration) {
               handleStop()
@@ -236,10 +255,10 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
         />
       )}
 
-      {/* Rethought Cinema Media Player */}
+      {/* Cinema Media Player */}
       <div className="cinema-glass rounded-xl overflow-hidden border border-stone-200/30 dark:border-amber-700/30">
         
-        {/* Main Player Row - Clean and Focused */}
+        {/* Main Player Row */}
         <div className="flex items-center gap-4 p-4">
           
           {/* Audio Icon with Play Status */}
@@ -265,7 +284,7 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
               </div>
               
               <div className="text-xs text-stone-500 dark:text-stone-400 ml-2 tabular-nums">
-                {Math.floor(playbackTime)}s/{duration}s
+                {Math.floor(Math.max(0, playbackTime))}s/{duration}s
               </div>
             </div>
             
@@ -278,7 +297,7 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
             </div>
           </div>
 
-          {/* Play Button Only - Clean */}
+          {/* Play Button */}
           <button
             onClick={togglePlay}
             disabled={isBuffering}
@@ -320,7 +339,7 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
             )}
           </div>
           
-          {/* Right: Volume Control - Better Placement */}
+          {/* Right: Volume Control */}
           <div className="flex items-center gap-2">
             <button
               onClick={toggleMute}

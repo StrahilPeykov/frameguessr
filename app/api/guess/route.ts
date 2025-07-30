@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { format } from 'date-fns'
+
+// Helper function to get today's date in local timezone (server-side)
+function getTodayLocal(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 interface GuessRequest {
   guess: {
@@ -57,7 +65,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const today = format(new Date(), 'yyyy-MM-dd')
+    const today = getTodayLocal()
 
     // Get today's correct answer for server-side validation
     const { data: dailyMovie, error: dailyError } = await supabase
@@ -185,7 +193,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
-    const date = searchParams.get('date') || format(new Date(), 'yyyy-MM-dd')
+    const date = searchParams.get('date') || getTodayLocal()
     
     // Future: Return user's guess history for a specific date
     // This would require authentication

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, ChevronLeft, ChevronRight, Clock, Film } from 'lucide-react'
+import { getTodayLocal, formatDateLocal, isToday } from '@/utils/dateUtils'
 
 interface DatePickerProps {
   currentDate: string
@@ -23,7 +24,7 @@ export default function DatePicker({
   const [showPicker, setShowPicker] = useState(false)
   const router = useRouter()
   
-  const today = new Date().toISOString().split('T')[0]
+  const today = getTodayLocal()
   const current = new Date(currentDate)
   const min = new Date(minDate)
   
@@ -52,8 +53,8 @@ export default function DatePicker({
   const canGoBack = current > min
   const canGoForward = currentDate < today
   
-  const prevDay = canGoBack ? addDays(current, -1).toISOString().split('T')[0] : null
-  const nextDay = canGoForward ? addDays(current, 1).toISOString().split('T')[0] : null
+  const prevDay = canGoBack ? formatDateLocal(addDays(current, -1)) : null
+  const nextDay = canGoForward ? formatDateLocal(addDays(current, 1)) : null
   
   // Prefetch adjacent days
   useEffect(() => {
@@ -75,7 +76,7 @@ export default function DatePicker({
     }
   }
   
-  const isToday = currentDate === today
+  const isTodayDate = isToday(currentDate)
 
   // Mobile compact version
   if (mobile) {
@@ -97,7 +98,7 @@ export default function DatePicker({
           onClick={() => setShowPicker(!showPicker)}
           className="text-sm font-medium px-2 py-1 hover:text-amber-600 dark:hover:text-amber-400 transition-colors rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800/50 cinema-touch min-w-[80px] text-center"
         >
-          {isToday ? 'Today' : formatDate(current, 'MMM d')}
+          {isTodayDate ? 'Today' : formatDate(current, 'MMM d')}
         </button>
         
         <Link
@@ -154,7 +155,7 @@ export default function DatePicker({
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl transition-all duration-300 cinema-touch group"
           >
             <Calendar className="w-4 h-4 text-amber-600 dark:text-amber-500 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors" />
-            <span className="text-stone-700 dark:text-stone-200">{isToday ? 'Today' : formatDate(current, 'MMM d, yyyy')}</span>
+            <span className="text-stone-700 dark:text-stone-200">{isTodayDate ? 'Today' : formatDate(current, 'MMM d, yyyy')}</span>
           </button>
           
           {showPicker && (
@@ -217,7 +218,7 @@ export default function DatePicker({
           className="flex items-center gap-3 px-6 py-4 cinema-glass rounded-2xl hover:bg-stone-100/80 dark:hover:bg-stone-800/80 border border-stone-200/50 dark:border-amber-700/50 transition-all duration-300 cinema-btn group shadow-lg hover:shadow-xl"
         >
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-            {isToday ? (
+            {isTodayDate ? (
               <Clock className="w-5 h-5 text-white" />
             ) : (
               <Calendar className="w-5 h-5 text-white" />
@@ -225,7 +226,7 @@ export default function DatePicker({
           </div>
           <div className="text-left">
             <div className="font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
-              {isToday ? 'Tonight\'s Feature' : 'Past Screening'}
+              {isTodayDate ? 'Tonight\'s Feature' : 'Past Screening'}
             </div>
             <div className="text-sm text-stone-600 dark:text-stone-400">
               {formatDate(current, 'MMMM d, yyyy')}

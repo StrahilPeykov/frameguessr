@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import GameBoard from '@/components/game/GameBoard'
+import { getTodayLocal } from '@/utils/dateUtils'
 
 interface PageProps {
   params: Promise<{
@@ -29,13 +30,12 @@ export default async function DayPage({ params }: PageProps) {
     notFound()
   }
   
-  // Get today's date in the same format
-  const today = new Date()
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  // Get today's date in local timezone
+  const today = getTodayLocal()
   
   // Check if date is in the future
-  if (date > todayStr) {
-    redirect(`/day/${todayStr}`)
+  if (date > today) {
+    redirect(`/day/${today}`)
   }
   
   // Check if date is too far in the past
@@ -71,22 +71,21 @@ export async function generateMetadata({ params }: PageProps) {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   const formattedDate = `${months[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`
   
-  const today = new Date()
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  const isToday = date === todayStr
+  const today = getTodayLocal()
+  const isTodayDate = date === today
   
   return {
-    title: isToday 
+    title: isTodayDate 
       ? 'FrameGuessr - Today\'s Movie & TV Challenge'
       : `FrameGuessr - ${formattedDate} Challenge`,
-    description: isToday
+    description: isTodayDate
       ? 'Can you guess today\'s movie or TV show from the image?'
       : `Take on the FrameGuessr challenge from ${formattedDate}`,
     openGraph: {
-      title: isToday 
+      title: isTodayDate 
         ? 'FrameGuessr - Today\'s Challenge'
         : `FrameGuessr - ${formattedDate}`,
-      description: isToday
+      description: isTodayDate
         ? 'Can you guess today\'s movie or TV show?'
         : `Challenge from ${formattedDate}`,
       url: `/day/${date}`,
@@ -104,10 +103,10 @@ export async function generateMetadata({ params }: PageProps) {
     },
     twitter: {
       card: 'summary_large_image',
-      title: isToday 
+      title: isTodayDate 
         ? 'FrameGuessr - Today\'s Challenge'
         : `FrameGuessr - ${formattedDate}`,
-      description: isToday
+      description: isTodayDate
         ? 'Can you guess today\'s movie or TV show?'
         : `Challenge from ${formattedDate}`,
       images: ['/images/og-image.jpg'],

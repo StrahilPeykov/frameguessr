@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { X, Copy, Check, Share } from 'lucide-react'
 import { GameState } from '@/types'
-import { format } from 'date-fns'
+import { getTodayLocal, isToday } from '@/utils/dateUtils'
 
 interface ShareModalProps {
   isOpen: boolean
@@ -32,7 +32,7 @@ export default function ShareModal({ isOpen, onClose, gameState, movieTitle }: S
       }
     }
 
-    const isToday = dateStr === format(new Date(), 'yyyy-MM-dd')
+    const isTodayDate = isToday(dateStr)
     const url = `frameguessr.com/day/${dateStr}`
 
     return `FrameGuessr ${dateStr}

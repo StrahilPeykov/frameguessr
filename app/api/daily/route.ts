@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { format } from 'date-fns'
+
+// Helper function to get today's date in local timezone (server-side)
+function getTodayLocal(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,13 +17,13 @@ export async function GET(request: NextRequest) {
     const dateParam = searchParams.get('date')
     
     // Validate date parameter if provided
-    let targetDate = format(new Date(), 'yyyy-MM-dd')
+    let targetDate = getTodayLocal()
     if (dateParam) {
       // Accept any valid date string but block future dates
-      const requestedDate = new Date(dateParam)
+      const requestedDate = new Date(dateParam + 'T00:00:00.000Z')
       if (!isNaN(requestedDate.getTime())) {
-        const formatted = format(requestedDate, 'yyyy-MM-dd')
-        const today = format(new Date(), 'yyyy-MM-dd')
+        const formatted = dateParam // Use the date as-is since it's already in YYYY-MM-DD format
+        const today = getTodayLocal()
 
         if (formatted > today) {
           return NextResponse.json(

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { GameState, DailyChallenge, SearchResult, AudioHintData } from '@/types'
 import { Search, SkipForward, Check, X, Share2, BarChart3, RefreshCw, Calendar, Clock, Trophy, Film, Tv, Star, User, Sun, Moon, Menu } from 'lucide-react'
 import { useBlur, type HintLevel } from '@/utils/blur'
+import { getTodayLocal } from '@/utils/dateUtils'
 import ShareModal from './ShareModal'
 import StatsModal from './StatsModal'
 import SearchBox from './SearchBox'
@@ -23,7 +24,7 @@ interface GameBoardProps {
 
 export default function GameBoard({ initialDate }: GameBoardProps) {
   const router = useRouter()
-  const today = new Date().toISOString().split('T')[0]
+  const today = getTodayLocal()
   const selectedDate = initialDate || today
   const audioRef = useRef<{ stopAudio: () => void } | null>(null)
   const { theme, toggleTheme } = useTheme()
