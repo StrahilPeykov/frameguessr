@@ -15,9 +15,9 @@ export default function HintsPanel() {
         {/* Tagline */}
         {gameState.currentHintLevel >= 2 && dailyChallenge.hints.level2.data.tagline && (
           <div className="cinema-glass rounded-lg px-3 py-1.5 border border-stone-200/30 dark:border-amber-700/30">
-            <span className="text-stone-500 dark:text-stone-400 text-xs">Quote:</span>
+            <span className="text-stone-500 dark:text-stone-400 text-xs">Tagline:</span>
             <span className="text-stone-700 dark:text-stone-300 italic ml-2">
-              "{dailyChallenge.hints.level2.data.tagline}"
+              {dailyChallenge.hints.level2.data.tagline}
             </span>
           </div>
         )}

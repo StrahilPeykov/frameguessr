@@ -90,7 +90,7 @@ export default function CompletionScreen({ currentDate }: CompletionScreenProps)
             {dailyChallenge.details.tagline && (
               <div>
                 <h4 className="font-semibold text-stone-700 dark:text-stone-300 mb-1">Tagline</h4>
-                <p className="text-stone-600 dark:text-stone-400 italic">"{dailyChallenge.details.tagline}"</p>
+                <p className="text-stone-600 dark:text-stone-400 italic">{dailyChallenge.details.tagline}</p>
               </div>
             )}
             
