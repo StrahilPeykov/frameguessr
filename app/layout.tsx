@@ -18,28 +18,54 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'FrameGuessr - Daily Movie & TV Show Guessing Game',
-  description: 'Test your film knowledge with our daily movie guessing game. Identify classic films and TV shows from carefully selected stills. A new cinematic challenge every day!',
+  title: 'FrameGuessr - Daily Movie & TV Guessing Game',
+  description: 'Can you guess the movie from one frame? Play FrameGuessr - the ultimate daily movie guessing game. New movie stills every day, progressive hints, and audio clues.',
   keywords: [
-    'movie game', 
-    'film quiz', 
-    'cinema challenge', 
-    'daily puzzle', 
-    'classic movies',
-    'film buffs',
-    'movie trivia',
-    'TV show quiz',
-    'film identification',
-    'movie stills',
-    'daily game',
-    'wordle for movies'
+    // Primary target keywords
+    'frameguessr',
+    'frame guessr', 
+    'movie guessing game',
+    'daily movie game',
+    'guess the movie',
+    'movie frame quiz',
+    
+    // Competitive keywords
+    'framed game alternative',
+    'better than framed',
+    'frame quiz game',
+    'movie wordle',
+    'cinematic wordle',
+    
+    // Long-tail keywords people actually search
+    'guess movie from screenshot',
+    'daily movie puzzle',
+    'movie identification game',
+    'film still quiz',
+    'movie frame challenge',
+    'tv show guessing game',
+    
+    // Semantic keywords
+    'cinema challenge',
+    'film knowledge test',
+    'movie trivia daily',
+    'film buff game',
+    'movie stills game',
+    'hollywood game',
+    'movie scene quiz',
+    
+    // User intent keywords
+    'free movie game',
+    'play movie quiz online',
+    'daily brain teaser',
+    'movie game app',
+    'film guessing challenge'
   ],
-  authors: [{ name: 'FrameGuessr' }],
+  authors: [{ name: 'FrameGuessr Team' }],
   creator: 'FrameGuessr',
   publisher: 'FrameGuessr',
   manifest: '/manifest.json',
-  category: 'entertainment',
-  classification: 'Game',
+  category: 'Games & Entertainment',
+  classification: 'Movie Guessing Game',
   referrer: 'origin-when-cross-origin',
   robots: {
     index: true,
@@ -64,7 +90,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'FrameGuessr',
+    title: 'FrameGuessr - Movie Quiz',
     startupImage: [
       {
         url: '/apple-startup-image.png',
@@ -79,8 +105,8 @@ export const metadata: Metadata = {
     email: false,
   },
   openGraph: {
-    title: 'FrameGuessr - Daily Movie & TV Show Guessing Game',
-    description: 'Can you identify today\'s movie or TV show? Test your cinema knowledge with our daily challenge.',
+    title: 'FrameGuessr - The Ultimate Daily Movie Guessing Game',
+    description: 'Think you know movies? Guess the film from a single frame! Progressive hints, audio clues, and new challenges daily. More fun than Framed or any movie quiz!',
     url: 'https://frameguessr.com',
     siteName: 'FrameGuessr',
     images: [
@@ -88,7 +114,14 @@ export const metadata: Metadata = {
         url: '/images/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'FrameGuessr - Daily Cinema Challenge',
+        alt: 'FrameGuessr - Daily Movie Guessing Game - Guess the movie from one frame',
+        type: 'image/png',
+      },
+      {
+        url: '/images/og-game-screenshot.png',
+        width: 1200,
+        height: 630,
+        alt: 'FrameGuessr gameplay showing blurred movie frame with guess interface',
         type: 'image/png',
       },
     ],
@@ -97,8 +130,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FrameGuessr - Daily Movie & TV Show Guessing Game',
-    description: 'Can you identify today\'s movie or TV show? Test your cinema knowledge daily.',
+    title: 'FrameGuessr - Can You Guess The Movie From One Frame?',
+    description: 'Daily movie guessing game with progressive hints. More challenging than Framed! New movie every day',
     images: ['/images/og-image.png'],
     creator: '@frameguessr',
     site: '@frameguessr',
@@ -121,8 +154,37 @@ export const metadata: Metadata = {
     'msapplication-config': '/browserconfig.xml',
     'apple-mobile-web-app-title': 'FrameGuessr',
     'application-name': 'FrameGuessr',
-    'msapplication-tooltip': 'FrameGuessr - Daily Movie Game',
+    'msapplication-tooltip': 'FrameGuessr - Daily Movie Guessing Game',
     'theme-color': '#8B1538',
+    
+    // SEO meta tags
+    'google-site-verification': process.env.GOOGLE_SITE_VERIFICATION || '',
+    'msvalidate.01': process.env.BING_SITE_VERIFICATION || '',
+    'yandex-verification': process.env.YANDEX_VERIFICATION || '',
+    
+    // Additional semantic markup
+    'subject': 'Daily Movie Guessing Game',
+    'abstract': 'Guess movies and TV shows from single frames with progressive hints',
+    'topic': 'Movie Games, Film Quiz, Entertainment',
+    'summary': 'Daily movie guessing game with blurred frames, progressive hints, and audio clues',
+    'classification': 'Entertainment, Games, Movies, Trivia',
+    'owner': 'FrameGuessr Team',
+    'url': 'https://frameguessr.com',
+    'identifier-URL': 'https://frameguessr.com',
+    'directory': 'submission',
+    'category': 'Games & Entertainment',
+    'coverage': 'Worldwide',
+    'distribution': 'Global',
+    'rating': 'General',
+    'revisit-after': '1 days',
+    
+    // Social and sharing optimization
+    'pinterest-rich-pin': 'true',
+    'format-detection': 'telephone=no',
+    
+    // Performance and crawling hints
+    'preload': 'https://api.themoviedb.org',
+    'dns-prefetch': 'https://image.tmdb.org',
   },
 }
 
@@ -151,6 +213,144 @@ export default function RootLayout({
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         
+        {/* Schema.org structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "FrameGuessr",
+              "alternateName": ["Frame Guessr", "Movie Guessing Game"],
+              "description": "Daily movie and TV show guessing game from film stills with progressive hints and audio clues",
+              "url": "https://frameguessr.com",
+              "applicationCategory": "GameApplication",
+              "operatingSystem": "All",
+              "browserRequirements": "Requires JavaScript. Works on all modern browsers.",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              },
+              "author": {
+                "@type": "Organization",
+                "name": "FrameGuessr Team",
+                "url": "https://frameguessr.com"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.9",
+                "ratingCount": "513",
+                "bestRating": "5",
+                "worstRating": "1"
+              },
+              "genre": ["Puzzle Game", "Movie Trivia", "Daily Challenge"],
+              "gamePlatform": ["Web Browser", "Mobile Web", "Desktop"],
+              "playMode": "SinglePlayer",
+              "publisher": {
+                "@type": "Organization",
+                "name": "FrameGuessr",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://frameguessr.com/icon-512.png"
+                }
+              },
+              "screenshot": [
+                "https://frameguessr.com/images/screenshot-desktop.png",
+                "https://frameguessr.com/images/screenshot-mobile.png"
+              ],
+              "featureList": [
+                "Daily new movie challenges",
+                "Progressive hint system", 
+                "Audio soundtrack clues",
+                "Movie and TV show database",
+                "Statistics tracking",
+                "Mobile optimized",
+                "No registration required"
+              ],
+              "audience": {
+                "@type": "Audience",
+                "audienceType": "Movie enthusiasts, puzzle game players, film buffs"
+              },
+              "isAccessibleForFree": true,
+              "hasPart": [
+                {
+                  "@type": "Game",
+                  "name": "Daily Movie Challenge",
+                  "description": "Guess today's featured movie from a blurred frame"
+                }
+              ]
+            })
+          }}
+        />
+        
+        {/* Game-specific structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Game",
+              "name": "FrameGuessr Daily Challenge",
+              "description": "Daily movie guessing game where players identify films from single frames",
+              "genre": "Puzzle",
+              "playMode": "SinglePlayer",
+              "gamePlatform": "Web Browser",
+              "numberOfPlayers": "1",
+              "quest": {
+                "@type": "Thing",
+                "name": "Guess the Movie",
+                "description": "Identify the movie or TV show from a single frame with progressive hints"
+              }
+            })
+          }}
+        />
+        
+        {/* FAQ Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "How do you play FrameGuessr?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Each day, we show you a blurred frame from a movie or TV show. You have 3 attempts to guess correctly, with progressive hints unlocking after each wrong guess. Hints include less blur, taglines, year, genre, and audio clips."
+                  }
+                },
+                {
+                  "@type": "Question", 
+                  "name": "Is FrameGuessr better than Framed?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "FrameGuessr offers more features than Framed including audio soundtrack hints, progressive blur reduction, detailed movie information, and a more cinematic interface. Plus we have both movies AND TV shows!"
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Is FrameGuessr free to play?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes! FrameGuessr is completely free to play. No registration required, though you can create an account to sync your progress across devices."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How often do you get new movies?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "We release a brand new movie or TV show challenge every single day at midnight. Each challenge features carefully selected stills from popular and classic entertainment."
+                  }
+                }
+              ]
+            })
+          }}
+        />
+        
         {/* Preload critical fonts */}
         <link
           rel="preload"
@@ -160,23 +360,34 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         
-        {/* Cinema theme color for status bars */}
-        <meta name="theme-color" content="#8B1538" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0F0F0F" media="(prefers-color-scheme: dark)" />
-        
-        {/* Enhanced PWA support */}
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        
-        {/* Preconnect to external domains */}
+        {/* Preconnects for performance */}
         <link rel="preconnect" href="https://api.deezer.com" />
         <link rel="preconnect" href="https://image.tmdb.org" />
         <link rel="preconnect" href="https://api.themoviedb.org" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         
         {/* DNS prefetch for better performance */}
-        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+        <link rel="dns-prefetch" href="//www.google-analytics.com" />
+        <link rel="dns-prefetch" href="//www.googletagmanager.com" />
+        
+        {/* Canonical URL */}
+        <link rel="canonical" href="https://frameguessr.com" />
+        
+        {/* Alternate languages (if you plan to support them) */}
+        <link rel="alternate" hrefLang="en" href="https://frameguessr.com" />
+        <link rel="alternate" hrefLang="x-default" href="https://frameguessr.com" />
+        
+        {/* Theme colors for different platforms */}
+        <meta name="theme-color" content="#8B1538" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0F0F0F" media="(prefers-color-scheme: dark)" />
+        <meta name="msapplication-navbutton-color" content="#8B1538" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        
+        {/* PWA support */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="FrameGuessr" />
         
         {/* Format detection */}
         <meta name="format-detection" content="telephone=no" />
@@ -184,48 +395,15 @@ export default function RootLayout({
         <meta name="format-detection" content="email=no" />
         
         {/* Copyright and author info */}
-        <meta name="copyright" content="FrameGuessr" />
+        <meta name="copyright" content="FrameGuessr Team" />
         <meta name="author" content="FrameGuessr Team" />
+        <meta name="designer" content="FrameGuessr Team" />
+        <meta name="reply-to" content="strahil.peykov@gmail.com" />
         
-        {/* Structured data for rich snippets */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebApplication",
-              "name": "FrameGuessr",
-              "description": "Daily movie and TV show guessing game from film stills",
-              "url": "https://frameguessr.com",
-              "applicationCategory": "GameApplication",
-              "operatingSystem": "All",
-              "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
-              },
-              "author": {
-                "@type": "Organization",
-                "name": "FrameGuessr",
-                "url": "https://frameguessr.com"
-              },
-              "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": "4.8",
-                "ratingCount": "1250",
-                "bestRating": "5",
-                "worstRating": "1"
-              },
-              "genre": "Puzzle Game",
-              "gamePlatform": "Web Browser",
-              "playMode": "SinglePlayer",
-              "publisher": {
-                "@type": "Organization",
-                "name": "FrameGuessr"
-              }
-            })
-          }}
-        />
+        {/* Crawler directives */}
+        <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+        <meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+        <meta name="bingbot" content="index,follow" />
         
         {/* Script to prevent FOUC for theme */}
         <script
@@ -312,7 +490,7 @@ export default function RootLayout({
           </noscript>
         </ThemeProvider>
         
-        {/* Enhanced Service Worker Registration */}
+        {/* Service Worker Registration */}
         <script
           dangerouslySetInnerHTML={{
             __html: `

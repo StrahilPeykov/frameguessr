@@ -38,14 +38,16 @@ export default async function DayPage({ params }: PageProps) {
   return <GameBoard initialDate={date} />
 }
 
-// Generate metadata for each day
+// Metadata generation for each day
 export async function generateMetadata({ params }: PageProps) {
   const { date } = await params
   
   // Quick validation for metadata
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return {
-      title: 'Day Not Found - FrameGuessr'
+      title: 'Day Not Found - FrameGuessr',
+      description: 'This FrameGuessr challenge could not be found.',
+      robots: 'noindex,nofollow'
     }
   }
   
@@ -54,56 +56,206 @@ export async function generateMetadata({ params }: PageProps) {
   
   if (!isValidDate) {
     return {
-      title: 'Day Not Found - FrameGuessr'
+      title: 'Invalid Date - FrameGuessr',
+      description: 'This FrameGuessr challenge date is invalid.',
+      robots: 'noindex,nofollow'
     }
   }
   
   // Format date for display
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-  const formattedDate = `${months[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   
-  // Check if it's today in user's timezone (best effort)
+  const formattedDate = `${months[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`
+  const shortDate = `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`
+  const dayName = dayNames[dateObj.getDay()]
+  
+  // Check if it's today in user's timezone (best effort server-side)
   const now = new Date()
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const isTodayDate = date === today
   
+  // Check if it's recent (within last 7 days) for SEO purposes
+  const daysDiff = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60 * 60 * 24))
+  const isRecent = daysDiff >= 0 && daysDiff <= 7
+  const isFuture = daysDiff < 0
+  
+  // Create dynamic titles and descriptions based on date context
+  let title: string
+  let description: string
+  let keywords: string[]
+  
+  if (isTodayDate) {
+    title = 'FrameGuessr Today - Can You Guess Today\'s Movie? Daily Film Challenge'
+    description = `Play today's FrameGuessr challenge! Can you identify today's featured movie or TV show from a single frame? Progressive hints, audio clues, and unlimited fun. Better than Framed or any movie quiz game!`
+    keywords = [
+      'frameguessr today',
+      'today movie game',
+      'daily movie challenge today',
+      'guess today movie',
+      'movie game today',
+      'frame quiz today',
+      'daily film puzzle',
+      'today\'s movie quiz'
+    ]
+  } else if (isFuture) {
+    title = `FrameGuessr ${formattedDate} - Future Movie Challenge Coming Soon`
+    description = `Get ready for the FrameGuessr challenge on ${formattedDate}! A new movie or TV show guessing game will be available. Bookmark this page and come back to play!`
+    keywords = [
+      'frameguessr future',
+      'upcoming movie game',
+      'movie challenge coming soon',
+      `frameguessr ${date}`,
+      'future frame quiz'
+    ]
+  } else if (isRecent) {
+    title = `FrameGuessr ${shortDate} - ${dayName}'s Movie Challenge | Play Past Games`
+    description = `Play the FrameGuessr challenge from ${formattedDate}! Test your movie knowledge with this ${dayName} puzzle. Can you guess the featured film from just one frame? Progressive hints available!`
+    keywords = [
+      `frameguessr ${date}`,
+      `movie game ${shortDate}`,
+      `${dayName} movie challenge`,
+      'recent movie quiz',
+      'past frameguessr games',
+      'movie puzzle archive'
+    ]
+  } else {
+    title = `FrameGuessr Archive ${shortDate} - Classic Movie Challenge from ${formattedDate}`
+    description = `Revisit the FrameGuessr challenge from ${formattedDate}. Can you solve this classic movie puzzle? Guess the film from a single frame with progressive hints and audio clues.`
+    keywords = [
+      `frameguessr ${date}`,
+      'frameguessr archive',
+      'classic movie games',
+      'movie puzzle archive',
+      `${shortDate} movie challenge`,
+      'past movie quiz games'
+    ]
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://frameguessr.com'
+  const pageUrl = `${baseUrl}/day/${date}`
+  
   return {
-    title: isTodayDate 
-      ? 'FrameGuessr - Today\'s Movie & TV Challenge'
-      : `FrameGuessr - ${formattedDate} Challenge`,
-    description: isTodayDate
-      ? 'Can you guess today\'s movie or TV show from the image?'
-      : `Take on the FrameGuessr challenge from ${formattedDate}`,
+    title,
+    description,
+    keywords: [
+      ...keywords,
+      // Always include these core keywords
+      'frameguessr',
+      'movie guessing game',
+      'frame quiz',
+      'daily movie puzzle',
+      'film identification game',
+      'movie stills quiz',
+      'cinema challenge',
+      'guess the movie',
+      'framed alternative',
+      'movie wordle'
+    ],
+    authors: [{ name: 'FrameGuessr Team' }],
+    robots: isFuture ? 'noindex,follow' : 'index,follow',
+    canonical: pageUrl,
     openGraph: {
       title: isTodayDate 
-        ? 'FrameGuessr - Today\'s Challenge'
-        : `FrameGuessr - ${formattedDate}`,
+        ? 'FrameGuessr Today - Can You Guess Today\'s Movie?'
+        : `FrameGuessr ${shortDate} - ${dayName}'s Movie Challenge`,
       description: isTodayDate
-        ? 'Can you guess today\'s movie or TV show?'
-        : `Challenge from ${formattedDate}`,
-      url: `/day/${date}`,
+        ? 'Play today\'s movie guessing challenge! Progressive hints, audio clues, and cinematic fun.'
+        : `Test your film knowledge with the ${formattedDate} FrameGuessr challenge.`,
+      url: pageUrl,
       siteName: 'FrameGuessr',
       images: [
         {
-          url: '/images/og-image.jpg',
+          url: '/images/og-daily-challenge.png',
           width: 1200,
           height: 630,
-          alt: 'FrameGuessr - Daily Movie & TV Show Guessing Game',
+          alt: `FrameGuessr ${formattedDate} - Daily Movie Guessing Challenge`,
         },
       ],
       locale: 'en_US',
       type: 'website',
+      publishedTime: isTodayDate ? new Date().toISOString() : undefined,
     },
     twitter: {
       card: 'summary_large_image',
       title: isTodayDate 
-        ? 'FrameGuessr - Today\'s Challenge'
-        : `FrameGuessr - ${formattedDate}`,
+        ? 'Can You Guess Today\'s Movie? 🎬'
+        : `FrameGuessr ${shortDate} Challenge 🎬`,
       description: isTodayDate
-        ? 'Can you guess today\'s movie or TV show?'
-        : `Challenge from ${formattedDate}`,
-      images: ['/images/og-image.jpg'],
+        ? 'New daily movie challenge is live! Progressive hints and audio clues available.'
+        : `Movie guessing challenge from ${formattedDate}. Can you solve it?`,
+      images: ['/images/og-daily-challenge.png'],
       creator: '@frameguessr',
+    },
+    alternates: {
+      canonical: pageUrl,
+    },
+    other: {
+      'article:published_time': isTodayDate ? new Date().toISOString() : dateObj.toISOString(),
+      'article:modified_time': new Date().toISOString(),
+      'article:section': 'Games',
+      'article:tag': keywords.join(','),
+      
+      // Crawling directives
+      'robots': isFuture ? 'noindex,follow' : 'index,follow,max-image-preview:large',
+      'googlebot': isFuture ? 'noindex,follow' : 'index,follow,max-image-preview:large',
+      
+      // Date-specific meta
+      'date': date,
+      'challenge-date': formattedDate,
+      'game-type': 'daily-movie-challenge',
+      
+      // Social sharing optimization
+      'pinterest:description': description,
+      'linkedin:description': description,
+    }
+  }
+}
+
+// Structured data for daily challenges
+export async function generateJsonLd(date: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://frameguessr.com'
+  const dateObj = new Date(date + 'T00:00:00.000Z')
+  const formattedDate = dateObj.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+  
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Game',
+    'name': `FrameGuessr ${formattedDate} Challenge`,
+    'description': `Daily movie guessing game challenge for ${formattedDate}. Identify the featured movie or TV show from a single frame.`,
+    'url': `${baseUrl}/day/${date}`,
+    'datePublished': dateObj.toISOString(),
+    'genre': 'Puzzle',
+    'playMode': 'SinglePlayer',
+    'gamePlatform': 'Web Browser',
+    'numberOfPlayers': '1',
+    'applicationCategory': 'Game',
+    'isAccessibleForFree': true,
+    'publisher': {
+      '@type': 'Organization',
+      'name': 'FrameGuessr',
+      'url': 'https://frameguessr.com'
+    },
+    'gameItem': {
+      '@type': 'Thing',
+      'name': 'Movie Frame',
+      'description': 'A single frame from a movie or TV show to identify'
+    },
+    'quest': {
+      '@type': 'Thing', 
+      'name': 'Identify the Movie',
+      'description': 'Guess the correct movie or TV show title from the given frame'
+    },
+    'offers': {
+      '@type': 'Offer',
+      'price': '0',
+      'priceCurrency': 'USD',
+      'availability': 'https://schema.org/InStock'
     }
   }
 }
