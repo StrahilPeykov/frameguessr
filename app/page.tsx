@@ -1,91 +1,27 @@
-import GameBoard from '@/components/game/GameBoard'
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { getTodayLocal } from '@/utils/dateUtils'
-import type { Metadata } from 'next'
 
 export default function HomePage() {
-  const today = getTodayLocal()
-  return <GameBoard initialDate={today} />
-}
+  const router = useRouter()
+  
+  useEffect(() => {
+    // Use client-side redirect to ensure user's timezone is used
+    const today = getTodayLocal()
+    router.replace(`/day/${today}`)
+  }, [router])
 
-export async function generateMetadata(): Promise<Metadata> {
-  const now = new Date()
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-  const formattedDate = `${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`
-
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://frameguessr.com'
-
-  return {
-    title: 'FrameGuessr Today - Can You Guess Today\'s Movie? Daily Film Challenge',
-    description: `Play today's FrameGuessr challenge! Can you identify today's featured movie or TV show from a single frame? Progressive hints, audio clues, and unlimited fun. Better than Framed or any movie quiz game!`,
-    keywords: [
-      'frameguessr today',
-      'today movie game',
-      'daily movie challenge today',
-      'guess today movie',
-      'movie game today',
-      'frame quiz today',
-      'daily film puzzle',
-      "today's movie quiz",
-      'frameguessr',
-      'movie guessing game',
-      'frame quiz',
-      'daily movie puzzle',
-      'film identification game',
-      'movie stills quiz',
-      'cinema challenge',
-      'guess the movie',
-      'framed alternative',
-      'movie wordle'
-    ],
-    authors: [{ name: 'FrameGuessr Team' }],
-    robots: 'index,follow',
-    openGraph: {
-      title: 'FrameGuessr Today - Can You Guess Today\'s Movie?',
-      description: "Play today's movie guessing challenge! Progressive hints, audio clues, and cinematic fun.",
-      url: baseUrl,
-      siteName: 'FrameGuessr',
-      images: [
-        {
-          url: '/images/og-daily-challenge.png',
-          width: 1200,
-          height: 630,
-          alt: `FrameGuessr ${formattedDate} - Daily Movie Guessing Challenge`,
-        },
-      ],
-      locale: 'en_US',
-      type: 'website'
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: "Can You Guess Today's Movie? 🎬",
-      description: 'New daily movie challenge is live! Progressive hints and audio clues available.',
-      images: ['/images/og-daily-challenge.png'],
-      creator: '@frameguessr',
-    },
-    alternates: {
-      canonical: baseUrl,
-    },
-    other: {
-      'article:published_time': now.toISOString(),
-      'article:modified_time': now.toISOString(),
-      'article:section': 'Games',
-      'article:tag': [
-        'frameguessr today',
-        'today movie game',
-        'daily movie challenge today',
-        'guess today movie',
-        'movie game today',
-        'frame quiz today',
-        'daily film puzzle',
-        "today's movie quiz"
-      ].join(','),
-      robots: 'index,follow,max-image-preview:large',
-      googlebot: 'index,follow,max-image-preview:large',
-      date: getTodayLocal(),
-      'challenge-date': formattedDate,
-      'game-type': 'daily-movie-challenge',
-      'pinterest:description': "Play today's FrameGuessr challenge! Can you identify today's featured movie or TV show from a single frame? Progressive hints, audio clues, and unlimited fun.",
-      'linkedin:description': "Play today's FrameGuessr challenge! Can you identify today's featured movie or TV show from a single frame? Progressive hints, audio clues, and unlimited fun."
-    }
-  }
+  // Show a minimal loading state while redirecting
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-50 via-amber-50/30 to-rose-50/20 dark:from-stone-950 dark:via-amber-950/20 dark:to-rose-950/10">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-stone-600 dark:text-stone-400 text-sm">
+          Loading today's challenge...
+        </p>
+      </div>
+    </div>
+  )
 }

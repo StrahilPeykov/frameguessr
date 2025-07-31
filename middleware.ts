@@ -39,7 +39,46 @@ function getRateLimit(pathname: string) {
   return RATE_LIMITS.default
 }
 
+function isBot(userAgent: string): boolean {
+  const botPatterns = [
+    'googlebot',
+    'bingbot',
+    'slurp',
+    'duckduckbot',
+    'baiduspider',
+    'yandexbot',
+    'facebookexternalhit',
+    'twitterbot',
+    'rogerbot',
+    'linkedinbot',
+    'embedly',
+    'quora link preview',
+    'showyoubot',
+    'outbrain',
+    'pinterest',
+    'developers.google.com/+/web/snippet'
+  ]
+  
+  const ua = userAgent.toLowerCase()
+  return botPatterns.some(pattern => ua.includes(pattern))
+}
+
 export function middleware(request: NextRequest) {
+  const userAgent = request.headers.get('user-agent') || ''
+  const isSearchBot = isBot(userAgent)
+  
+  // HTTPS redirect for non-bot traffic in production
+  if (process.env.NODE_ENV === 'production' && !isSearchBot) {
+    const forwardedProto = request.headers.get('x-forwarded-proto')
+    const proto = request.nextUrl.protocol
+    
+    if (forwardedProto === 'http' || proto === 'http:') {
+      const httpsUrl = request.nextUrl.clone()
+      httpsUrl.protocol = 'https:'
+      return NextResponse.redirect(httpsUrl, 301)
+    }
+  }
+
   // Only apply rate limiting to API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const forwardedFor = request.headers.get('x-forwarded-for')
@@ -151,5 +190,6 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/api/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
   ],
 }
