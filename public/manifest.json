@@ -1,18 +1,58 @@
 {
-  "name": "FrameGuessr - Movie & TV Guessing Game",
+  "name": "FrameGuessr - Daily Movie Guessing Game",
   "short_name": "FrameGuessr",
-  "description": "Guess the movie or TV show from a still image. A new challenge every day!",
+  "description": "Can you guess the movie from one frame? The ultimate daily movie and TV guessing game with progressive hints and audio clues.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#0F0F0F",
+  "theme_color": "#8B1538",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["games", "entertainment", "puzzle", "trivia"],
   "icons": [
+    {
+      "src": "/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-96.png", 
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-128.png",
+      "sizes": "128x128", 
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png", 
+      "purpose": "any"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
@@ -23,19 +63,73 @@
   ],
   "screenshots": [
     {
-      "src": "/screenshot-mobile.png",
+      "src": "/screenshot-mobile-1.png",
       "sizes": "390x844",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "FrameGuessr mobile gameplay showing blurred movie frame"
     },
     {
-      "src": "/screenshot-desktop.png",
-      "sizes": "1920x1080",
+      "src": "/screenshot-mobile-2.png", 
+      "sizes": "390x844",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "narrow",
+      "label": "Progressive hints and movie search interface"
+    },
+    {
+      "src": "/screenshot-desktop-1.png",
+      "sizes": "1920x1080", 
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "FrameGuessr desktop experience with cinema theme"
+    },
+    {
+      "src": "/screenshot-desktop-2.png",
+      "sizes": "1920x1080",
+      "type": "image/png", 
+      "form_factor": "wide",
+      "label": "Game completion screen with movie details"
     }
   ],
-  "categories": ["games", "entertainment"],
-  "lang": "en",
-  "dir": "ltr"
+  "shortcuts": [
+    {
+      "name": "Play Today",
+      "short_name": "Today",
+      "description": "Play today's FrameGuessr challenge",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Browse Archive",
+      "short_name": "Archive", 
+      "description": "Browse past FrameGuessr challenges",
+      "url": "/archive",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+frameguessr",
+      "url": "/game?challenge=%s"
+    }
+  ]
 }
