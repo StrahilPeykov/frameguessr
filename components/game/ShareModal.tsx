@@ -22,21 +22,33 @@ export default function ShareModal({ isOpen, onClose, currentDate }: ShareModalP
     const attempts = gameState.attempts
     const maxAttempts = gameState.maxAttempts
     
-    // Simple emojis for results
+    // Always show all 3 positions in the grid
     let grid = ''
+    
+    // Build grid from chronological attempts, padding to maxAttempts
     for (let i = 0; i < maxAttempts; i++) {
-      if (i < gameState.guesses.length) {
-        grid += gameState.guesses[i].correct ? '🟩' : '🟥'
+      const attempt = gameState.allAttempts[i]
+      
+      if (attempt) {
+        if (attempt.type === 'guess') {
+          grid += attempt.correct ? '🟩' : '🟥'
+        } else {
+          // Skip - always red
+          grid += '🟥'
+        }
       } else {
+        // Unused attempt - white square
         grid += '⬜'
       }
     }
+    
+    const displayAttempts = attempts
 
     const isTodayDate = isToday(dateStr)
     const url = `frameguessr.com/day/${dateStr}`
 
     return `FrameGuessr ${dateStr}
-${gameState.won ? `Solved in ${attempts}/${maxAttempts}!` : `${attempts}/${maxAttempts}`}
+${gameState.won ? `${displayAttempts}/${maxAttempts}` : `X/${maxAttempts}`}
 
 ${grid}
 

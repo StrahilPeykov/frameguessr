@@ -5,7 +5,8 @@ import { useGameContext } from '@/contexts/GameContext'
 export default function HintsPanel() {
   const { gameState, dailyChallenge } = useGameContext()
 
-  if (!dailyChallenge || gameState.currentHintLevel < 2) {
+  // Hide hints when game is completed since we show full details in CompletionScreen
+  if (!dailyChallenge || gameState.currentHintLevel < 2 || gameState.completed) {
     return null
   }
 

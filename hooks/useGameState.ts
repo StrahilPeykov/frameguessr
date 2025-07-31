@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { GameState, Guess, SearchResult } from '@/types'
+import { GameState, Guess, SearchResult, Attempt } from '@/types'
 import { gameStorage } from '@/lib/gameStorage'
 
 interface UseGameStateOptions {
@@ -12,7 +12,8 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
     currentDate: initialDate,
     attempts: 0,
     maxAttempts,
-    guesses: [],
+    allAttempts: [], // Chronological tracking
+    guesses: [], // Keep for backward compatibility
     completed: false,
     won: false,
     currentHintLevel: 1,
@@ -25,12 +26,26 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
     const loadGameState = async () => {
       const savedState = await gameStorage.loadGameState(initialDate)
       if (savedState) {
-        setGameState(savedState)
+        // Handle backward compatibility - convert old format if needed
+        const modernState: GameState = {
+          ...savedState,
+          allAttempts: savedState.allAttempts || savedState.guesses.map(guess => ({
+            id: guess.id,
+            type: 'guess' as const,
+            correct: guess.correct,
+            title: guess.title,
+            tmdbId: guess.tmdbId,
+            mediaType: guess.mediaType,
+            timestamp: guess.timestamp,
+          }))
+        }
+        setGameState(modernState)
       } else {
         setGameState({
           currentDate: initialDate,
           attempts: 0,
           maxAttempts,
+          allAttempts: [],
           guesses: [],
           completed: false,
           won: false,
@@ -78,12 +93,25 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
       timestamp: Date.now(),
     }
 
+    const newAttempt: Attempt = {
+      id: `${Date.now()}`,
+      type: 'guess',
+      correct: isCorrect,
+      title: result.title,
+      tmdbId: result.id,
+      mediaType: result.mediaType,
+      timestamp: Date.now(),
+    }
+
     const newAttempts = gameState.attempts + 1
-    const newHintLevel = Math.min(newAttempts + 1, 3)
+    const newHintLevel = isCorrect 
+      ? gameState.currentHintLevel  // Keep current level if correct
+      : Math.min(newAttempts + 1, 3) // Only advance if wrong
 
     const newGameState = {
       ...gameState,
       attempts: newAttempts,
+      allAttempts: [...gameState.allAttempts, newAttempt],
       guesses: [...gameState.guesses, newGuess],
       completed: isCorrect || newAttempts >= gameState.maxAttempts,
       won: isCorrect,
@@ -117,11 +145,20 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
     const newAttempts = gameState.attempts + 1
     const newHintLevel = Math.min(newAttempts + 1, 3)
 
+    const skipAttempt: Attempt = {
+      id: `skip-${Date.now()}`,
+      type: 'skip',
+      correct: false,
+      timestamp: Date.now(),
+    }
+
     setGameState(prev => ({
       ...prev,
       attempts: newAttempts,
+      allAttempts: [...prev.allAttempts, skipAttempt],
       currentHintLevel: newHintLevel,
-      completed: newAttempts >= gameState.maxAttempts,
+      completed: newAttempts >= prev.maxAttempts,
+      won: false,
     }))
   }
 
@@ -131,6 +168,7 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
       currentDate: targetDate,
       attempts: 0,
       maxAttempts,
+      allAttempts: [],
       guesses: [],
       completed: false,
       won: false,
@@ -146,5 +184,3 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
     resetGame,
   }
 }
-
-export default useGameState

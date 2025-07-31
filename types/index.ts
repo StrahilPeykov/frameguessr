@@ -3,6 +3,7 @@ export interface GameState {
   attempts: number
   maxAttempts: number
   guesses: Guess[]
+  allAttempts: Attempt[] // Chronological list of all attempts
   completed: boolean
   won: boolean
   currentHintLevel: number
@@ -14,6 +15,17 @@ export interface Guess {
   tmdbId: number
   mediaType: 'movie' | 'tv'
   correct: boolean
+  timestamp: number
+}
+
+// Attempt type that tracks all attempts chronologically
+export interface Attempt {
+  id: string
+  type: 'guess' | 'skip'
+  correct?: boolean // Only meaningful for guesses
+  title?: string // Only for guesses
+  tmdbId?: number // Only for guesses
+  mediaType?: 'movie' | 'tv' // Only for guesses
   timestamp: number
 }
 
