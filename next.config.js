@@ -84,27 +84,13 @@ const nextConfig = {
           },
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
-        ],
-      },
-    ]
-  },
-  
-  async redirects() {
-    return [
-      // Force HTTPS redirect
-      {
-        source: '/:path*',
-        has: [
           {
-            type: 'header',
-            key: 'x-forwarded-proto',
-            value: 'http',
+            key: 'X-Robots-Tag',
+            value: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
           },
         ],
-        destination: 'https://frameguessr.com/:path*',
-        permanent: true,
       },
     ]
   },

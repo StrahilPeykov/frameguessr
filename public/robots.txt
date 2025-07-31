@@ -1,9 +1,93 @@
-# FrameGuessr robots.txt
-User-agent: *
-Allow: /
+import type { MetadataRoute } from 'next'
 
-# API endpoints
-Disallow: /api/
-
-# Sitemap
-Sitemap: https://frameguessr.com/sitemap.xml
+export default function robots(): MetadataRoute.Robots {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://frameguessr.com'
+  
+  return {
+    rules: [
+      {
+        userAgent: 'Googlebot',
+        allow: [
+          '/',
+          '/day/*',
+          '/archive',
+          '/privacy',
+          '/terms',
+          // Allow safe API endpoints that provide public data
+          '/api/daily*',      // Daily challenge data - safe to crawl
+          '/api/search*',     // Movie search - safe to crawl
+        ],
+        disallow: [
+          // Block sensitive API endpoints
+          '/api/guess*',      // User guesses - should not be crawled
+          '/api/audio*',      // Audio streaming - waste of crawl budget
+          '/api/cron*',       // Admin endpoints
+          '/api/auth*',       // Authentication endpoints (if any)
+          // Block Next.js internal files to save crawl budget
+          '/_next/static/*.js$',
+          '/_next/static/*.json$',
+          '/_next/static/*/_buildManifest.js$',
+          '/_next/static/*/_ssgManifest.js$',
+          '/_next/static/*/_middlewareManifest.js$',
+        ],
+        crawlDelay: 1,
+      },
+      {
+        userAgent: 'Bingbot',
+        allow: [
+          '/',
+          '/day/*',
+          '/archive',
+          '/privacy', 
+          '/terms',
+          '/api/daily*',
+          '/api/search*',
+        ],
+        disallow: [
+          '/api/guess*',
+          '/api/audio*',
+          '/api/cron*',
+          '/api/auth*',
+          '/_next/',
+        ],
+        crawlDelay: 2,
+      },
+      {
+        userAgent: '*',
+        allow: [
+          '/',
+          '/day/*',
+          '/archive',
+          '/privacy',
+          '/terms',
+          '/api/daily*',
+          '/api/search*',
+        ],
+        disallow: [
+          '/api/guess*',
+          '/api/audio*', 
+          '/api/cron*',
+          '/api/auth*',
+          '/_next/',
+          '/admin/',
+          '/private/',
+        ],
+      },
+      // Block AI training crawlers
+      {
+        userAgent: 'GPTBot',
+        disallow: '/',
+      },
+      {
+        userAgent: 'ChatGPT-User',
+        disallow: '/',
+      },
+      {
+        userAgent: 'CCBot',
+        disallow: '/',
+      },
+    ],
+    sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
+  }
+}
