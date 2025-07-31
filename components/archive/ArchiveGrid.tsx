@@ -28,7 +28,7 @@ export default function ArchiveGrid() {
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [filter, setFilter] = useState<'all' | 'played' | 'won' | 'lost'>('all')
-  const itemsPerPage = 30
+  const itemsPerPage = 36 // 6x6 grid
   const today = getTodayLocal()
 
   useEffect(() => {
@@ -39,7 +39,6 @@ export default function ArchiveGrid() {
     try {
       setLoading(true)
       
-      // Fetch all available dates from the database
       const { data: availableDates, error } = await supabase
         .from('daily_movies')
         .select('date, tmdb_id, title, media_type')
@@ -50,7 +49,6 @@ export default function ArchiveGrid() {
 
       const challengeMap = new Map<string, DayChallenge>()
       
-      // Process each available date
       availableDates?.forEach((movie: AvailableDate, index) => {
         const gameState = gameStorage.loadFromLocalStorage(movie.date)
         
@@ -68,7 +66,7 @@ export default function ArchiveGrid() {
         
         challengeMap.set(movie.date, {
           date: movie.date,
-          dayNumber: availableDates.length - index, // Reverse numbering so day 1 is the oldest
+          dayNumber: availableDates.length - index,
           status,
           title: status !== 'not-played' ? movie.title : undefined,
           mediaType: movie.media_type as 'movie' | 'tv',
@@ -76,7 +74,6 @@ export default function ArchiveGrid() {
         })
       })
       
-      // Convert to array and sort by date descending (newest first)
       const challengeArray = Array.from(challengeMap.values())
         .sort((a, b) => b.date.localeCompare(a.date))
       
@@ -115,12 +112,9 @@ export default function ArchiveGrid() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-        {Array.from({ length: 30 }).map((_, i) => (
-          <div key={i} className="aspect-square cinema-glass rounded-xl p-4 animate-pulse">
-            <div className="h-6 bg-stone-200 dark:bg-stone-700 rounded mb-2" />
-            <div className="h-4 bg-stone-200 dark:bg-stone-700 rounded w-3/4" />
-          </div>
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-4">
+        {Array.from({ length: 36 }).map((_, i) => (
+          <div key={i} className="aspect-square bg-stone-100 dark:bg-stone-800/50 rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -128,9 +122,9 @@ export default function ArchiveGrid() {
 
   return (
     <div className="space-y-6">
-      {/* Filter buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex gap-2">
+      {/* Clean filter buttons */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-1 cinema-glass p-1 rounded-lg border border-stone-200/50 dark:border-amber-700/30">
           {(['all', 'played', 'won', 'lost'] as const).map((f) => (
             <button
               key={f}
@@ -138,10 +132,10 @@ export default function ArchiveGrid() {
                 setFilter(f)
                 setCurrentPage(1)
               }}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 filter === f
-                  ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg transform scale-105'
-                  : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
+                  ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-sm'
+                  : 'text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400'
               }`}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -149,25 +143,18 @@ export default function ArchiveGrid() {
           ))}
         </div>
         
-        {/* Stats summary */}
-        <div className="flex gap-4 text-sm">
-          <div className="flex items-center gap-1">
-            <Trophy className="w-4 h-4 text-amber-600" />
-            <span className="font-medium text-stone-700 dark:text-stone-300">
-              {challenges.filter(c => c.status === 'won').length} Won
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <X className="w-4 h-4 text-red-600" />
-            <span className="font-medium text-stone-700 dark:text-stone-300">
-              {challenges.filter(c => c.status === 'lost').length} Lost
-            </span>
-          </div>
+        {/* Simple stats */}
+        <div className="text-sm text-stone-500 dark:text-stone-400">
+          <span className="text-green-600 dark:text-green-400 font-medium">
+            {challenges.filter(c => c.status === 'won').length}
+          </span>
+          <span className="mx-1">/</span>
+          <span>{challenges.filter(c => c.status !== 'not-played').length} played</span>
         </div>
       </div>
 
-      {/* Challenge grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+      {/* Clean challenge grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-4">
         {paginatedChallenges.map((challenge) => {
           const { month, day, year } = formatDate(challenge.date)
           const todayChallenge = isToday(challenge.date)
@@ -177,109 +164,111 @@ export default function ArchiveGrid() {
             <Link
               key={challenge.date}
               href={`/day/${challenge.date}`}
-              className={`relative group aspect-square cinema-glass rounded-xl p-4 flex flex-col justify-between transition-all duration-300 hover:scale-105 hover:shadow-xl border ${
+              className={`relative group aspect-square rounded-xl p-4 flex flex-col justify-between transition-all duration-200 hover:scale-[1.02] cinema-glass border overflow-hidden ${
                 challenge.status === 'won'
-                  ? 'border-amber-500/50 dark:border-amber-400/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20'
+                  ? 'border-green-300/50 dark:border-green-600/50 bg-gradient-to-br from-green-50/80 to-emerald-50/60 dark:from-green-900/30 dark:to-emerald-900/20 hover:border-green-400/60 dark:hover:border-green-500/60'
                   : challenge.status === 'lost'
-                  ? 'border-red-500/50 dark:border-red-400/50 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20'
-                  : 'border-stone-200/50 dark:border-stone-700/50 hover:border-amber-500/50 dark:hover:border-amber-400/50'
+                  ? 'border-red-300/50 dark:border-red-600/50 bg-gradient-to-br from-red-50/80 to-rose-50/60 dark:from-red-900/30 dark:to-rose-900/20 hover:border-red-400/60 dark:hover:border-red-500/60'
+                  : futureChallenge
+                  ? 'border-stone-200/50 dark:border-stone-700/50 bg-stone-50/50 dark:bg-stone-900/30 opacity-60'
+                  : 'border-stone-200/50 dark:border-stone-700/50 hover:border-amber-300/50 dark:hover:border-amber-600/50'
               }`}
               aria-label={`Challenge ${challenge.dayNumber} - ${month} ${day}, ${year}`}
             >
-              {/* Day number badge */}
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-amber-600 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg z-10">
-                {challenge.dayNumber}
-              </div>
-              
-              {/* Today badge */}
+              {/* Today indicator */}
               {todayChallenge && (
-                <div className="absolute -top-2 -left-2 px-2 py-1 bg-gradient-to-r from-amber-600 to-orange-600 rounded-full text-white text-xs font-bold shadow-lg z-10">
-                  TODAY
-                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full animate-pulse shadow-lg" />
               )}
               
-              {/* Date info */}
-              <div>
-                <div className="text-2xl font-bold text-stone-800 dark:text-stone-100">
+              {/* Date */}
+              <div className="text-center">
+                <div className="text-lg md:text-xl font-bold text-stone-900 dark:text-stone-100">
                   {day}
                 </div>
-                <div className="text-sm text-stone-600 dark:text-stone-400">
-                  {month} {year}
+                <div className="text-xs text-stone-500 dark:text-stone-400 leading-tight">
+                  {month}
                 </div>
               </div>
               
-              {/* Status */}
-              <div className="space-y-2">
+              {/* Status indicator */}
+              <div className="flex items-center justify-center">
                 {challenge.status === 'won' && (
-                  <>
-                    <div className="flex items-center justify-center">
-                      <Trophy className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center shadow-sm">
+                      <div className="w-3 h-3 rounded-full bg-white" />
                     </div>
-                    <div className="text-xs text-center text-stone-600 dark:text-stone-400">
-                      {challenge.attempts}/3 guesses
-                    </div>
-                  </>
-                )}
-                
-                {challenge.status === 'lost' && (
-                  <>
-                    <div className="flex items-center justify-center">
-                      <X className="w-8 h-8 text-red-600 dark:text-red-400" />
-                    </div>
-                    <div className="text-xs text-center text-stone-600 dark:text-stone-400">
-                      Failed
-                    </div>
-                  </>
-                )}
-                
-                {challenge.status === 'not-played' && (
-                  <>
-                    <div className="flex items-center justify-center">
-                      {futureChallenge ? (
-                        <Lock className="w-8 h-8 text-stone-400 dark:text-stone-500" />
-                      ) : (
-                        <Calendar className="w-8 h-8 text-stone-400 dark:text-stone-500 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
-                      )}
-                    </div>
-                    <div className="text-xs text-center text-stone-500 dark:text-stone-500">
-                      {futureChallenge ? 'Coming Soon' : 'Not Played'}
-                    </div>
-                  </>
-                )}
-                
-                {/* Show title on hover for played games */}
-                {challenge.title && challenge.status !== 'not-played' && (
-                  <div className="absolute inset-0 bg-black/90 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-3">
-                    <div className="text-center">
-                      <div className="flex justify-center mb-2">
-                        {challenge.mediaType === 'tv' ? (
-                          <Tv className="w-5 h-5 text-white/80" />
-                        ) : (
-                          <Film className="w-5 h-5 text-white/80" />
-                        )}
-                      </div>
-                      <p className="text-white text-xs font-medium line-clamp-2">
-                        {challenge.title}
-                      </p>
+                    <div className="text-xs text-green-600 dark:text-green-400 font-medium">
+                      {challenge.attempts}/3
                     </div>
                   </div>
                 )}
+                
+                {challenge.status === 'lost' && (
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-red-500 to-rose-500 flex items-center justify-center shadow-sm">
+                      <X className="w-3 h-3 text-white" />
+                    </div>
+                    <div className="text-xs text-red-600 dark:text-red-400">
+                      Lost
+                    </div>
+                  </div>
+                )}
+                
+                {challenge.status === 'not-played' && (
+                  <div className="flex flex-col items-center gap-1">
+                    {futureChallenge ? (
+                      <>
+                        <div className="w-6 h-6 rounded-full bg-stone-300 dark:bg-stone-600 flex items-center justify-center">
+                          <Lock className="w-3 h-3 text-stone-500 dark:text-stone-400" />
+                        </div>
+                        <div className="text-xs text-stone-400">
+                          Soon
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-6 h-6 rounded-full border-2 border-amber-300 dark:border-amber-600 border-dashed group-hover:border-amber-400 dark:group-hover:border-amber-500 transition-colors" />
+                        <div className="text-xs text-stone-500 dark:text-stone-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                          Play
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
+              
+              {/* Movie title overlay on hover */}
+              {challenge.title && challenge.status !== 'not-played' && (
+                <div className="absolute inset-0 bg-black/80 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-3">
+                  <div className="text-center">
+                    <div className="flex justify-center mb-1">
+                      {challenge.mediaType === 'tv' ? (
+                        <Tv className="w-4 h-4 text-white/80" />
+                      ) : (
+                        <Film className="w-4 h-4 text-white/80" />
+                      )}
+                    </div>
+                    <p className="text-white text-xs font-medium line-clamp-3 leading-relaxed">
+                      {challenge.title}
+                    </p>
+                  </div>
+                </div>
+              )}
             </Link>
           )
         })}
       </div>
       
-      {/* Pagination */}
+      {/* Clean pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-8">
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
-            className="p-2 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="p-2 rounded-lg cinema-glass border border-stone-200/50 dark:border-amber-700/30 hover:border-amber-300/50 dark:hover:border-amber-600/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             aria-label="Previous page"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4 text-stone-600 dark:text-stone-400" />
           </button>
           
           <div className="flex gap-1">
@@ -299,10 +288,10 @@ export default function ArchiveGrid() {
                 <button
                   key={pageNum}
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`w-10 h-10 rounded-lg font-medium transition-all ${
+                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
                     currentPage === pageNum
-                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg'
-                      : 'bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-400'
+                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-sm'
+                      : 'cinema-glass border border-stone-200/50 dark:border-amber-700/30 hover:border-amber-300/50 dark:hover:border-amber-600/50 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400'
                   }`}
                 >
                   {pageNum}
@@ -314,10 +303,10 @@ export default function ArchiveGrid() {
           <button
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages}
-            className="p-2 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="p-2 rounded-lg cinema-glass border border-stone-200/50 dark:border-amber-700/30 hover:border-amber-300/50 dark:hover:border-amber-600/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             aria-label="Next page"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4 text-stone-600 dark:text-stone-400" />
           </button>
         </div>
       )}
