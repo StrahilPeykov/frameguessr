@@ -155,7 +155,6 @@ export async function generateMetadata({ params }: PageProps) {
     ],
     authors: [{ name: 'FrameGuessr Team' }],
     robots: isFuture ? 'noindex,follow' : 'index,follow',
-    canonical: pageUrl,
     openGraph: {
       title: isTodayDate 
         ? 'FrameGuessr Today - Can You Guess Today\'s Movie?'
@@ -175,7 +174,6 @@ export async function generateMetadata({ params }: PageProps) {
       ],
       locale: 'en_US',
       type: 'website',
-      publishedTime: isTodayDate ? new Date().toISOString() : undefined,
     },
     twitter: {
       card: 'summary_large_image',
