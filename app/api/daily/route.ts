@@ -1,44 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-// Helper function to get today's date in local timezone (server-side)
-function getTodayLocal(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
 export async function GET(request: NextRequest) {
   try {
     // Check if a specific date is requested
     const searchParams = request.nextUrl.searchParams
     const dateParam = searchParams.get('date')
     
-    // Validate date parameter if provided
-    let targetDate = getTodayLocal()
+    // Use provided date or default to user's local date (no server-side validation)
+    let targetDate: string
     if (dateParam) {
-      // Accept any valid date string but block future dates
+      // Accept any valid date string - let users play when it's their local midnight
       const requestedDate = new Date(dateParam + 'T00:00:00.000Z')
       if (!isNaN(requestedDate.getTime())) {
-        const formatted = dateParam // Use the date as-is since it's already in YYYY-MM-DD format
-        const today = getTodayLocal()
-
-        if (formatted > today) {
-          return NextResponse.json(
-            { error: 'Challenge not yet available', date: formatted },
-            { status: 403 }
-          )
-        }
-
-        targetDate = formatted
+        targetDate = dateParam // Use the date as-is since it's already in YYYY-MM-DD format
       } else {
         return NextResponse.json(
           { error: 'Invalid date format' },
           { status: 400 }
         )
       }
+    } else {
+      // Default to current server date if no date specified
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      targetDate = `${year}-${month}-${day}`
     }
     
     // Get the movie for the target date

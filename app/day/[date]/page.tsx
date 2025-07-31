@@ -1,6 +1,5 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import GameBoard from '@/components/game/GameBoard'
-import { getTodayLocal } from '@/utils/dateUtils'
 
 interface PageProps {
   params: Promise<{
@@ -28,14 +27,6 @@ export default async function DayPage({ params }: PageProps) {
   
   if (!isValidDate) {
     notFound()
-  }
-  
-  // Get today's date in local timezone
-  const today = getTodayLocal()
-  
-  // Check if date is in the future
-  if (date > today) {
-    redirect(`/day/${today}`)
   }
   
   // Check if date is too far in the past
@@ -71,7 +62,9 @@ export async function generateMetadata({ params }: PageProps) {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   const formattedDate = `${months[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`
   
-  const today = getTodayLocal()
+  // Check if it's today in user's timezone (best effort)
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const isTodayDate = date === today
   
   return {
