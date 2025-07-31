@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Film, Sun, Moon, BarChart3, Share2, Menu, Check, X } from 'lucide-react'
+import { Sun, Moon, BarChart3, Share2, Menu, Check, X } from 'lucide-react'
 import { useTheme } from '@/hooks/useTheme'
 import { useNavigation } from '@/hooks/useNavigation'
 import { useGameContext } from '@/contexts/GameContext'
@@ -10,6 +10,7 @@ import DatePicker from './DatePicker'
 import UserMenu from '@/components/auth/UserMenu'
 import MobileMenu from './MobileMenu'
 import AuthModal from '@/components/auth/AuthModal'
+import FrameGuessrLogo from '@/components/ui/FrameGuessrLogo'
 
 interface GameHeaderProps {
   currentDate: string
@@ -43,13 +44,17 @@ function GameHeader({
       }`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Left side - Logo only */}
+            {/* Left side - Logo */}
             <div className="flex items-center">
-              <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-600 to-red-700 flex items-center justify-center">
-                  <Film className="w-5 h-5 text-white" />
+              <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-all duration-300 group">
+                <div className="relative">
+                  <FrameGuessrLogo 
+                    size={32}
+                    className="text-amber-600 dark:text-amber-500 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors duration-300"
+                  />
+                  <div className="absolute inset-0 bg-amber-500/20 dark:bg-amber-400/10 rounded-full blur-lg group-hover:bg-amber-400/30 dark:group-hover:bg-amber-300/20 transition-all duration-300 -z-10 scale-150" />
                 </div>
-                <h1 className="text-xl font-bold cinema-gradient-title">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-amber-700 via-amber-600 to-amber-800 dark:from-amber-400 dark:via-amber-300 dark:to-amber-500 bg-clip-text text-transparent group-hover:from-amber-600 group-hover:via-amber-500 group-hover:to-amber-700 dark:group-hover:from-amber-300 dark:group-hover:via-amber-200 dark:group-hover:to-amber-400 transition-all duration-300">
                   FrameGuessr
                 </h1>
               </Link>
