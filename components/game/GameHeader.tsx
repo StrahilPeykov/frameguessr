@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Sun, Moon, BarChart3, Share2, Menu, Check, X } from 'lucide-react'
+import { Sun, Moon, BarChart3, Share2, Menu, Check, X, Archive } from 'lucide-react'
 import { useTheme } from '@/hooks/useTheme'
 import { useNavigation } from '@/hooks/useNavigation'
 import { useGameContext } from '@/contexts/GameContext'
@@ -97,6 +97,14 @@ function GameHeader({
 
               {/* Desktop Controls */}
               <div className="hidden md:flex items-center gap-2">
+                <Link
+                  href="/archive"
+                  className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
+                  aria-label="Browse archive"
+                >
+                  <Archive className="w-5 h-5" />
+                </Link>
+
                 <button
                   onClick={toggleTheme}
                   className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"

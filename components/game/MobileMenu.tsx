@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Sun, Moon, BarChart3, Share2, User, LogOut, Check } from 'lucide-react'
+import { X, Sun, Moon, BarChart3, Share2, User, LogOut, Check, Archive } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
@@ -153,6 +153,18 @@ export default function MobileMenu({
 
         {/* Menu Items */}
         <div className="p-4 space-y-2">
+          {/* Archive */}
+          <Link
+            href="/archive"
+            onClick={onClose}
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors text-left"
+          >
+            <Archive className="w-5 h-5 text-amber-600" />
+            <span className="font-medium text-stone-700 dark:text-stone-200">
+              Browse Archive
+            </span>
+          </Link>
+
           {/* Theme Toggle */}
           <button
             onClick={onThemeToggle}

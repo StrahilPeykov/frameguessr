@@ -21,6 +21,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 1,
     },
+    // Archive page - high priority
+    {
+      url: `${baseUrl}/archive`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
     // Static pages
     {
       url: `${baseUrl}/privacy`,
@@ -222,7 +229,7 @@ export const STRUCTURED_DATA_TEMPLATES = {
         'name': 'How do you play FrameGuessr?',
         'acceptedAnswer': {
           '@type': 'Answer',
-          'text': 'Each day features a blurred movie frame. You have 3 attempts to guess correctly, with progressive hints (less blur, taglines, audio) unlocking after each guess.'
+          'text': 'Each day features a blurred movie frame. You have 3 attempts to guess correctly, with progressive hints (less blur, taglines, audio) unlocking after each wrong guess.'
         }
       }
     ]

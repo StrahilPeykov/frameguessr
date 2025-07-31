@@ -69,7 +69,7 @@ export class GameStorage {
     }
   }
 
-  private loadFromLocalStorage(date: string): GameState | null {
+  loadFromLocalStorage(date: string): GameState | null {
     try {
       const saved = localStorage.getItem(`frameguessr-${date}`)
       return saved ? JSON.parse(saved) : null

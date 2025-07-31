@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Film, Heart, ExternalLink } from 'lucide-react'
+import { Film, Heart, ExternalLink, Archive } from 'lucide-react'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -11,7 +11,7 @@ export default function Footer() {
       {/* Main Footer */}
       <div className="bg-white dark:bg-stone-900 border-t border-stone-200 dark:border-stone-800">
         <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* About */}
             <div>
               <h3 className="font-bold text-stone-800 dark:text-stone-100 mb-3 flex items-center gap-2">
@@ -22,6 +22,32 @@ export default function Footer() {
                 A daily movie and TV show guessing game for film enthusiasts. 
                 Test your cinema knowledge with carefully selected stills from classic and modern productions.
               </p>
+            </div>
+
+            {/* Play */}
+            <div>
+              <h3 className="font-bold text-stone-800 dark:text-stone-100 mb-3">
+                Play
+              </h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link 
+                    href="/" 
+                    className="text-sm text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                  >
+                    Today's Challenge
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    href="/archive" 
+                    className="text-sm text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors flex items-center gap-1"
+                  >
+                    <Archive className="w-3 h-3" />
+                    Browse Archive
+                  </Link>
+                </li>
+              </ul>
             </div>
 
             {/* Legal Links */}
