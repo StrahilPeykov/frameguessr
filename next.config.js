@@ -92,7 +92,6 @@ const nextConfig = {
   },
   
   async redirects() {
-    return []
     return [
       // Force HTTPS redirect
       {
