@@ -149,6 +149,9 @@ export default function Footer() {
             This product uses the TMDB API but is not endorsed or certified by TMDB.
             Audio previews provided by Deezer.
           </p>
+          <p className="text-xs text-stone-500 dark:text-stone-500 text-center mt-1">
+            Site built by Strahil Peykov.
+          </p>
         </div>
       </div>
     </footer>
