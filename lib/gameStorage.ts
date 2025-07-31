@@ -134,11 +134,24 @@ export class GameStorage {
       throw new Error(`Database load failed: ${error.message}`)
     }
 
+    // Handle backward compatibility - convert guesses to allAttempts if needed
+    const guesses = data.guesses || []
+    const allAttempts = guesses.map((guess: any) => ({
+      id: guess.id,
+      type: 'guess' as const,
+      correct: guess.correct,
+      title: guess.title,
+      tmdbId: guess.tmdbId,
+      mediaType: guess.mediaType,
+      timestamp: guess.timestamp,
+    }))
+
     return {
       currentDate: date,
       attempts: data.attempts,
       maxAttempts: 3,
-      guesses: data.guesses || [],
+      guesses: guesses,
+      allAttempts: allAttempts,
       completed: data.completed,
       won: data.won || false,
       currentHintLevel: data.current_hint_level || 1
