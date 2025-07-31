@@ -51,9 +51,9 @@ export default function DatePicker({
   }
   
   const canGoBack = current > min
-  // Allow going forward for a reasonable buffer (e.g., next few days) to account for timezone differences
-  const maxFutureDate = addDays(new Date(), 2) // Allow 2 days in the future
-  const canGoForward = current < maxFutureDate
+  // Only allow up to today - no future dates
+  const maxDate = new Date(today)
+  const canGoForward = current < maxDate
   
   const prevDay = canGoBack ? formatDateLocal(addDays(current, -1)) : null
   const nextDay = canGoForward ? formatDateLocal(addDays(current, 1)) : null
@@ -72,8 +72,8 @@ export default function DatePicker({
     const selected = e.target.value
     const selectedDate = new Date(selected)
     
-    // More permissive validation - allow reasonable future dates and past dates from game start
-    if (selectedDate >= min && selectedDate <= maxFutureDate) {
+    // Only allow dates from minDate to today (inclusive)
+    if (selectedDate >= min && selectedDate <= maxDate) {
       onDateSelect(selected)
       setShowPicker(false)
     }
@@ -123,7 +123,7 @@ export default function DatePicker({
                 type="date"
                 value={currentDate}
                 min={minDate}
-                max={formatDateLocal(maxFutureDate)}
+                max={today}
                 onChange={handleDateInput}
                 className="px-3 py-2 text-sm border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 cinema-focus"
               />
@@ -172,7 +172,7 @@ export default function DatePicker({
                   type="date"
                   value={currentDate}
                   min={minDate}
-                  max={formatDateLocal(maxFutureDate)}
+                  max={today}
                   onChange={handleDateInput}
                   className="px-4 py-3 border border-stone-300 dark:border-stone-600 rounded-xl bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 cinema-focus w-full"
                 />
@@ -199,7 +199,6 @@ export default function DatePicker({
   }
 
   // Original full version with cinema styling
-  const maxDateForDisplay = formatDateLocal(maxFutureDate)
   
   return (
     <div className="flex items-center justify-center gap-6 mb-8">
@@ -254,12 +253,12 @@ export default function DatePicker({
                 type="date"
                 value={currentDate}
                 min={minDate}
-                max={maxDateForDisplay}
+                max={today}
                 onChange={handleDateInput}
                 className="w-full px-4 py-3 border border-stone-300 dark:border-stone-600 rounded-xl bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 cinema-focus"
               />
               <div className="mt-3 text-xs text-stone-500 dark:text-stone-400 text-center">
-                Available from {formatDate(min, 'MMM d, yyyy')} onwards
+                Available from {formatDate(min, 'MMM d, yyyy')} to today
               </div>
             </div>
           </div>
