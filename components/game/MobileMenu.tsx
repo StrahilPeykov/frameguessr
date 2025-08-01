@@ -8,8 +8,8 @@ import Link from 'next/link'
 interface MobileMenuProps {
   isOpen: boolean
   onClose: () => void
-  theme: 'light' | 'dark'
-  onThemeToggle: () => void
+  //theme: 'light' | 'dark'
+  //onThemeToggle: () => void
   isAuthenticated: boolean
   gameCompleted: boolean
   syncStatus: 'idle' | 'syncing' | 'synced' | 'error'
@@ -22,8 +22,8 @@ interface MobileMenuProps {
 export default function MobileMenu({
   isOpen,
   onClose,
-  theme,
-  onThemeToggle,
+  //theme,
+  //onThemeToggle,
   isAuthenticated,
   gameCompleted,
   syncStatus,
@@ -165,7 +165,8 @@ export default function MobileMenu({
             </span>
           </Link>
 
-          {/* Theme Toggle */}
+          {/*
+          //Theme Toggle
           <button
             onClick={onThemeToggle}
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors text-left"
@@ -179,6 +180,7 @@ export default function MobileMenu({
               {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </span>
           </button>
+          */}
 
           {/* Statistics */}
           <button

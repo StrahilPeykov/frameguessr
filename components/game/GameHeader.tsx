@@ -25,7 +25,7 @@ function GameHeader({
   onStatsClick, 
   onShareClick 
 }: GameHeaderProps) {
-  const { theme, toggleTheme } = useTheme()
+  //const { theme, toggleTheme } = useTheme()
   const { isScrolled, showMobileMenu, openMobileMenu, closeMobileMenu } = useNavigation()
   const { gameState, syncStatus, isAuthenticated } = useGameContext()
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -105,6 +105,7 @@ function GameHeader({
                   <Archive className="w-5 h-5" />
                 </Link>
 
+                {/*
                 <button
                   onClick={toggleTheme}
                   className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
@@ -116,6 +117,7 @@ function GameHeader({
                     <Moon className="w-5 h-5" />
                   )}
                 </button>
+                */}
                 
                 <button
                   onClick={onStatsClick}
@@ -190,8 +192,8 @@ function GameHeader({
       <MobileMenu
         isOpen={showMobileMenu}
         onClose={closeMobileMenu}
-        theme={theme}
-        onThemeToggle={toggleTheme}
+        /*theme={theme}
+        onThemeToggle={toggleTheme}*/
         isAuthenticated={isAuthenticated}
         gameCompleted={gameState.completed}
         syncStatus={syncStatus}
