@@ -31,7 +31,6 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
-  const [volume, setVolume] = useState(0.7)
   const [isBuffering, setIsBuffering] = useState(false)
   const [audioError, setAudioError] = useState(false)
   const [playbackTime, setPlaybackTime] = useState(0) // Time within our duration window
@@ -89,8 +88,7 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
     audio.addEventListener('canplay', handleCanPlay)
     audio.addEventListener('seeked', handleSeeked)
     
-    // Apply initial volume and muted state
-    audio.volume = volume
+    // Apply initial muted state
     audio.muted = isMuted
 
     return () => {
@@ -108,14 +106,13 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
     }
   }, [previewUrl, duration, hintLevel])
 
-  // Separate effect for volume/muted changes
+  // Separate effect for muted changes
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    audio.volume = volume
     audio.muted = isMuted
-  }, [volume, isMuted])
+  }, [isMuted])
 
   // Clean stop function
   const handleStop = () => {
@@ -219,13 +216,6 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
     setIsMuted(!isMuted)
   }
 
-  const handleVolumeChange = (newVolume: number) => {
-    setVolume(newVolume)
-    if (newVolume > 0 && isMuted) {
-      setIsMuted(false)
-    }
-  }
-
   const progress = Math.min((playbackTime / duration) * 100, 100)
 
   if (audioError) {
@@ -297,8 +287,8 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
             </div>
           </div>
 
-          {/* Volume Control (Desktop) - Next to play button */}
-          <div className="hidden sm:flex items-center gap-3">
+          {/* Volume Control (Desktop) */}
+          <div className="hidden sm:flex items-center">
             <button
               onClick={toggleMute}
               className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors cinema-touch"
@@ -310,23 +300,6 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
                 <Volume2 className="w-4 h-4 text-stone-600 dark:text-stone-400" />
               )}
             </button>
-            
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={isMuted ? 0 : volume}
-              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-              className="w-20 h-1.5 bg-stone-300 dark:bg-stone-600 rounded-lg appearance-none cursor-pointer"
-              style={{
-                background: `linear-gradient(to right, 
-                  #D4A574 0%, 
-                  #D4A574 ${(isMuted ? 0 : volume) * 100}%, 
-                  #e5e5e5 ${(isMuted ? 0 : volume) * 100}%, 
-                  #e5e5e5 100%)`
-              }}
-            />
           </div>
 
           {/* Play Button */}
@@ -347,63 +320,27 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
         </div>
 
         {/* Bottom Bar with Visualizer */}
-        <div className="flex items-center justify-center px-4 pb-3 border-t border-stone-200/20 dark:border-stone-700/20">
-          {/* Mini Visualizer */}
-          <div className="flex items-center gap-0.5">
-            {isPlaying ? (
-              Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-0.5 bg-gradient-to-t from-amber-500 to-orange-500 rounded-full transition-all duration-300"
-                  style={{
-                    height: `${Math.random() * 12 + 4}px`,
-                    animationDelay: `${i * 0.1}s`
-                  }}
-                />
-              ))
-            ) : (
-              Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-0.5 h-1 bg-stone-300 dark:bg-stone-600 rounded-full opacity-30"
-                />
-              ))
-            )}
-          </div>
-          
-          {/* Mobile Volume Control - Show only when playing */}
-          {isPlaying && (
-            <div className="flex sm:hidden items-center gap-2 ml-4">
-              <button
-                onClick={toggleMute}
-                className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors cinema-touch"
-                aria-label={isMuted ? 'Unmute' : 'Mute'}
-              >
-                {isMuted ? (
-                  <VolumeX className="w-4 h-4 text-stone-600 dark:text-stone-400" />
-                ) : (
-                  <Volume2 className="w-4 h-4 text-stone-600 dark:text-stone-400" />
-                )}
-              </button>
-              
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={isMuted ? 0 : volume}
-                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                className="w-16 h-1.5 bg-stone-300 dark:bg-stone-600 rounded-lg appearance-none cursor-pointer"
+        <div className="flex items-center justify-center px-4 pb-3 border-t border-stone-200/20 dark:border-stone-700/20 h-12">
+          {/* Mini Visualizer - Fixed container */}
+          <div className="flex items-end gap-0.5 h-6 justify-center">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className={`w-0.5 rounded-full transition-all duration-300 ${
+                  isPlaying 
+                    ? 'bg-gradient-to-t from-amber-500 to-orange-500' 
+                    : 'bg-stone-300 dark:bg-stone-600 opacity-30'
+                }`}
                 style={{
-                  background: `linear-gradient(to right, 
-                    #D4A574 0%, 
-                    #D4A574 ${(isMuted ? 0 : volume) * 100}%, 
-                    #e5e5e5 ${(isMuted ? 0 : volume) * 100}%, 
-                    #e5e5e5 100%)`
+                  height: isPlaying 
+                    ? `${Math.random() * 16 + 8}px` 
+                    : '4px',
+                  maxHeight: '24px',
+                  animationDelay: `${i * 0.1}s`
                 }}
               />
-            </div>
-          )}
+            ))}
+          </div>
         </div>
       </div>
     </>
