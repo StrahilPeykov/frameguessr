@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Sun, Moon, BarChart3, Share2, Menu, Check, X, Archive } from 'lucide-react'
+import { Sun, Moon, BarChart3, Share2, Menu, Check, X, Archive, HelpCircle } from 'lucide-react'
 import { useTheme } from '@/hooks/useTheme'
 import { useNavigation } from '@/hooks/useNavigation'
 import { useGameContext } from '@/contexts/GameContext'
@@ -10,6 +10,7 @@ import DatePicker from './DatePicker'
 import UserMenu from '@/components/auth/UserMenu'
 import MobileMenu from './MobileMenu'
 import AuthModal from '@/components/auth/AuthModal'
+import AboutModal from './AboutModal'
 import FrameGuessrLogo from '@/components/ui/FrameGuessrLogo'
 
 interface GameHeaderProps {
@@ -29,10 +30,15 @@ function GameHeader({
   const { isScrolled, showMobileMenu, openMobileMenu, closeMobileMenu } = useNavigation()
   const { gameState, syncStatus, isAuthenticated } = useGameContext()
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showAboutModal, setShowAboutModal] = useState(false)
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin')
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false)
+  }
+
+  const handleAboutClick = () => {
+    setShowAboutModal(true)
   }
 
   return (
@@ -104,6 +110,14 @@ function GameHeader({
                 >
                   <Archive className="w-5 h-5" />
                 </Link>
+
+                <button
+                  onClick={handleAboutClick}
+                  className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
+                  aria-label="About and how to play"
+                >
+                  <HelpCircle className="w-5 h-5" />
+                </button>
 
                 <button
                   onClick={toggleTheme}
@@ -203,6 +217,10 @@ function GameHeader({
           closeMobileMenu()
           onShareClick()
         }}
+        onAboutClick={() => {
+          closeMobileMenu()
+          handleAboutClick()
+        }}
         onSignInClick={() => {
           closeMobileMenu()
           setShowAuthModal(true)
@@ -221,6 +239,12 @@ function GameHeader({
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
         initialMode={authModalMode}
+      />
+
+      {/* About Modal */}
+      <AboutModal
+        isOpen={showAboutModal}
+        onClose={() => setShowAboutModal(false)}
       />
     </>
   )

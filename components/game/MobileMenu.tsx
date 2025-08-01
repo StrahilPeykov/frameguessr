@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Sun, Moon, BarChart3, Share2, User, LogOut, Check, Archive } from 'lucide-react'
+import { X, Sun, Moon, BarChart3, Share2, User, LogOut, Check, Archive, HelpCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
@@ -15,6 +15,7 @@ interface MobileMenuProps {
   syncStatus: 'idle' | 'syncing' | 'synced' | 'error'
   onStatsClick: () => void
   onShareClick: () => void
+  onAboutClick: () => void
   onSignInClick: () => void
   onSignUpClick: () => void
 }
@@ -29,6 +30,7 @@ export default function MobileMenu({
   syncStatus,
   onStatsClick,
   onShareClick,
+  onAboutClick,
   onSignInClick,
   onSignUpClick
 }: MobileMenuProps) {
@@ -164,6 +166,17 @@ export default function MobileMenu({
               Browse Archive
             </span>
           </Link>
+
+          {/* About & How to Play */}
+          <button
+            onClick={onAboutClick}
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors text-left"
+          >
+            <HelpCircle className="w-5 h-5 text-amber-600" />
+            <span className="font-medium text-stone-700 dark:text-stone-200">
+              About & How to Play
+            </span>
+          </button>
 
           {/* Theme Toggle */}
           <button
