@@ -297,50 +297,8 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
             </div>
           </div>
 
-          {/* Play Button */}
-          <button
-            onClick={togglePlay}
-            disabled={isBuffering}
-            className="w-12 h-12 bg-gradient-to-br from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 disabled:from-amber-800 disabled:to-orange-800 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl cinema-btn disabled:opacity-50 disabled:cursor-not-allowed group flex items-center justify-center"
-            aria-label={isPlaying ? 'Pause soundtrack' : 'Play soundtrack'}
-          >
-            {isBuffering ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : isPlaying ? (
-              <Pause className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
-            ) : (
-              <Play className="w-5 h-5 ml-0.5 text-white group-hover:scale-110 transition-transform" />
-            )}
-          </button>
-        </div>
-
-        {/* Bottom Bar with Visualizer and Volume */}
-        <div className="flex items-center justify-between px-4 pb-3 border-t border-stone-200/20 dark:border-stone-700/20">
-          {/* Left: Mini Visualizer */}
-          <div className="flex items-center gap-0.5">
-            {isPlaying ? (
-              Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-0.5 bg-gradient-to-t from-amber-500 to-orange-500 rounded-full transition-all duration-300"
-                  style={{
-                    height: `${Math.random() * 12 + 4}px`,
-                    animationDelay: `${i * 0.1}s`
-                  }}
-                />
-              ))
-            ) : (
-              Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-0.5 h-1 bg-stone-300 dark:bg-stone-600 rounded-full opacity-30"
-                />
-              ))
-            )}
-          </div>
-          
-          {/* Right: Volume Control */}
-          <div className="flex items-center gap-2">
+          {/* Volume Control (Desktop) - Next to play button */}
+          <div className="hidden sm:flex items-center gap-3">
             <button
               onClick={toggleMute}
               className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors cinema-touch"
@@ -370,6 +328,82 @@ const AudioHint = forwardRef<AudioHintRef, AudioHintProps>(({
               }}
             />
           </div>
+
+          {/* Play Button */}
+          <button
+            onClick={togglePlay}
+            disabled={isBuffering}
+            className="w-12 h-12 bg-gradient-to-br from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 disabled:from-amber-800 disabled:to-orange-800 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl cinema-btn disabled:opacity-50 disabled:cursor-not-allowed group flex items-center justify-center"
+            aria-label={isPlaying ? 'Pause soundtrack' : 'Play soundtrack'}
+          >
+            {isBuffering ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : isPlaying ? (
+              <Pause className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+            ) : (
+              <Play className="w-5 h-5 ml-0.5 text-white group-hover:scale-110 transition-transform" />
+            )}
+          </button>
+        </div>
+
+        {/* Bottom Bar with Visualizer */}
+        <div className="flex items-center justify-center px-4 pb-3 border-t border-stone-200/20 dark:border-stone-700/20">
+          {/* Mini Visualizer */}
+          <div className="flex items-center gap-0.5">
+            {isPlaying ? (
+              Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-0.5 bg-gradient-to-t from-amber-500 to-orange-500 rounded-full transition-all duration-300"
+                  style={{
+                    height: `${Math.random() * 12 + 4}px`,
+                    animationDelay: `${i * 0.1}s`
+                  }}
+                />
+              ))
+            ) : (
+              Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-0.5 h-1 bg-stone-300 dark:bg-stone-600 rounded-full opacity-30"
+                />
+              ))
+            )}
+          </div>
+          
+          {/* Mobile Volume Control - Show only when playing */}
+          {isPlaying && (
+            <div className="flex sm:hidden items-center gap-2 ml-4">
+              <button
+                onClick={toggleMute}
+                className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors cinema-touch"
+                aria-label={isMuted ? 'Unmute' : 'Mute'}
+              >
+                {isMuted ? (
+                  <VolumeX className="w-4 h-4 text-stone-600 dark:text-stone-400" />
+                ) : (
+                  <Volume2 className="w-4 h-4 text-stone-600 dark:text-stone-400" />
+                )}
+              </button>
+              
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={isMuted ? 0 : volume}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className="w-16 h-1.5 bg-stone-300 dark:bg-stone-600 rounded-lg appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, 
+                    #D4A574 0%, 
+                    #D4A574 ${(isMuted ? 0 : volume) * 100}%, 
+                    #e5e5e5 ${(isMuted ? 0 : volume) * 100}%, 
+                    #e5e5e5 100%)`
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </>
