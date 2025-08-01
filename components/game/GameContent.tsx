@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
-import { RefreshCw, X } from 'lucide-react'
+import { RefreshCw, X, SkipForward } from 'lucide-react'
 import { useGameContext } from '@/contexts/GameContext'
 import GameProgress from './GameProgress'
 import CinemaScreen from './CinemaScreen'
@@ -24,7 +24,8 @@ export default function GameContent({ currentDate }: GameContentProps) {
     audioHints,
     audioLoading,
     setAudioRef,
-    stopAudio
+    stopAudio,
+    skipHint
   } = useGameContext()
 
   const audioRef = useRef<{ stopAudio: () => void } | null>(null)
@@ -40,6 +41,15 @@ export default function GameContent({ currentDate }: GameContentProps) {
       audioRef.current.stopAudio()
     }
   }, [gameState.completed])
+
+  const handleSkip = () => {
+    if (gameState.completed) return
+    
+    // Stop audio when skipping
+    stopAudio()
+    
+    skipHint()
+  }
 
   // Loading state
   if (isChallengeLoading) {
@@ -80,54 +90,77 @@ export default function GameContent({ currentDate }: GameContentProps) {
 
   return (
     <div className="min-h-screen pt-16 pb-6">
-      <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="max-w-5xl mx-auto px-4 py-4">
         
-        {/* Game Progress Header */}
+        {/* Game Progress Header - Full width for consistency */}
         <GameProgress />
 
-        {/* Smart Cinema Screen */}
-        <CinemaScreen />
+        {/* Main Game Area */}
+        <div className="space-y-4">
+          {/* Cinema Screen - Hero element, stays prominent */}
+          <CinemaScreen />
 
-        {/* Compact Cinema Audio Player */}
-        {audioHints && (
-          <div className="mb-4">
-            <AudioHint
-              ref={audioRef}
-              previewUrl={audioHints.track.streamUrl || audioHints.track.previewUrl}
-              duration={gameState.completed ? 15 : audioHints.durations[`level${gameState.currentHintLevel}` as keyof typeof audioHints.durations]}
-              trackTitle={audioHints.track.title}
-              artistName={audioHints.track.artist}
-              hintLevel={gameState.currentHintLevel}
-              gameCompleted={gameState.completed}
-            />
-          </div>
-        )}
+          {/* Secondary Elements Container - Narrower on desktop */}
+          <div className="max-w-3xl mx-auto space-y-4">
+            {/* Compact Cinema Audio Player - Visually secondary */}
+            {audioHints && (
+              <div className="transform scale-95 md:scale-100 transition-transform">
+                <AudioHint
+                  ref={audioRef}
+                  previewUrl={audioHints.track.streamUrl || audioHints.track.previewUrl}
+                  duration={gameState.completed ? 15 : audioHints.durations[`level${gameState.currentHintLevel}` as keyof typeof audioHints.durations]}
+                  trackTitle={audioHints.track.title}
+                  artistName={audioHints.track.artist}
+                  hintLevel={gameState.currentHintLevel}
+                  gameCompleted={gameState.completed}
+                />
+              </div>
+            )}
 
-        {audioLoading && (
-          <div className="mb-4">
-            <div className="cinema-glass rounded-xl p-4 border border-stone-200/30 dark:border-amber-700/30">
-              <div className="flex items-center gap-3">
-                <div className="cinema-spinner" />
-                <div className="flex-1">
-                  <div className="h-4 bg-amber-800/30 rounded mb-2 skeleton" />
-                  <div className="h-3 bg-amber-800/20 rounded w-2/3 skeleton" />
+            {audioLoading && (
+              <div className="transform scale-95 md:scale-100 transition-transform">
+                <div className="cinema-glass rounded-xl p-4 border border-stone-200/30 dark:border-amber-700/30">
+                  <div className="flex items-center gap-3">
+                    <div className="cinema-spinner" />
+                    <div className="flex-1">
+                      <div className="h-4 bg-amber-800/30 rounded mb-2 skeleton" />
+                      <div className="h-3 bg-amber-800/20 rounded w-2/3 skeleton" />
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Compact Inline Hints */}
+            <HintsPanel />
           </div>
-        )}
 
-        {/* Compact Inline Hints */}
-        <HintsPanel />
+          {/* Game Controls - Centered with max width */}
+          <div className="max-w-2xl mx-auto">
+            <GameControls />
+          </div>
 
-        {/* Game Controls */}
-        <GameControls />
+          {/* Skip Button - Now floating/contextual instead of full-width */}
+          {!gameState.completed && (
+            <div className="flex justify-center">
+              <button
+                onClick={handleSkip}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm cinema-glass hover:bg-stone-100/80 dark:hover:bg-stone-800/80 text-stone-600 dark:text-stone-400 rounded-lg transition-all duration-300 border border-stone-200/30 dark:border-amber-700/30 font-medium cinema-btn group"
+              >
+                <SkipForward className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                Skip to Next Scene
+              </button>
+            </div>
+          )}
+        </div>
 
-        {/* Completion Screen */}
+        {/* Completion Screen - Full width for impact */}
         <CompletionScreen currentDate={currentDate} />
 
-        {/* Guess History */}
-        <GuessHistory />
+        {/* Guess History - Narrower for better readability */}
+        <div className="max-w-2xl mx-auto">
+          <GuessHistory />
+        </div>
       </div>
     </div>
   )

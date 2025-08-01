@@ -198,10 +198,12 @@ export default function SearchBox({
 
   return (
     <div ref={searchRef} className="relative w-full">
-      {/* Cinema Search Input */}
+      {/* Cinema Search Input - Enhanced Focus State */}
       <div className="relative">
-        <div className="absolute left-5 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          <Search className="w-5 h-5 text-stone-400 dark:text-stone-500" />
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+          <Search className={`w-5 h-5 transition-colors ${
+            hasFocus ? 'text-amber-600 dark:text-amber-400' : 'text-stone-400 dark:text-stone-500'
+          }`} />
         </div>
         
         <input
@@ -213,15 +215,15 @@ export default function SearchBox({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={placeholder}
-          className={`w-full pl-14 pr-14 py-4 text-lg cinema-glass rounded-xl 
-            border-2 transition-all duration-300 shadow-lg hover:shadow-xl cinema-focus
+          className={`w-full pl-12 pr-12 py-3.5 text-base cinema-glass rounded-xl 
+            border-2 transition-all duration-300 cinema-focus
             ${hasFocus || showResults 
-              ? 'border-amber-500 dark:border-amber-400' 
-              : 'border-stone-200 dark:border-stone-700'
+              ? 'border-amber-500 dark:border-amber-400 shadow-lg shadow-amber-500/20 dark:shadow-amber-400/20' 
+              : 'border-transparent shadow-md hover:shadow-lg'
             }
-            ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-stone-300 dark:hover:border-stone-600'}
+            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             text-stone-900 dark:text-stone-100 placeholder-stone-500 dark:placeholder-stone-400
-            backdrop-blur-sm`}
+            bg-white/80 dark:bg-stone-900/80`}
           disabled={disabled}
           autoComplete="off"
           autoCorrect="off"
@@ -234,13 +236,13 @@ export default function SearchBox({
         />
         
         {/* Loading/Clear Button */}
-        <div className="absolute right-5 top-1/2 transform -translate-y-1/2">
+        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
           {isSearching ? (
             <div className="cinema-spinner w-5 h-5" />
           ) : query.length > 0 ? (
             <button
               onClick={clearSearch}
-              className="p-1.5 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-full transition-colors cinema-touch"
+              className="p-1 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-full transition-colors cinema-touch"
               aria-label="Clear search"
             >
               <X className="w-4 h-4 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300" />
@@ -249,11 +251,11 @@ export default function SearchBox({
         </div>
       </div>
 
-      {/* Cinema Search Results */}
+      {/* Cinema Search Results - Enhanced Dropdown */}
       {shouldShowResults && (
         <div 
           ref={resultsRef}
-          className="absolute top-full left-0 right-0 mt-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl shadow-2xl max-h-96 overflow-y-auto z-50 cinema-scrollbar"
+          className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-stone-900 border-2 border-amber-500/20 dark:border-amber-400/20 rounded-xl shadow-2xl max-h-96 overflow-y-auto z-50 cinema-scrollbar"
           role="listbox"
         >
           {error && (
@@ -284,22 +286,22 @@ export default function SearchBox({
           )}
 
           {!error && results.length > 0 && (
-            <div className="py-2">
+            <div className="py-1">
               {results.map((result, index) => (
                 <button
                   key={`${result.mediaType}-${result.id}`}
                   role="option"
                   aria-selected={index === selectedIndex}
                   onClick={() => handleSelect(result)}
-                  className={`w-full text-left px-5 py-4 transition-all duration-200 cinema-focus group
+                  className={`w-full text-left px-4 py-3 transition-all duration-200 cinema-focus group
                     ${index === selectedIndex 
                       ? 'bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500' 
                       : 'hover:bg-stone-50 dark:hover:bg-stone-800/50'
                     }
-                    ${index < results.length - 1 ? 'border-b border-stone-200 dark:border-stone-700/30' : ''}
+                    ${index < results.length - 1 ? 'border-b border-stone-100 dark:border-stone-800/50' : ''}
                   `}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     {/* Poster with Cinema Frame */}
                     <div className="flex-shrink-0 relative">
                       {result.posterUrl ? (
@@ -307,21 +309,21 @@ export default function SearchBox({
                           <img
                             src={result.posterUrl}
                             alt=""
-                            className="w-14 h-20 object-cover rounded-lg shadow-lg bg-stone-200 dark:bg-stone-700 border border-stone-300 dark:border-stone-600/50"
+                            className="w-12 h-16 object-cover rounded-md shadow-md bg-stone-200 dark:bg-stone-700 border border-stone-300 dark:border-stone-600/50"
                             loading="lazy"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'
                             }}
                           />
                           {/* Film strip overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg pointer-events-none" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-md pointer-events-none" />
                         </div>
                       ) : (
-                        <div className="w-14 h-20 bg-stone-200 dark:bg-stone-700 rounded-lg flex items-center justify-center border border-stone-300 dark:border-stone-600/50">
+                        <div className="w-12 h-16 bg-stone-200 dark:bg-stone-700 rounded-md flex items-center justify-center border border-stone-300 dark:border-stone-600/50">
                           {result.mediaType === 'tv' ? (
-                            <Tv className="w-7 h-7 text-stone-400" />
+                            <Tv className="w-6 h-6 text-stone-400" />
                           ) : (
-                            <Film className="w-7 h-7 text-stone-400" />
+                            <Film className="w-6 h-6 text-stone-400" />
                           )}
                         </div>
                       )}
@@ -329,42 +331,33 @@ export default function SearchBox({
                     
                     {/* Content with Cinema Styling */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <h3 className="font-bold text-stone-900 dark:text-stone-100 truncate text-base leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-200 transition-colors">
+                      <div className="flex items-start justify-between gap-3 mb-1">
+                        <h3 className="font-semibold text-stone-900 dark:text-stone-100 truncate text-sm leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-200 transition-colors">
                           {result.title}
                         </h3>
                       </div>
                       
-                      <div className="flex items-center gap-4 text-sm text-stone-600 dark:text-stone-400 mb-2">
+                      <div className="flex items-center gap-3 text-xs text-stone-600 dark:text-stone-400">
                         {result.year && (
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
                             {result.year}
                           </span>
                         )}
-                        <span className="flex items-center gap-1.5">
+                        <span className="flex items-center gap-1">
                           {result.mediaType === 'tv' ? (
                             <>
-                              <Tv className="w-3.5 h-3.5" />
-                              Television Series
+                              <Tv className="w-3 h-3" />
+                              Series
                             </>
                           ) : (
                             <>
-                              <Film className="w-3.5 h-3.5" />
-                              Feature Film
+                              <Film className="w-3 h-3" />
+                              Film
                             </>
                           )}
                         </span>
                       </div>
-                      
-                      {result.overview && (
-                        <p className="text-xs text-stone-500 dark:text-stone-500 line-clamp-2 leading-relaxed">
-                          {result.overview.length > 140 
-                            ? `${result.overview.substring(0, 140)}...`
-                            : result.overview
-                          }
-                        </p>
-                      )}
                     </div>
                   </div>
                 </button>
