@@ -1,3 +1,4 @@
+// contexts/GameContext.tsx - Updated with reactive auth
 'use client'
 
 import { createContext, useContext, ReactNode } from 'react'
@@ -33,6 +34,7 @@ interface GameContextValue {
   // Auth
   isAuthenticated: boolean
   currentUser: any
+  authLoading: boolean
 }
 
 const GameContext = createContext<GameContextValue | undefined>(undefined)
@@ -76,6 +78,7 @@ export function GameProvider({ children, initialDate }: GameProviderProps) {
     // Auth
     isAuthenticated: auth.isAuthenticated,
     currentUser: auth.currentUser,
+    authLoading: auth.loading,
   }
 
   return (

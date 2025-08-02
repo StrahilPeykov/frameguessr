@@ -1,3 +1,4 @@
+// hooks/useGameState.ts - Updated to reduce sync notifications
 import { useState, useEffect } from 'react'
 import { GameState, Guess, SearchResult, Attempt } from '@/types'
 import { gameStorage } from '@/lib/gameStorage'
@@ -12,8 +13,8 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
     currentDate: initialDate,
     attempts: 0,
     maxAttempts,
-    allAttempts: [], // Chronological tracking
-    guesses: [], // Keep for backward compatibility
+    allAttempts: [],
+    guesses: [],
     completed: false,
     won: false,
     currentHintLevel: 1,
@@ -26,7 +27,7 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
     const loadGameState = async () => {
       const savedState = await gameStorage.loadGameState(initialDate)
       if (savedState) {
-        // Handle backward compatibility - convert old format if needed
+        // Handle backward compatibility
         const modernState: GameState = {
           ...savedState,
           allAttempts: savedState.allAttempts || savedState.guesses.map(guess => ({
@@ -57,17 +58,16 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
     loadGameState()
   }, [initialDate, maxAttempts])
 
-  // Save game state when it changes
+  // Save game state when it changes - silent saves only
   useEffect(() => {
     const saveGameState = async () => {
       if (gameState.attempts > 0 || gameState.completed) {
-        setSyncStatus('syncing')
         try {
           await gameStorage.saveGameState(initialDate, gameState)
-          setSyncStatus('synced')
-          setTimeout(() => setSyncStatus('idle'), 2000)
+          // No UI feedback for saves - they should be silent
         } catch (error) {
           console.error('Failed to save game state:', error)
+          // Only show errors that actually matter
           setSyncStatus('error')
           setTimeout(() => setSyncStatus('idle'), 3000)
         }
@@ -105,8 +105,8 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
 
     const newAttempts = gameState.attempts + 1
     const newHintLevel = isCorrect 
-      ? gameState.currentHintLevel  // Keep current level if correct
-      : Math.min(newAttempts + 1, 3) // Only advance if wrong
+      ? gameState.currentHintLevel
+      : Math.min(newAttempts + 1, 3)
 
     const newGameState = {
       ...gameState,
@@ -120,7 +120,13 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
 
     setGameState(newGameState)
 
-    // Log guess to API
+    // Show brief sync confirmation only for actual wins
+    if (isCorrect) {
+      setSyncStatus('synced')
+      setTimeout(() => setSyncStatus('idle'), 1500)
+    }
+
+    // Log guess to API (no UI feedback needed)
     try {
       await fetch('/api/guess', {
         method: 'POST',
@@ -174,6 +180,7 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
       won: false,
       currentHintLevel: 1,
     })
+    setSyncStatus('idle')
   }
 
   return {

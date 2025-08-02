@@ -1,3 +1,4 @@
+// components/auth/UserMenu.tsx
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -11,6 +12,7 @@ interface UserMenuProps {
 export default function UserMenu({ onStatsClick }: UserMenuProps) {
   const [user, setUser] = useState<any>(null)
   const [showMenu, setShowMenu] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -22,6 +24,12 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null)
+      
+      // Close menu on sign out
+      if (event === 'SIGNED_OUT') {
+        setShowMenu(false)
+        setSigningOut(false)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -45,8 +53,20 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
   }, [showMenu])
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setShowMenu(false)
+    if (signingOut) return
+    
+    setSigningOut(true)
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('Sign out error:', error)
+        setSigningOut(false)
+      }
+      // Don't manually set states here - let the auth listener handle it
+    } catch (error) {
+      console.error('Sign out error:', error)
+      setSigningOut(false)
+    }
   }
 
   const handleStatsClick = () => {
@@ -63,7 +83,8 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-2 px-3 py-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors text-sm"
+        disabled={signingOut}
+        className="flex items-center gap-2 px-3 py-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors text-sm disabled:opacity-50"
       >
         <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
           <User className="w-4 h-4 text-white" />
@@ -94,10 +115,11 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
           
           <button
             onClick={handleSignOut}
-            className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors"
+            disabled={signingOut}
+            className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors disabled:opacity-50"
           >
             <LogOut className="w-4 h-4" />
-            Sign Out
+            {signingOut ? 'Signing out...' : 'Sign Out'}
           </button>
         </div>
       )}
