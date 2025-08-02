@@ -1,9 +1,9 @@
-// components/game/GameHeader.tsx - Updated sync status display
+// components/game/GameHeader.tsx - Fixed TypeScript error
 'use client'
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Sun, Moon, BarChart3, Share2, Menu, Check, X, Archive, HelpCircle } from 'lucide-react'
+import { Sun, Moon, BarChart3, Share2, Menu, X, Archive, HelpCircle } from 'lucide-react'
 import { useTheme } from '@/hooks/useTheme'
 import { useNavigation } from '@/hooks/useNavigation'
 import { useGameContext } from '@/contexts/GameContext'
@@ -43,7 +43,7 @@ function GameHeader({
   }
 
   // Only show sync status for errors - wins are obvious from game completion screen
-  const showSyncStatus = isAuthenticated && syncStatus === 'error'
+  const showSyncError = isAuthenticated && syncStatus === 'error'
 
   return (
     <>
@@ -81,21 +81,13 @@ function GameHeader({
                 />
               </div>
               
-              {/* Sync Status - Only show for important events */}
-              {showSyncStatus && (
+              {/* Sync Status - Only show errors */}
+              {showSyncError && (
                 <div className="hidden sm:flex items-center gap-2">
-                  {syncStatus === 'synced' && (
-                    <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 opacity-75">
-                      <Check className="w-3 h-3" />
-                      <span>Saved</span>
-                    </div>
-                  )}
-                  {syncStatus === 'error' && (
-                    <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                      <X className="w-3 h-3" />
-                      <span>Save failed</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                    <X className="w-3 h-3" />
+                    <span>Save failed</span>
+                  </div>
                 </div>
               )}
 
