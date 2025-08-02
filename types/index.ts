@@ -1,9 +1,10 @@
+// types/index.ts - Updated with in-progress game states and data sync types
 export interface GameState {
   currentDate: string
   attempts: number
   maxAttempts: number
   guesses: Guess[]
-  allAttempts: Attempt[] // Chronological list of all attempts
+  allAttempts: Attempt[] // Chronological list of all attempts (guesses + skips)
   completed: boolean
   won: boolean
   currentHintLevel: number
@@ -27,6 +28,32 @@ export interface Attempt {
   tmdbId?: number // Only for guesses
   mediaType?: 'movie' | 'tv' // Only for guesses
   timestamp: number
+}
+
+// Game status enum for better type safety
+export type GameStatus = 'unplayed' | 'in-progress' | 'completed-won' | 'completed-lost'
+
+// Helper function to determine game status
+export function getGameStatus(gameState: GameState | null): GameStatus {
+  if (!gameState || gameState.attempts === 0) {
+    return 'unplayed'
+  }
+  
+  if (gameState.completed) {
+    return gameState.won ? 'completed-won' : 'completed-lost'
+  }
+  
+  return 'in-progress'
+}
+
+// Helper to check if a game has meaningful progress
+export function hasProgress(gameState: GameState | null): boolean {
+  return gameState !== null && gameState.attempts > 0
+}
+
+// Helper to check if a game is worth saving/syncing
+export function isWorthSaving(gameState: GameState | null): boolean {
+  return hasProgress(gameState) // Save if any attempts were made
 }
 
 export interface DailyChallenge {
@@ -101,6 +128,129 @@ export interface AudioHintData {
   }
 }
 
+// Data sync types for handling conflicts between local and cloud data
+export interface DataConflict {
+  date: string
+  localData: LocalGameData
+  cloudData: GameState
+  type: 'local-only' | 'cloud-newer' | 'local-newer' | 'different-progress'
+}
+
+export interface LocalGameData extends GameState {
+  createdWhileLoggedOut?: boolean
+  lastModified: number
+  syncStatus?: 'local-only' | 'synced' | 'conflict'
+}
+
+export interface SyncDecision {
+  type: 'import-all' | 'clean-start' | 'merge-selected' | 'keep-account-only'
+  selectedDates?: string[]
+  clearLocalOnLogout?: boolean
+}
+
+// Statistics types
+export interface UserStats {
+  gamesPlayed: number
+  gamesWon: number
+  winPercentage: number
+  currentStreak: number
+  averageAttempts: number
+  guessDistribution: number[]
+  gamesInProgress?: number // New field for tracking incomplete games
+}
+
+// Archive types
+export interface ArchiveEntry {
+  date: string
+  status: GameStatus
+  title?: string // Only available if game was played
+  mediaType?: 'movie' | 'tv'
+  attempts?: number
+  won?: boolean
+  lastPlayed?: number // Timestamp
+}
+
+// Data summary for merge modal
+export interface DataSummary {
+  localGames: number
+  localCompleted: number
+  localInProgress: number
+  cloudGames: number
+  conflicts: number
+}
+
+// Game context types
+export interface GameContextValue {
+  // Game State
+  gameState: GameState
+  syncStatus: 'idle' | 'syncing' | 'synced' | 'error'
+  makeGuess: (result: SearchResult, correctMovieId: number, correctMediaType: string) => Promise<{ isCorrect: boolean; newGameState: GameState } | undefined>
+  skipHint: () => void
+  resetGame: (date?: string) => void
+  
+  // Daily Challenge
+  dailyChallenge: DailyChallenge | null
+  isChallengeLoading: boolean
+  challengeError: string | null
+  imageLoaded: boolean
+  imageError: boolean
+  retryChallenge: () => void
+  
+  // Audio
+  audioHints: AudioHintData | null
+  audioLoading: boolean
+  audioError: boolean
+  stopAudio: () => void
+  setAudioRef: (ref: { stopAudio: () => void } | null) => void
+  
+  // Auth
+  isAuthenticated: boolean
+  currentUser: any
+  authLoading: boolean
+}
+
+// Leaderboard types
+export interface LeaderboardEntry {
+  user_id: string
+  username?: string
+  display_name?: string
+  score: number
+  rank: number
+  streak?: number
+  averageAttempts?: number
+}
+
+// API Response types
+export interface ApiResponse<T> {
+  success: boolean
+  data?: T
+  error?: string
+  timestamp: string
+}
+
+export interface GuessResponse {
+  success: boolean
+  validated: boolean
+  correct: boolean
+  corrected?: boolean
+  correctAnswer?: {
+    title: string
+    tmdbId: number
+    mediaType: 'movie' | 'tv'
+  }
+  message: string
+  timestamp: string
+}
+
+// Error types
+export interface GameError {
+  type: 'network' | 'validation' | 'auth' | 'storage' | 'unknown'
+  message: string
+  code?: string
+  retry?: boolean
+}
+
+// Global window extensions
 declare global {
   interface Window {
     gtag: (
@@ -111,4 +261,18 @@ declare global {
       }
     ) => void;
   }
+  
+  interface WindowEventMap {
+    'show-data-merge-modal': CustomEvent<{
+      conflicts: DataConflict[]
+    }>
+  }
 }
+
+// Utility type for making properties optional
+export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+
+// Utility type for picking required properties
+export type RequiredBy<T, K extends keyof T> = T & Required<Pick<T, K>>
+
+export type { }; // Ensure this is treated as a module

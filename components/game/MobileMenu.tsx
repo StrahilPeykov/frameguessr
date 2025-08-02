@@ -1,8 +1,8 @@
-// components/game/MobileMenu.tsx - Updated sync status display
+// components/game/MobileMenu.tsx - Enhanced with sync status display
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Sun, Moon, BarChart3, Share2, User, LogOut, Check, Archive, HelpCircle } from 'lucide-react'
+import { X, Sun, Moon, BarChart3, Share2, User, LogOut, Check, Archive, HelpCircle, RefreshCw, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
@@ -14,6 +14,7 @@ interface MobileMenuProps {
   isAuthenticated: boolean
   gameCompleted: boolean
   syncStatus: 'idle' | 'syncing' | 'synced' | 'error'
+  syncingData?: boolean
   onStatsClick: () => void
   onShareClick: () => void
   onAboutClick: () => void
@@ -29,6 +30,7 @@ export default function MobileMenu({
   isAuthenticated,
   gameCompleted,
   syncStatus,
+  syncingData = false,
   onStatsClick,
   onShareClick,
   onAboutClick,
@@ -102,8 +104,38 @@ export default function MobileMenu({
   const userEmail = user?.email || ''
   const displayName = userEmail.split('@')[0] || 'User'
 
-  // Only show sync status for errors or important completed games
-  const showSyncStatus = isAuthenticated && (syncStatus === 'error' || (syncStatus === 'synced' && gameCompleted))
+  // Enhanced sync status display
+  const getSyncStatusDisplay = () => {
+    if (!isAuthenticated) return null
+    
+    if (syncingData) {
+      return {
+        icon: <RefreshCw className="w-3 h-3 animate-spin" />,
+        text: 'Syncing progress...',
+        color: 'text-blue-600 dark:text-blue-400'
+      }
+    }
+    
+    if (syncStatus === 'synced' && gameCompleted) {
+      return {
+        icon: <Check className="w-3 h-3" />,
+        text: 'Progress saved',
+        color: 'text-green-600 dark:text-green-400'
+      }
+    }
+    
+    if (syncStatus === 'error') {
+      return {
+        icon: <AlertTriangle className="w-3 h-3" />,
+        text: 'Sync failed',
+        color: 'text-red-600 dark:text-red-400'
+      }
+    }
+    
+    return null
+  }
+
+  const syncStatusDisplay = getSyncStatusDisplay()
 
   return (
     <>
@@ -146,21 +178,13 @@ export default function MobileMenu({
               </div>
             </div>
             
-            {/* Sync Status - Only for important events */}
-            {showSyncStatus && (
+            {/* Enhanced Sync Status */}
+            {syncStatusDisplay && (
               <div className="text-xs">
-                {syncStatus === 'synced' && (
-                  <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                    <Check className="w-3 h-3" />
-                    <span>Progress saved</span>
-                  </div>
-                )}
-                {syncStatus === 'error' && (
-                  <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                    <X className="w-3 h-3" />
-                    <span>Save failed</span>
-                  </div>
-                )}
+                <div className={`flex items-center gap-1 ${syncStatusDisplay.color}`}>
+                  {syncStatusDisplay.icon}
+                  <span>{syncStatusDisplay.text}</span>
+                </div>
               </div>
             )}
           </div>
@@ -242,21 +266,23 @@ export default function MobileMenu({
                 </button>
                 <button
                   onClick={onSignUpClick}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-lg font-medium transition-colors"
+                  className="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
                 >
                   Create Account
                 </button>
               </div>
               
-              <p className="text-xs text-stone-500 dark:text-stone-400 text-center mt-3">
-                Sign in to sync your progress across devices
-              </p>
+              <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                <p className="text-xs text-amber-800 dark:text-amber-200 text-center leading-relaxed">
+                  Sign up to save your progress across devices and sync your game data
+                </p>
+              </div>
             </>
           ) : (
             <div className="pt-4 border-t border-stone-200 dark:border-stone-700 mt-4">
               <button
                 onClick={handleSignOut}
-                disabled={signingOut}
+                disabled={signingOut || syncingData}
                 className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-left disabled:opacity-50"
               >
                 <LogOut className="w-5 h-5" />
@@ -264,6 +290,12 @@ export default function MobileMenu({
                   {signingOut ? 'Signing out...' : 'Sign Out'}
                 </span>
               </button>
+              
+              {syncingData && (
+                <p className="text-xs text-stone-500 dark:text-stone-400 text-center mt-2">
+                  Please wait while we sync your progress
+                </p>
+              )}
             </div>
           )}
         </div>

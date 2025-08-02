@@ -1,8 +1,8 @@
-// components/game/GameHeader.tsx - Fixed TypeScript error
+// components/game/GameHeader.tsx - Updated with data merge integration
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sun, Moon, BarChart3, Share2, Menu, X, Archive, HelpCircle } from 'lucide-react'
 import { useTheme } from '@/hooks/useTheme'
 import { useNavigation } from '@/hooks/useNavigation'
@@ -11,8 +11,10 @@ import DatePicker from './DatePicker'
 import UserMenu from '@/components/auth/UserMenu'
 import MobileMenu from './MobileMenu'
 import AuthModal from '@/components/auth/AuthModal'
+import DataMergeModal from '@/components/auth/DataMergeModal'
 import AboutModal from './AboutModal'
 import FrameGuessrLogo from '@/components/ui/FrameGuessrLogo'
+import { DataConflict, SyncDecision, gameStorage } from '@/lib/gameStorage'
 
 interface GameHeaderProps {
   currentDate: string
@@ -30,16 +32,59 @@ function GameHeader({
   const { theme, toggleTheme } = useTheme()
   const { isScrolled, showMobileMenu, openMobileMenu, closeMobileMenu } = useNavigation()
   const { gameState, syncStatus, isAuthenticated } = useGameContext()
+  
+  // Modal states
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showAboutModal, setShowAboutModal] = useState(false)
+  const [showDataMergeModal, setShowDataMergeModal] = useState(false)
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin')
+  
+  // Data merge state
+  const [dataConflicts, setDataConflicts] = useState<DataConflict[]>([])
+
+  // Listen for data merge modal events from GameStorage
+  useEffect(() => {
+    const handleShowDataMerge = (event: CustomEvent) => {
+      const { conflicts } = event.detail
+      setDataConflicts(conflicts)
+      setShowDataMergeModal(true)
+      setShowAuthModal(false) // Close auth modal if open
+    }
+
+    window.addEventListener('show-data-merge-modal', handleShowDataMerge as EventListener)
+    return () => {
+      window.removeEventListener('show-data-merge-modal', handleShowDataMerge as EventListener)
+    }
+  }, [])
 
   const handleAuthSuccess = () => {
-    setShowAuthModal(false)
+    // Don't close immediately - let the data merge flow handle it
+    // The auth modal will close itself or be closed by the data merge modal
+  }
+
+  const handleDataMergeDecision = (decision: SyncDecision) => {
+    gameStorage.setSyncDecision(decision)
+    setShowDataMergeModal(false)
+    
+    // Show success message based on decision
+    if (decision.type === 'import-all' || (decision.type === 'merge-selected' && decision.selectedDates && decision.selectedDates.length > 0)) {
+      // Could show a toast notification here
+      console.log('Data imported successfully!')
+    }
   }
 
   const handleAboutClick = () => {
     setShowAboutModal(true)
+  }
+
+  const handleSignInClick = () => {
+    setShowAuthModal(true)
+    setAuthModalMode('signin')
+  }
+
+  const handleSignUpClick = () => {
+    setShowAuthModal(true)
+    setAuthModalMode('signup')
   }
 
   // Only show sync status for errors - wins are obvious from game completion screen
@@ -146,19 +191,13 @@ function GameHeader({
                 ) : (
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => {
-                        setShowAuthModal(true)
-                        setAuthModalMode('signin')
-                      }}
+                      onClick={handleSignInClick}
                       className="px-3 py-2 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg font-medium transition-colors text-sm"
                     >
                       Sign In
                     </button>
                     <button
-                      onClick={() => {
-                        setShowAuthModal(true)
-                        setAuthModalMode('signup')
-                      }}
+                      onClick={handleSignUpClick}
                       className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm"
                     >
                       Sign Up
@@ -213,13 +252,11 @@ function GameHeader({
         }}
         onSignInClick={() => {
           closeMobileMenu()
-          setShowAuthModal(true)
-          setAuthModalMode('signin')
+          handleSignInClick()
         }}
         onSignUpClick={() => {
           closeMobileMenu()
-          setShowAuthModal(true)
-          setAuthModalMode('signup')
+          handleSignUpClick()
         }}
       />
 
@@ -229,6 +266,14 @@ function GameHeader({
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
         initialMode={authModalMode}
+      />
+
+      {/* Data Merge Modal */}
+      <DataMergeModal
+        isOpen={showDataMergeModal}
+        onClose={() => setShowDataMergeModal(false)}
+        conflicts={dataConflicts}
+        onDecision={handleDataMergeDecision}
       />
 
       {/* About Modal */}
