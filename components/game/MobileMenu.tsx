@@ -1,3 +1,4 @@
+// components/game/MobileMenu.tsx - Updated sync status display
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -35,12 +36,15 @@ export default function MobileMenu({
   onSignUpClick
 }: MobileMenuProps) {
   const [user, setUser] = useState<any>(null)
+  const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated) {
       supabase.auth.getUser().then(({ data: { user } }) => {
         setUser(user)
       })
+    } else {
+      setUser(null)
     }
   }, [isAuthenticated])
 
@@ -78,13 +82,28 @@ export default function MobileMenu({
   if (!isOpen) return null
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    onClose()
-    window.location.reload()
+    if (signingOut) return
+    
+    setSigningOut(true)
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('Sign out error:', error)
+        setSigningOut(false)
+      } else {
+        onClose()
+      }
+    } catch (error) {
+      console.error('Sign out error:', error)
+      setSigningOut(false)
+    }
   }
 
   const userEmail = user?.email || ''
   const displayName = userEmail.split('@')[0] || 'User'
+
+  // Only show sync status for errors or important completed games
+  const showSyncStatus = isAuthenticated && (syncStatus === 'error' || (syncStatus === 'synced' && gameCompleted))
 
   return (
     <>
@@ -127,25 +146,19 @@ export default function MobileMenu({
               </div>
             </div>
             
-            {/* Sync Status */}
-            {syncStatus !== 'idle' && (
+            {/* Sync Status - Only for important events */}
+            {showSyncStatus && (
               <div className="text-xs">
-                {syncStatus === 'syncing' && (
-                  <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
-                    <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    <span>Syncing progress...</span>
-                  </div>
-                )}
                 {syncStatus === 'synced' && (
                   <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                     <Check className="w-3 h-3" />
-                    <span>Progress synced</span>
+                    <span>Progress saved</span>
                   </div>
                 )}
                 {syncStatus === 'error' && (
                   <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
                     <X className="w-3 h-3" />
-                    <span>Sync failed</span>
+                    <span>Save failed</span>
                   </div>
                 )}
               </div>
@@ -246,10 +259,13 @@ export default function MobileMenu({
             <div className="pt-4 border-t border-stone-200 dark:border-stone-700 mt-4">
               <button
                 onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-left"
+                disabled={signingOut}
+                className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-left disabled:opacity-50"
               >
                 <LogOut className="w-5 h-5" />
-                <span className="font-medium">Sign Out</span>
+                <span className="font-medium">
+                  {signingOut ? 'Signing out...' : 'Sign Out'}
+                </span>
               </button>
             </div>
           )}

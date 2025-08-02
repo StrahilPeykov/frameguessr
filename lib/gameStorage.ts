@@ -1,3 +1,4 @@
+// lib/gameStorage.ts - Updated with better sync logic
 import { GameState, Guess } from '@/types'
 import { supabase } from '@/lib/supabase'
 
@@ -11,6 +12,11 @@ export interface UserProgressRow {
   won?: boolean
   current_hint_level?: number
   created_at?: string
+}
+
+export interface LocalGameData extends GameState {
+  createdWhileLoggedOut?: boolean
+  lastModified: number
 }
 
 export class GameStorage {
@@ -29,19 +35,26 @@ export class GameStorage {
     this.user = user
     
     supabase.auth.onAuthStateChange((event, session) => {
+      const wasLoggedOut = !this.user
       this.user = session?.user || null
       
-      if (event === 'SIGNED_IN') {
-        this.syncLocalToDatabase()
+      if (event === 'SIGNED_IN' && wasLoggedOut) {
+        // Only sync legitimate data when signing in
+        this.syncLegitimateDataToDatabase()
+      } else if (event === 'SIGNED_OUT') {
+        // Mark future local data as created while logged out
+        this.markFutureDataAsLoggedOut()
       }
     })
   }
 
   async saveGameState(date: string, state: GameState): Promise<void> {
+    // Always save to local storage
     this.saveToLocalStorage(date, state)
     
+    // Only save to database if user is logged in
     if (this.user) {
-      await this.saveToDatabaseWithRetry(date, state)
+      await this.saveToDatabaseQuietly(date, state)
     }
   }
 
@@ -50,11 +63,12 @@ export class GameStorage {
       try {
         const dbState = await this.loadFromDatabase(date)
         if (dbState) {
+          // Update local storage with DB data
           this.saveToLocalStorage(date, dbState)
           return dbState
         }
       } catch (error) {
-        console.warn('Failed to load from database, falling back to localStorage:', error)
+        console.warn('Failed to load from database, using local data:', error)
       }
     }
     
@@ -63,7 +77,12 @@ export class GameStorage {
 
   private saveToLocalStorage(date: string, state: GameState): void {
     try {
-      localStorage.setItem(`frameguessr-${date}`, JSON.stringify(state))
+      const localData: LocalGameData = {
+        ...state,
+        createdWhileLoggedOut: !this.user,
+        lastModified: Date.now()
+      }
+      localStorage.setItem(`frameguessr-${date}`, JSON.stringify(localData))
     } catch (error) {
       console.error('Failed to save to localStorage:', error)
     }
@@ -72,24 +91,25 @@ export class GameStorage {
   loadFromLocalStorage(date: string): GameState | null {
     try {
       const saved = localStorage.getItem(`frameguessr-${date}`)
-      return saved ? JSON.parse(saved) : null
+      if (!saved) return null
+      
+      const data: LocalGameData = JSON.parse(saved)
+      
+      // Return game state without the tracking metadata
+      const { createdWhileLoggedOut, lastModified, ...gameState } = data
+      return gameState as GameState
     } catch (error) {
       console.error('Failed to load from localStorage:', error)
       return null
     }
   }
 
-  private async saveToDatabaseWithRetry(date: string, state: GameState, retries = 3): Promise<void> {
-    for (let i = 0; i < retries; i++) {
-      try {
-        await this.saveToDatabase(date, state)
-        return
-      } catch (error) {
-        console.warn(`Database save attempt ${i + 1} failed:`, error)
-        if (i === retries - 1) throw error
-        
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)))
-      }
+  private async saveToDatabaseQuietly(date: string, state: GameState): Promise<void> {
+    try {
+      await this.saveToDatabase(date, state)
+    } catch (error) {
+      // Fail silently - no UI notifications for routine saves
+      console.warn('Database save failed (silent):', error)
     }
   }
 
@@ -134,7 +154,6 @@ export class GameStorage {
       throw new Error(`Database load failed: ${error.message}`)
     }
 
-    // Handle backward compatibility - convert guesses to allAttempts if needed
     const guesses = data.guesses || []
     const allAttempts = guesses.map((guess: any) => ({
       id: guess.id,
@@ -158,35 +177,64 @@ export class GameStorage {
     }
   }
 
-  async syncLocalToDatabase(): Promise<void> {
+  async syncLegitimateDataToDatabase(): Promise<void> {
     if (!this.user) return
 
     try {
-      console.log('Syncing local game data to database...')
+      console.log('Syncing legitimate local data to database...')
       
       const localKeys = Object.keys(localStorage)
         .filter(key => key.startsWith('frameguessr-') && 
                       !key.includes('settings') && 
                       !key.includes('stats'))
 
+      let syncedCount = 0
+
       for (const key of localKeys) {
         const date = key.replace('frameguessr-', '')
-        const localState = this.loadFromLocalStorage(date)
+        const savedData = localStorage.getItem(key)
         
-        if (localState && localState.attempts > 0) {
-          const dbState = await this.loadFromDatabase(date)
+        if (!savedData) continue
+
+        try {
+          const localData: LocalGameData = JSON.parse(savedData)
           
-          if (!dbState || localState.attempts >= dbState.attempts) {
-            await this.saveToDatabase(date, localState)
-            console.log(`Synced ${date} to database`)
+          // Skip data that was created while logged out
+          if (localData.createdWhileLoggedOut) {
+            console.log(`Skipping ${date} - created while logged out`)
+            continue
           }
+
+          // Only sync if there's actual progress
+          if (localData.attempts > 0) {
+            const dbState = await this.loadFromDatabase(date)
+            
+            // Only sync if DB doesn't have better data
+            if (!dbState || localData.attempts >= dbState.attempts) {
+              const { createdWhileLoggedOut, lastModified, ...gameState } = localData
+              await this.saveToDatabase(date, gameState as GameState)
+              syncedCount++
+              console.log(`Synced ${date} to database`)
+            }
+          }
+        } catch (parseError) {
+          console.warn(`Failed to parse data for ${date}:`, parseError)
         }
       }
       
-      console.log('Local sync completed')
+      if (syncedCount > 0) {
+        console.log(`Successfully synced ${syncedCount} games to your account`)
+      } else {
+        console.log('No legitimate local data to sync')
+      }
     } catch (error) {
       console.error('Failed to sync local data:', error)
     }
+  }
+
+  private markFutureDataAsLoggedOut(): void {
+    // This is handled automatically in saveToLocalStorage by checking this.user
+    console.log('Future game data will be marked as created while logged out')
   }
 
   async getUserStats(): Promise<{

@@ -1,3 +1,4 @@
+// components/auth/AuthModal.tsx - Updated success handling
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -18,6 +19,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -27,6 +29,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
       setPassword('')
       setConfirmPassword('')
       setError('')
+      setSuccessMessage('')
     }
   }, [isOpen, initialMode])
 
@@ -36,6 +39,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccessMessage('')
 
     // Validation
     if (mode === 'signup' && password !== confirmPassword) {
@@ -57,6 +61,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
           password
         })
         if (error) throw error
+        
+        // Success - the auth state change listener will handle the rest
+        setSuccessMessage('Welcome back!')
+        setTimeout(() => {
+          onSuccess?.()
+          onClose()
+        }, 1000)
+        
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -64,15 +76,15 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
         })
         if (error) throw error
         
-        // Show success message for signup
-        setError('')
-        alert('Account created! Please check your email to verify your account.')
+        // Show success message for signup (email verification required)
+        setSuccessMessage('Check your email to verify your account!')
+        setTimeout(() => {
+          onClose()
+        }, 3000)
       }
-
-      onSuccess?.()
-      onClose()
     } catch (error: any) {
-      setError(error.message)
+      console.error('Auth error:', error)
+      setError(error.message || 'An error occurred during authentication')
     } finally {
       setLoading(false)
     }
@@ -80,6 +92,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
 
   const handleGoogleSignIn = async () => {
     setLoading(true)
+    setError('')
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -88,8 +101,11 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
         }
       })
       if (error) throw error
+      
+      // OAuth will redirect, so we don't need to handle success here
     } catch (error: any) {
-      setError(error.message)
+      console.error('Google auth error:', error)
+      setError(error.message || 'Google sign in failed')
       setLoading(false)
     }
   }
@@ -111,6 +127,13 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
         </div>
 
         <div className="p-6">
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-300 text-sm">
+              {successMessage}
+            </div>
+          )}
+
           {/* Error Display */}
           {error && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
@@ -133,6 +156,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
                   className="w-full pl-10 pr-4 py-3 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-transparent transition-all"
                   placeholder="your@email.com"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -151,6 +175,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
                   placeholder="Enter your password"
                   required
                   minLength={6}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -170,6 +195,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
                     placeholder="Confirm your password"
                     required
                     minLength={6}
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -177,10 +203,10 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 disabled:from-amber-400 disabled:to-orange-400 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 shadow-lg"
+              disabled={loading || !!successMessage}
+              className="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 disabled:from-amber-400 disabled:to-orange-400 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 shadow-lg disabled:opacity-50"
             >
-              {loading ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
+              {loading ? 'Please wait...' : successMessage ? '✓ Success!' : mode === 'signin' ? 'Sign In' : 'Create Account'}
             </button>
           </form>
 
@@ -197,8 +223,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
 
             <button
               onClick={handleGoogleSignIn}
-              disabled={loading}
-              className="w-full mt-4 flex items-center justify-center gap-3 px-4 py-3 border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-lg font-medium transition-all duration-300 shadow-sm hover:shadow-md"
+              disabled={loading || !!successMessage}
+              className="w-full mt-4 flex items-center justify-center gap-3 px-4 py-3 border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-lg font-medium transition-all duration-300 shadow-sm hover:shadow-md disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -211,31 +237,35 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
           </div>
 
           {/* Toggle Mode */}
-          <div className="mt-6 text-center text-sm">
-            {mode === 'signin' ? (
-              <span className="text-stone-600 dark:text-stone-400">
-                Don't have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => setMode('signup')}
-                  className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium transition-colors"
-                >
-                  Sign up
-                </button>
-              </span>
-            ) : (
-              <span className="text-stone-600 dark:text-stone-400">
-                Already have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => setMode('signin')}
-                  className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium transition-colors"
-                >
-                  Sign in
-                </button>
-              </span>
-            )}
-          </div>
+          {!successMessage && (
+            <div className="mt-6 text-center text-sm">
+              {mode === 'signin' ? (
+                <span className="text-stone-600 dark:text-stone-400">
+                  Don't have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => setMode('signup')}
+                    disabled={loading}
+                    className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium transition-colors disabled:opacity-50"
+                  >
+                    Sign up
+                  </button>
+                </span>
+              ) : (
+                <span className="text-stone-600 dark:text-stone-400">
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => setMode('signin')}
+                    disabled={loading}
+                    className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium transition-colors disabled:opacity-50"
+                  >
+                    Sign in
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

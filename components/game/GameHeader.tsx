@@ -1,8 +1,9 @@
+// components/game/GameHeader.tsx - Fixed TypeScript error
 'use client'
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Sun, Moon, BarChart3, Share2, Menu, Check, X, Archive, HelpCircle } from 'lucide-react'
+import { Sun, Moon, BarChart3, Share2, Menu, X, Archive, HelpCircle } from 'lucide-react'
 import { useTheme } from '@/hooks/useTheme'
 import { useNavigation } from '@/hooks/useNavigation'
 import { useGameContext } from '@/contexts/GameContext'
@@ -41,6 +42,9 @@ function GameHeader({
     setShowAboutModal(true)
   }
 
+  // Only show sync status for errors - wins are obvious from game completion screen
+  const showSyncError = isAuthenticated && syncStatus === 'error'
+
   return (
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
@@ -77,27 +81,13 @@ function GameHeader({
                 />
               </div>
               
-              {/* Sync Status */}
-              {isAuthenticated && syncStatus !== 'idle' && (
+              {/* Sync Status - Only show errors */}
+              {showSyncError && (
                 <div className="hidden sm:flex items-center gap-2">
-                  {syncStatus === 'syncing' && (
-                    <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
-                      <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin" />
-                      <span>Syncing...</span>
-                    </div>
-                  )}
-                  {syncStatus === 'synced' && (
-                    <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                      <Check className="w-3 h-3" />
-                      <span>Synced</span>
-                    </div>
-                  )}
-                  {syncStatus === 'error' && (
-                    <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                      <X className="w-3 h-3" />
-                      <span>Sync failed</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                    <X className="w-3 h-3" />
+                    <span>Save failed</span>
+                  </div>
                 </div>
               )}
 
