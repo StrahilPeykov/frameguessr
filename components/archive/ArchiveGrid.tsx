@@ -2,18 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Trophy, X, Calendar, ChevronLeft, ChevronRight, Film, Tv, Lock } from 'lucide-react'
+import { Trophy, X, Calendar, ChevronLeft, ChevronRight, Film, Tv, Lock, Clock, Play } from 'lucide-react'
 import { gameStorage } from '@/lib/gameStorage'
 import { supabase } from '@/lib/supabase'
 import { getTodayLocal, formatDateLocal } from '@/utils/dateUtils'
+import { getGameStatus, hasProgress } from '@/utils/gameStateValidation'
+import { useAuth } from '@/hooks/useAuth'
+import { GameStatus } from '@/types'
 
 interface DayChallenge {
   date: string
   dayNumber: number
-  status: 'won' | 'lost' | 'not-played'
+  status: GameStatus
   title?: string
   mediaType?: 'movie' | 'tv'
   attempts?: number
+  currentHintLevel?: number
+  lastPlayed?: number
 }
 
 interface AvailableDate {
@@ -24,20 +29,42 @@ interface AvailableDate {
 }
 
 export default function ArchiveGrid() {
+  const { isAuthenticated } = useAuth()
   const [challenges, setChallenges] = useState<DayChallenge[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const [filter, setFilter] = useState<'all' | 'played' | 'won' | 'lost'>('all')
-  const itemsPerPage = 36 // 6x6 grid
+  const [filter, setFilter] = useState<'all' | 'played' | 'won' | 'lost' | 'in-progress'>('all')
+  const itemsPerPage = 36
   const today = getTodayLocal()
 
   useEffect(() => {
     loadChallenges()
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    const handleDataChange = () => {
+      console.log('[ArchiveGrid] Data change event received, reloading challenges...')
+      loadChallenges()
+    }
+
+    const handleDataImported = () => {
+      console.log('[ArchiveGrid] Data imported event received, reloading challenges...')
+      loadChallenges()
+    }
+
+    window.addEventListener('game-data-changed', handleDataChange)
+    window.addEventListener('game-data-imported', handleDataImported)
+    
+    return () => {
+      window.removeEventListener('game-data-changed', handleDataChange)
+      window.removeEventListener('game-data-imported', handleDataImported)
+    }
   }, [])
 
   const loadChallenges = async () => {
     try {
       setLoading(true)
+      console.log(`[ArchiveGrid] Loading challenges, auth: ${isAuthenticated}`)
       
       const { data: availableDates, error } = await supabase
         .from('daily_movies')
@@ -49,34 +76,47 @@ export default function ArchiveGrid() {
 
       const challengeMap = new Map<string, DayChallenge>()
       
-      availableDates?.forEach((movie: AvailableDate, index) => {
-        const gameState = gameStorage.loadFromLocalStorage(movie.date)
-        
-        let status: 'won' | 'lost' | 'not-played' = 'not-played'
-        let attempts = 0
-        
-        if (gameState) {
-          if (gameState.won) {
-            status = 'won'
-          } else if (gameState.completed) {
-            status = 'lost'
+      // Load game states for all dates
+      const gameStatePromises = availableDates?.map(async (movie: AvailableDate, index) => {
+        try {
+          const gameState = await gameStorage.loadGameState(movie.date)
+          const status = getGameStatus(gameState)
+          
+          return {
+            date: movie.date,
+            dayNumber: availableDates.length - index,
+            status,
+            title: hasProgress(gameState) ? movie.title : undefined,
+            mediaType: movie.media_type as 'movie' | 'tv',
+            attempts: gameState?.attempts || 0,
+            currentHintLevel: gameState?.currentHintLevel || 1,
+            lastPlayed: gameState ? Date.now() : undefined
           }
-          attempts = gameState.attempts
+        } catch (error) {
+          console.error(`Failed to load game state for ${movie.date}:`, error)
+          return {
+            date: movie.date,
+            dayNumber: availableDates.length - index,
+            status: 'unplayed' as GameStatus,
+            title: undefined,
+            mediaType: movie.media_type as 'movie' | 'tv',
+            attempts: 0,
+            currentHintLevel: 1,
+            lastPlayed: undefined
+          }
         }
-        
-        challengeMap.set(movie.date, {
-          date: movie.date,
-          dayNumber: availableDates.length - index,
-          status,
-          title: status !== 'not-played' ? movie.title : undefined,
-          mediaType: movie.media_type as 'movie' | 'tv',
-          attempts
-        })
+      }) || []
+
+      const challengeResults = await Promise.all(gameStatePromises)
+      
+      challengeResults.forEach(challenge => {
+        challengeMap.set(challenge.date, challenge)
       })
       
       const challengeArray = Array.from(challengeMap.values())
         .sort((a, b) => b.date.localeCompare(a.date))
       
+      console.log(`[ArchiveGrid] Loaded ${challengeArray.length} challenges`)
       setChallenges(challengeArray)
     } catch (error) {
       console.error('Failed to load challenges:', error)
@@ -88,9 +128,10 @@ export default function ArchiveGrid() {
   // Filter challenges
   const filteredChallenges = challenges.filter(challenge => {
     if (filter === 'all') return true
-    if (filter === 'played') return challenge.status !== 'not-played'
-    if (filter === 'won') return challenge.status === 'won'
-    if (filter === 'lost') return challenge.status === 'lost'
+    if (filter === 'played') return challenge.status !== 'unplayed'
+    if (filter === 'won') return challenge.status === 'completed-won'
+    if (filter === 'lost') return challenge.status === 'completed-lost'
+    if (filter === 'in-progress') return challenge.status === 'in-progress'
     return true
   })
 
@@ -110,6 +151,112 @@ export default function ArchiveGrid() {
   const isToday = (dateStr: string) => dateStr === today
   const isFuture = (dateStr: string) => dateStr > today
 
+  const getStatusIcon = (challenge: DayChallenge) => {
+    switch (challenge.status) {
+      case 'completed-won':
+        return (
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center shadow-sm">
+              <div className="w-3 h-3 rounded-full bg-white" />
+            </div>
+            <div className="text-xs text-green-600 dark:text-green-400 font-medium">
+              {challenge.attempts}/3
+            </div>
+          </div>
+        )
+      
+      case 'completed-lost':
+        return (
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-red-500 to-rose-500 flex items-center justify-center shadow-sm">
+              <X className="w-3 h-3 text-white" />
+            </div>
+            <div className="text-xs text-red-600 dark:text-red-400">
+              Lost
+            </div>
+          </div>
+        )
+      
+      case 'in-progress':
+        return (
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center shadow-sm">
+              <Clock className="w-3 h-3 text-white" />
+            </div>
+            <div className="text-xs text-amber-600 dark:text-amber-400">
+              Scene {challenge.currentHintLevel}
+            </div>
+          </div>
+        )
+      
+      case 'unplayed':
+        if (isFuture(challenge.date)) {
+          return (
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-6 h-6 rounded-full bg-stone-300 dark:bg-stone-600 flex items-center justify-center">
+                <Lock className="w-3 h-3 text-stone-500 dark:text-stone-400" />
+              </div>
+              <div className="text-xs text-stone-400">
+                Soon
+              </div>
+            </div>
+          )
+        } else {
+          return (
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-6 h-6 rounded-full border-2 border-amber-300 dark:border-amber-600 border-dashed group-hover:border-amber-400 dark:group-hover:border-amber-500 transition-colors flex items-center justify-center">
+                <Play className="w-3 h-3 text-amber-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-300" />
+              </div>
+              <div className="text-xs text-stone-500 dark:text-stone-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                Play
+              </div>
+            </div>
+          )
+        }
+      
+      default:
+        return null
+    }
+  }
+
+  const getChallengeCardStyle = (challenge: DayChallenge) => {
+    const baseStyle = "relative group aspect-square rounded-xl p-4 flex flex-col justify-between transition-all duration-200 hover:scale-[1.02] cinema-glass border overflow-hidden"
+    
+    switch (challenge.status) {
+      case 'completed-won':
+        return `${baseStyle} border-green-300/50 dark:border-green-600/50 bg-gradient-to-br from-green-50/80 to-emerald-50/60 dark:from-green-900/30 dark:to-emerald-900/20 hover:border-green-400/60 dark:hover:border-green-500/60`
+      
+      case 'completed-lost':
+        return `${baseStyle} border-red-300/50 dark:border-red-600/50 bg-gradient-to-br from-red-50/80 to-rose-50/60 dark:from-red-900/30 dark:to-rose-900/20 hover:border-red-400/60 dark:hover:border-red-500/60`
+      
+      case 'in-progress':
+        return `${baseStyle} border-amber-300/50 dark:border-amber-600/50 bg-gradient-to-br from-amber-50/80 to-orange-50/60 dark:from-amber-900/30 dark:to-orange-900/20 hover:border-amber-400/60 dark:hover:border-amber-500/60`
+      
+      case 'unplayed':
+        if (isFuture(challenge.date)) {
+          return `${baseStyle} border-stone-200/50 dark:border-stone-700/50 bg-stone-50/50 dark:bg-stone-900/30 opacity-60`
+        } else {
+          return `${baseStyle} border-stone-200/50 dark:border-stone-700/50 hover:border-amber-300/50 dark:hover:border-amber-600/50`
+        }
+      
+      default:
+        return baseStyle
+    }
+  }
+
+  const getProgressText = (challenge: DayChallenge) => {
+    switch (challenge.status) {
+      case 'in-progress':
+        return `${challenge.attempts} attempt${challenge.attempts !== 1 ? 's' : ''}`
+      case 'completed-won':
+        return `Won in ${challenge.attempts}`
+      case 'completed-lost':
+        return `Lost`
+      default:
+        return null
+    }
+  }
+
   if (loading) {
     return (
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-4">
@@ -122,10 +269,10 @@ export default function ArchiveGrid() {
 
   return (
     <div className="space-y-6">
-      {/* Clean filter buttons */}
+      {/* Enhanced filter buttons */}
       <div className="flex items-center justify-between">
         <div className="flex gap-1 cinema-glass p-1 rounded-lg border border-stone-200/50 dark:border-amber-700/30">
-          {(['all', 'played', 'won', 'lost'] as const).map((f) => (
+          {(['all', 'played', 'won', 'lost', 'in-progress'] as const).map((f) => (
             <button
               key={f}
               onClick={() => {
@@ -138,22 +285,40 @@ export default function ArchiveGrid() {
                   : 'text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400'
               }`}
             >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {f === 'in-progress' ? 'In Progress' : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
         </div>
         
-        {/* Simple stats */}
-        <div className="text-sm text-stone-500 dark:text-stone-400">
-          <span className="text-green-600 dark:text-green-400 font-medium">
-            {challenges.filter(c => c.status === 'won').length}
-          </span>
-          <span className="mx-1">/</span>
-          <span>{challenges.filter(c => c.status !== 'not-played').length} played</span>
+        {/* Enhanced stats */}
+        <div className="text-sm text-stone-500 dark:text-stone-400 flex items-center gap-4">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span className="text-green-600 dark:text-green-400 font-medium">
+              {challenges.filter(c => c.status === 'completed-won').length}
+            </span>
+            <span>won</span>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+            <span className="text-amber-600 dark:text-amber-400 font-medium">
+              {challenges.filter(c => c.status === 'in-progress').length}
+            </span>
+            <span>in progress</span>
+          </div>
+          
+          <div>
+            <span className="font-medium">
+              {challenges.filter(c => c.status !== 'unplayed').length}
+            </span>
+            <span className="mx-1">/</span>
+            <span>{challenges.length} total</span>
+          </div>
         </div>
       </div>
 
-      {/* Clean challenge grid */}
+      {/* Challenge grid */}
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-4">
         {paginatedChallenges.map((challenge) => {
           const { month, day, year } = formatDate(challenge.date)
@@ -164,16 +329,8 @@ export default function ArchiveGrid() {
             <Link
               key={challenge.date}
               href={`/day/${challenge.date}`}
-              className={`relative group aspect-square rounded-xl p-4 flex flex-col justify-between transition-all duration-200 hover:scale-[1.02] cinema-glass border overflow-hidden ${
-                challenge.status === 'won'
-                  ? 'border-green-300/50 dark:border-green-600/50 bg-gradient-to-br from-green-50/80 to-emerald-50/60 dark:from-green-900/30 dark:to-emerald-900/20 hover:border-green-400/60 dark:hover:border-green-500/60'
-                  : challenge.status === 'lost'
-                  ? 'border-red-300/50 dark:border-red-600/50 bg-gradient-to-br from-red-50/80 to-rose-50/60 dark:from-red-900/30 dark:to-rose-900/20 hover:border-red-400/60 dark:hover:border-red-500/60'
-                  : futureChallenge
-                  ? 'border-stone-200/50 dark:border-stone-700/50 bg-stone-50/50 dark:bg-stone-900/30 opacity-60'
-                  : 'border-stone-200/50 dark:border-stone-700/50 hover:border-amber-300/50 dark:hover:border-amber-600/50'
-              }`}
-              aria-label={`Challenge ${challenge.dayNumber} - ${month} ${day}, ${year}`}
+              className={getChallengeCardStyle(challenge)}
+              aria-label={`Challenge ${challenge.dayNumber} - ${month} ${day}, ${year} - ${challenge.status}`}
             >
               {/* Today indicator */}
               {todayChallenge && (
@@ -192,53 +349,18 @@ export default function ArchiveGrid() {
               
               {/* Status indicator */}
               <div className="flex items-center justify-center">
-                {challenge.status === 'won' && (
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center shadow-sm">
-                      <div className="w-3 h-3 rounded-full bg-white" />
-                    </div>
-                    <div className="text-xs text-green-600 dark:text-green-400 font-medium">
-                      {challenge.attempts}/3
-                    </div>
-                  </div>
-                )}
-                
-                {challenge.status === 'lost' && (
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-red-500 to-rose-500 flex items-center justify-center shadow-sm">
-                      <X className="w-3 h-3 text-white" />
-                    </div>
-                    <div className="text-xs text-red-600 dark:text-red-400">
-                      Lost
-                    </div>
-                  </div>
-                )}
-                
-                {challenge.status === 'not-played' && (
-                  <div className="flex flex-col items-center gap-1">
-                    {futureChallenge ? (
-                      <>
-                        <div className="w-6 h-6 rounded-full bg-stone-300 dark:bg-stone-600 flex items-center justify-center">
-                          <Lock className="w-3 h-3 text-stone-500 dark:text-stone-400" />
-                        </div>
-                        <div className="text-xs text-stone-400">
-                          Soon
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-6 h-6 rounded-full border-2 border-amber-300 dark:border-amber-600 border-dashed group-hover:border-amber-400 dark:group-hover:border-amber-500 transition-colors" />
-                        <div className="text-xs text-stone-500 dark:text-stone-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                          Play
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
+                {getStatusIcon(challenge)}
               </div>
               
+              {/* Progress text */}
+              {getProgressText(challenge) && (
+                <div className="text-xs text-center text-stone-500 dark:text-stone-400 mt-1">
+                  {getProgressText(challenge)}
+                </div>
+              )}
+              
               {/* Movie title overlay on hover */}
-              {challenge.title && challenge.status !== 'not-played' && (
+              {challenge.title && challenge.status !== 'unplayed' && (
                 <div className="absolute inset-0 bg-black/80 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-3">
                   <div className="text-center">
                     <div className="flex justify-center mb-1">
@@ -251,6 +373,25 @@ export default function ArchiveGrid() {
                     <p className="text-white text-xs font-medium line-clamp-3 leading-relaxed">
                       {challenge.title}
                     </p>
+                    
+                    {/* Status badge in overlay */}
+                    <div className="mt-2">
+                      {challenge.status === 'in-progress' && (
+                        <span className="text-xs bg-amber-600 text-white px-2 py-1 rounded-full">
+                          Continue Playing
+                        </span>
+                      )}
+                      {challenge.status === 'completed-won' && (
+                        <span className="text-xs bg-green-600 text-white px-2 py-1 rounded-full">
+                          ✓ Completed
+                        </span>
+                      )}
+                      {challenge.status === 'completed-lost' && (
+                        <span className="text-xs bg-red-600 text-white px-2 py-1 rounded-full">
+                          View Result
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -259,7 +400,7 @@ export default function ArchiveGrid() {
         })}
       </div>
       
-      {/* Clean pagination */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
           <button

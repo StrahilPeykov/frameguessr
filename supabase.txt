@@ -1,0 +1,64 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.daily_movies (
+  date date NOT NULL UNIQUE,
+  tmdb_id integer NOT NULL,
+  media_type character varying NOT NULL,
+  title character varying NOT NULL,
+  year integer,
+  image_url text NOT NULL,
+  hints jsonb,
+  id integer NOT NULL DEFAULT nextval('daily_movies_id_seq'::regclass),
+  created_at timestamp with time zone DEFAULT now(),
+  deezer_track_id bigint,
+  CONSTRAINT daily_movies_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.game_analytics (
+  date date NOT NULL,
+  movie_id integer NOT NULL,
+  average_attempts numeric,
+  most_common_wrong_guess text,
+  id bigint NOT NULL DEFAULT nextval('game_analytics_id_seq'::regclass),
+  total_players integer DEFAULT 0,
+  successful_players integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT game_analytics_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.leaderboard (
+  user_id uuid,
+  id integer NOT NULL DEFAULT nextval('leaderboard_id_seq'::regclass),
+  streak integer DEFAULT 0,
+  total_solved integer DEFAULT 0,
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT leaderboard_pkey PRIMARY KEY (id),
+  CONSTRAINT leaderboard_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  username text UNIQUE CHECK (char_length(username) >= 3),
+  display_name text,
+  avatar_url text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.user_progress (
+  won boolean DEFAULT false,
+  current_hint_level integer DEFAULT 1,
+  updated_at timestamp with time zone DEFAULT now(),
+  all_attempts jsonb DEFAULT '[]'::jsonb,
+  max_attempts integer NOT NULL DEFAULT 3,
+  last_modified timestamp with time zone DEFAULT now(),
+  hint_levels_viewed ARRAY DEFAULT ARRAY[1],
+  user_id uuid,
+  date date NOT NULL,
+  id integer NOT NULL DEFAULT nextval('user_progress_id_seq'::regclass),
+  attempts integer DEFAULT 0,
+  completed boolean DEFAULT false,
+  guesses jsonb DEFAULT '[]'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_progress_pkey PRIMARY KEY (id),
+  CONSTRAINT user_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);

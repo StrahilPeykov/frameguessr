@@ -5,7 +5,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Types for our database tables
+// Updated types for our database tables to match the migrated schema
 export interface DailyMovie {
   id: number
   date: string
@@ -14,17 +14,7 @@ export interface DailyMovie {
   title: string
   year?: number
   image_url: string
-  blur_levels?: {
-    level1: string // Most blurred/cropped
-    level2: string // Medium blur
-    level3: string // Least blur
-  }
-  hints?: {
-    actors?: string[]
-    tagline?: string
-    genre?: string
-    director?: string
-  }
+  deezer_track_id?: number
   created_at: string
 }
 
@@ -34,6 +24,22 @@ export interface UserProgress {
   date: string
   attempts: number
   completed: boolean
-  guesses: string[]
+  guesses: any[] // JSON array of guess objects
+  all_attempts?: any[] // JSON array of attempt objects (new field)
+  won?: boolean
+  current_hint_level?: number
+  max_attempts?: number // New field
+  last_modified?: string // New field for conflict resolution
+  hint_levels_viewed?: number[] // New field for tracking viewed hints
   created_at: string
+}
+
+// Type for the user_stats view created in migration
+export interface UserStatsView {
+  user_id: string
+  games_played: number
+  games_completed: number
+  games_won: number
+  win_percentage: number
+  avg_attempts_when_won: number
 }

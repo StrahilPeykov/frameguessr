@@ -1,46 +1,61 @@
-// hooks/useAuth.ts
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { gameStorage } from '@/lib/gameStorage'
 
+export interface AuthState {
+  isAuthenticated: boolean
+  currentUser: any
+  loading: boolean
+}
+
 export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [currentUser, setCurrentUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [authState, setAuthState] = useState<AuthState>({
+    isAuthenticated: false,
+    currentUser: null,
+    loading: true
+  })
 
   useEffect(() => {
     const initAuth = async () => {
       try {
         await gameStorage.init()
         const user = gameStorage.getCurrentUser()
-        setIsAuthenticated(!!user)
-        setCurrentUser(user)
+        
+        console.log('[useAuth] Initialized:', { user: !!user })
+        
+        setAuthState(prev => ({
+          ...prev,
+          isAuthenticated: !!user,
+          currentUser: user,
+          loading: false
+        }))
       } catch (error) {
         console.error('Auth initialization error:', error)
-        setIsAuthenticated(false)
-        setCurrentUser(null)
-      } finally {
-        setLoading(false)
+        setAuthState(prev => ({
+          ...prev,
+          isAuthenticated: false,
+          currentUser: null,
+          loading: false
+        }))
       }
     }
 
     initAuth()
+  }, [])
 
-    // Listen for auth state changes
+  // Listen for auth state changes from Supabase
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, !!session?.user)
+        console.log('[useAuth] Auth state change:', event, !!session?.user)
         
         const user = session?.user || null
-        setIsAuthenticated(!!user)
-        setCurrentUser(user)
         
-        // Update gameStorage
-        if (gameStorage) {
-          if (event === 'SIGNED_IN' && user) {
-            await gameStorage.syncLegitimateDataToDatabase()
-          }
-        }
+        setAuthState(prev => ({
+          ...prev,
+          isAuthenticated: !!user,
+          currentUser: user
+        }))
       }
     )
 
@@ -49,10 +64,78 @@ export function useAuth() {
     }
   }, [])
 
+  const getUserStats = useCallback(async () => {
+    return await gameStorage.getUserStats()
+  }, [])
+
+  const canAccessCloudFeatures = useCallback(() => {
+    return authState.isAuthenticated
+  }, [authState.isAuthenticated])
+
+  const getDataSource = useCallback((): 'local' | 'cloud' | 'mixed' => {
+    return authState.isAuthenticated ? 'cloud' : 'local'
+  }, [authState.isAuthenticated])
+
+  // Sign out with proper cleanup
+  const signOut = useCallback(async () => {
+    try {
+      console.log('[useAuth] Starting sign out process')
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('Sign out error:', error)
+        throw error
+      }
+    } catch (error) {
+      console.error('Failed to sign out:', error)
+      throw error
+    }
+  }, [])
+
+  // Check if there are unsaved local changes
+  const hasUnsavedChanges = useCallback(async () => {
+    if (!authState.isAuthenticated) return false
+    
+    try {
+      const dataSummary = await gameStorage.getDataSummary()
+      return dataSummary.mergeableGames > 0
+    } catch (error) {
+      console.error('Error checking unsaved changes:', error)
+      return false
+    }
+  }, [authState.isAuthenticated])
+
+  const reloadAuthState = useCallback(async () => {
+    console.log('[useAuth] Force reloading auth state')
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      setAuthState(prev => ({
+        ...prev,
+        isAuthenticated: !!user,
+        currentUser: user
+      }))
+      
+      return { user: !!user }
+    } catch (error) {
+      console.error('Failed to reload auth state:', error)
+      throw error
+    }
+  }, [])
+
   return {
-    isAuthenticated,
-    currentUser,
-    loading,
+    isAuthenticated: authState.isAuthenticated,
+    currentUser: authState.currentUser,
+    loading: authState.loading,
+    
+    // Utility functions
+    canAccessCloudFeatures,
+    getDataSource,
+    hasUnsavedChanges,
+    
+    // Actions
+    signOut,
+    getUserStats,
+    reloadAuthState,
   }
 }
 

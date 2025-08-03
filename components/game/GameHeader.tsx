@@ -1,4 +1,3 @@
-// components/game/GameHeader.tsx - Fixed TypeScript error
 'use client'
 
 import Link from 'next/link'
@@ -30,6 +29,8 @@ function GameHeader({
   //const { theme, toggleTheme } = useTheme()
   const { isScrolled, showMobileMenu, openMobileMenu, closeMobileMenu } = useNavigation()
   const { gameState, syncStatus, isAuthenticated } = useGameContext()
+  
+  // Modal states
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showAboutModal, setShowAboutModal] = useState(false)
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin')
@@ -40,6 +41,16 @@ function GameHeader({
 
   const handleAboutClick = () => {
     setShowAboutModal(true)
+  }
+
+  const handleSignInClick = () => {
+    setShowAuthModal(true)
+    setAuthModalMode('signin')
+  }
+
+  const handleSignUpClick = () => {
+    setShowAuthModal(true)
+    setAuthModalMode('signup')
   }
 
   // Only show sync status for errors - wins are obvious from game completion screen
@@ -148,19 +159,13 @@ function GameHeader({
                 ) : (
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => {
-                        setShowAuthModal(true)
-                        setAuthModalMode('signin')
-                      }}
+                      onClick={handleSignInClick}
                       className="px-3 py-2 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg font-medium transition-colors text-sm"
                     >
                       Sign In
                     </button>
                     <button
-                      onClick={() => {
-                        setShowAuthModal(true)
-                        setAuthModalMode('signup')
-                      }}
+                      onClick={handleSignUpClick}
                       className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors text-sm"
                     >
                       Sign Up
@@ -215,13 +220,11 @@ function GameHeader({
         }}
         onSignInClick={() => {
           closeMobileMenu()
-          setShowAuthModal(true)
-          setAuthModalMode('signin')
+          handleSignInClick()
         }}
         onSignUpClick={() => {
           closeMobileMenu()
-          setShowAuthModal(true)
-          setAuthModalMode('signup')
+          handleSignUpClick()
         }}
       />
 

@@ -1,9 +1,8 @@
-// components/auth/AuthModal.tsx - Updated success handling
 'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { X, Mail, Lock } from 'lucide-react'
+import { X, Mail, Lock, CheckCircle } from 'lucide-react'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -12,7 +11,12 @@ interface AuthModalProps {
   initialMode?: 'signin' | 'signup'
 }
 
-export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'signin' }: AuthModalProps) {
+export default function AuthModal({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  initialMode = 'signin' 
+}: AuthModalProps) {
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -62,12 +66,12 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
         })
         if (error) throw error
         
-        // Success - the auth state change listener will handle the rest
         setSuccessMessage('Welcome back!')
+        
         setTimeout(() => {
           onSuccess?.()
           onClose()
-        }, 1000)
+        }, 1500)
         
       } else {
         const { error } = await supabase.auth.signUp({
@@ -76,7 +80,6 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
         })
         if (error) throw error
         
-        // Show success message for signup (email verification required)
         setSuccessMessage('Check your email to verify your account!')
         setTimeout(() => {
           onClose()
@@ -101,8 +104,6 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
         }
       })
       if (error) throw error
-      
-      // OAuth will redirect, so we don't need to handle success here
     } catch (error: any) {
       console.error('Google auth error:', error)
       setError(error.message || 'Google sign in failed')
@@ -129,7 +130,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
         <div className="p-6">
           {/* Success Message */}
           {successMessage && (
-            <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-300 text-sm">
+            <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-300 text-sm flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
               {successMessage}
             </div>
           )}
@@ -138,6 +140,18 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
           {error && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
               {error}
+            </div>
+          )}
+
+          {/* Special message for first-time users */}
+          {mode === 'signup' && (
+            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-lg">
+              <h4 className="font-medium text-amber-900 dark:text-amber-100 text-sm mb-1">
+                Save Your Progress
+              </h4>
+              <p className="text-xs text-amber-800 dark:text-amber-200">
+                Create an account to sync your game progress across devices and compete on leaderboards.
+              </p>
             </div>
           )}
 
@@ -156,7 +170,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
                   className="w-full pl-10 pr-4 py-3 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-transparent transition-all"
                   placeholder="your@email.com"
                   required
-                  disabled={loading}
+                  disabled={loading || !!successMessage}
                 />
               </div>
             </div>
@@ -175,7 +189,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
                   placeholder="Enter your password"
                   required
                   minLength={6}
-                  disabled={loading}
+                  disabled={loading || !!successMessage}
                 />
               </div>
             </div>
@@ -195,7 +209,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 's
                     placeholder="Confirm your password"
                     required
                     minLength={6}
-                    disabled={loading}
+                    disabled={loading || !!successMessage}
                   />
                 </div>
               </div>
