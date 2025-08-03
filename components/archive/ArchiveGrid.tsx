@@ -7,6 +7,7 @@ import { gameStorage } from '@/lib/gameStorage'
 import { supabase } from '@/lib/supabase'
 import { getTodayLocal, formatDateLocal } from '@/utils/dateUtils'
 import { GameStatus, getGameStatus, hasProgress } from '@/types'
+import { useAuth } from '@/hooks/useAuth'
 
 interface DayChallenge {
   date: string
@@ -27,6 +28,7 @@ interface AvailableDate {
 }
 
 export default function ArchiveGrid() {
+  const { isAuthenticated, syncDecision } = useAuth()
   const [challenges, setChallenges] = useState<DayChallenge[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
@@ -36,11 +38,41 @@ export default function ArchiveGrid() {
 
   useEffect(() => {
     loadChallenges()
+  }, [isAuthenticated, syncDecision]) // React to auth changes
+
+  // Listen for data change events from GameStorage
+  useEffect(() => {
+    const handleDataChange = () => {
+      console.log('[ArchiveGrid] Data change event received, reloading challenges...')
+      loadChallenges()
+    }
+
+    const handleDataCleared = () => {
+      console.log('[ArchiveGrid] Data cleared event received, reloading challenges...')
+      loadChallenges()
+    }
+
+    const handleDataImported = () => {
+      console.log('[ArchiveGrid] Data imported event received, reloading challenges...')
+      loadChallenges()
+    }
+
+    // Listen for GameStorage events
+    window.addEventListener('game-data-changed', handleDataChange)
+    window.addEventListener('auth-data-cleared', handleDataCleared)
+    window.addEventListener('game-data-imported', handleDataImported)
+    
+    return () => {
+      window.removeEventListener('game-data-changed', handleDataChange)
+      window.removeEventListener('auth-data-cleared', handleDataCleared)
+      window.removeEventListener('game-data-imported', handleDataImported)
+    }
   }, [])
 
   const loadChallenges = async () => {
     try {
       setLoading(true)
+      console.log(`[ArchiveGrid] Loading challenges, auth: ${isAuthenticated}, syncDecision: ${syncDecision?.type}`)
       
       const { data: availableDates, error } = await supabase
         .from('daily_movies')
@@ -52,25 +84,47 @@ export default function ArchiveGrid() {
 
       const challengeMap = new Map<string, DayChallenge>()
       
-      availableDates?.forEach((movie: AvailableDate, index) => {
-        const gameState = gameStorage.loadFromLocalStorage(movie.date)
-        const status = getGameStatus(gameState)
-        
-        challengeMap.set(movie.date, {
-          date: movie.date,
-          dayNumber: availableDates.length - index,
-          status,
-          title: hasProgress(gameState) ? movie.title : undefined,
-          mediaType: movie.media_type as 'movie' | 'tv',
-          attempts: gameState?.attempts || 0,
-          currentHintLevel: gameState?.currentHintLevel || 1,
-          lastPlayed: gameState ? Date.now() : undefined // Could track actual last played time
-        })
+      // Load game states for all dates
+      const gameStatePromises = availableDates?.map(async (movie: AvailableDate, index) => {
+        try {
+          const gameState = await gameStorage.loadGameState(movie.date)
+          const status = getGameStatus(gameState)
+          
+          return {
+            date: movie.date,
+            dayNumber: availableDates.length - index,
+            status,
+            title: hasProgress(gameState) ? movie.title : undefined,
+            mediaType: movie.media_type as 'movie' | 'tv',
+            attempts: gameState?.attempts || 0,
+            currentHintLevel: gameState?.currentHintLevel || 1,
+            lastPlayed: gameState ? Date.now() : undefined // Could track actual last played time
+          }
+        } catch (error) {
+          console.error(`Failed to load game state for ${movie.date}:`, error)
+          return {
+            date: movie.date,
+            dayNumber: availableDates.length - index,
+            status: 'unplayed' as GameStatus,
+            title: undefined,
+            mediaType: movie.media_type as 'movie' | 'tv',
+            attempts: 0,
+            currentHintLevel: 1,
+            lastPlayed: undefined
+          }
+        }
+      }) || []
+
+      const challengeResults = await Promise.all(gameStatePromises)
+      
+      challengeResults.forEach(challenge => {
+        challengeMap.set(challenge.date, challenge)
       })
       
       const challengeArray = Array.from(challengeMap.values())
         .sort((a, b) => b.date.localeCompare(a.date))
       
+      console.log(`[ArchiveGrid] Loaded ${challengeArray.length} challenges`)
       setChallenges(challengeArray)
     } catch (error) {
       console.error('Failed to load challenges:', error)
@@ -269,6 +323,13 @@ export default function ArchiveGrid() {
             <span className="mx-1">/</span>
             <span>{challenges.length} total</span>
           </div>
+          
+          {/* Auth indicator */}
+          {isAuthenticated && (
+            <div className="text-xs text-blue-600 dark:text-blue-400">
+              {syncDecision?.type === 'clean-start' ? '🏠 Local' : '☁️ Synced'}
+            </div>
+          )}
         </div>
       </div>
 

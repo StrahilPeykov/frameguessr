@@ -27,6 +27,8 @@ export function useAuth() {
         const user = gameStorage.getCurrentUser()
         const syncDecision = gameStorage.getSyncDecision()
         
+        console.log('[useAuth] Initialized:', { user: !!user, syncDecision: syncDecision?.type })
+        
         setAuthState(prev => ({
           ...prev,
           isAuthenticated: !!user,
@@ -48,15 +50,16 @@ export function useAuth() {
     initAuth()
   }, [])
 
-  // Listen for auth state changes
+  // Listen for auth state changes from Supabase
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, !!session?.user)
+        console.log('[useAuth] Auth state change:', event, !!session?.user)
         
         const user = session?.user || null
         const wasAuthenticated = authState.isAuthenticated
         
+        // Update auth state immediately
         setAuthState(prev => ({
           ...prev,
           isAuthenticated: !!user,
@@ -77,14 +80,35 @@ export function useAuth() {
     }
   }, [authState.isAuthenticated])
 
+  // Listen for sync decision changes from GameStorage
+  useEffect(() => {
+    const handleSyncDecisionChange = (event: CustomEvent) => {
+      const { decision } = event.detail
+      console.log('[useAuth] Sync decision changed:', decision?.type)
+      setAuthState(prev => ({
+        ...prev,
+        syncDecision: decision
+      }))
+    }
+
+    window.addEventListener('sync-decision-changed', handleSyncDecisionChange as EventListener)
+    
+    return () => {
+      window.removeEventListener('sync-decision-changed', handleSyncDecisionChange as EventListener)
+    }
+  }, [])
+
   const handleSignIn = async (user: any) => {
     if (!user) return
+
+    console.log('[useAuth] Handling sign in for user:', user.email)
 
     try {
       // Check if there are data conflicts that need user attention
       const dataSummary = await gameStorage.getDataSummary()
       
       if (dataSummary.conflicts > 0) {
+        console.log('[useAuth] Found data conflicts:', dataSummary.conflicts)
         setAuthState(prev => ({
           ...prev,
           hasPendingDataMerge: true
@@ -93,7 +117,7 @@ export function useAuth() {
         // The data merge modal will be shown by the GameStorage event
         // We don't need to do anything else here
       } else {
-        // No conflicts, proceed with normal sync
+        console.log('[useAuth] No conflicts found')
         setAuthState(prev => ({
           ...prev,
           hasPendingDataMerge: false
@@ -105,6 +129,8 @@ export function useAuth() {
   }
 
   const handleSignOut = async () => {
+    console.log('[useAuth] Handling sign out')
+    
     setAuthState(prev => ({
       ...prev,
       isAuthenticated: false,
@@ -116,6 +142,7 @@ export function useAuth() {
 
   // Callback for when data merge decision is made
   const onDataMergeComplete = useCallback((decision: any) => {
+    console.log('[useAuth] Data merge complete:', decision?.type)
     setAuthState(prev => ({
       ...prev,
       syncDecision: decision,
@@ -159,6 +186,7 @@ export function useAuth() {
   // Sign out with proper cleanup
   const signOut = useCallback(async () => {
     try {
+      console.log('[useAuth] Starting sign out process')
       const { error } = await supabase.auth.signOut()
       if (error) {
         console.error('Sign out error:', error)
@@ -190,6 +218,7 @@ export function useAuth() {
     }
     
     try {
+      console.log('[useAuth] Force syncing all data')
       const decision = {
         type: 'import-all' as const,
         clearLocalOnLogout: true
@@ -209,6 +238,28 @@ export function useAuth() {
       throw error
     }
   }, [authState.isAuthenticated])
+
+  // Force reload auth state (useful for debugging)
+  const reloadAuthState = useCallback(async () => {
+    console.log('[useAuth] Force reloading auth state')
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const syncDecision = gameStorage.getSyncDecision()
+      
+      setAuthState(prev => ({
+        ...prev,
+        isAuthenticated: !!user,
+        currentUser: user,
+        syncDecision,
+        hasPendingDataMerge: false
+      }))
+      
+      return { user: !!user, syncDecision: syncDecision?.type }
+    } catch (error) {
+      console.error('Failed to reload auth state:', error)
+      throw error
+    }
+  }, [])
 
   return {
     // Basic auth state
@@ -231,6 +282,7 @@ export function useAuth() {
     forceSyncAllData,
     getUserStats,
     onDataMergeComplete,
+    reloadAuthState, // Added for debugging
   }
 }
 
