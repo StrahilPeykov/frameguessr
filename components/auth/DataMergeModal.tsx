@@ -2,13 +2,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Calendar, Trophy, Check, AlertCircle, Database, Smartphone, Cloud } from 'lucide-react'
+import { X, Calendar, Trophy, Check, AlertCircle, Database, Smartphone, Cloud, Clock, Zap } from 'lucide-react'
 import { DataConflict, SyncDecision, gameStorage } from '@/lib/gameStorage'
+import { getGameStatus } from '@/types'
 
 interface DataMergeModalProps {
   isOpen: boolean
   onClose: () => void
   conflicts: DataConflict[]
+  isAccountEmpty?: boolean
   onDecision: (decision: SyncDecision) => void
 }
 
@@ -24,6 +26,7 @@ export default function DataMergeModal({
   isOpen, 
   onClose, 
   conflicts, 
+  isAccountEmpty = false,
   onDecision 
 }: DataMergeModalProps) {
   const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set())
@@ -34,11 +37,15 @@ export default function DataMergeModal({
   useEffect(() => {
     if (isOpen) {
       loadDataSummary()
+      
       // Pre-select all local-only items
       const localOnlyDates = conflicts
         .filter(c => c.type === 'local-only')
         .map(c => c.date)
       setSelectedDates(new Set(localOnlyDates))
+      
+      // Reset view mode
+      setViewMode('summary')
     }
   }, [isOpen, conflicts])
 
@@ -108,35 +115,33 @@ export default function DataMergeModal({
     })
   }
 
-  const getConflictIcon = (type: DataConflict['type']) => {
-    switch (type) {
-      case 'local-only':
-        return <Smartphone className="w-4 h-4 text-amber-600" />
-      case 'local-newer':
-        return <AlertCircle className="w-4 h-4 text-blue-600" />
-      case 'different-progress':
-        return <AlertCircle className="w-4 h-4 text-orange-600" />
-      default:
-        return <Calendar className="w-4 h-4 text-stone-500" />
+  const getConflictIcon = (conflict: DataConflict) => {
+    const localStatus = getGameStatus(conflict.localData)
+    
+    if (localStatus === 'completed-won') {
+      return <Trophy className="w-4 h-4 text-green-600" />
+    } else if (localStatus === 'completed-lost') {
+      return <X className="w-4 h-4 text-red-600" />
+    } else if (localStatus === 'in-progress') {
+      return <Clock className="w-4 h-4 text-amber-600" />
+    } else {
+      return <Calendar className="w-4 h-4 text-stone-500" />
     }
   }
 
   const getConflictDescription = (conflict: DataConflict) => {
     const localData = conflict.localData
-    const cloudData = conflict.cloudData
+    const localStatus = getGameStatus(localData)
     
-    switch (conflict.type) {
-      case 'local-only':
-        return localData.completed 
-          ? `Completed on device (${localData.won ? 'won' : 'lost'} in ${localData.attempts} attempts)`
-          : `In progress (${localData.attempts} attempts, scene ${localData.currentHintLevel})`
-      case 'local-newer':
-        return `Device has better progress (${localData.attempts} vs ${cloudData.attempts} attempts)`
-      case 'different-progress':
-        return `Different progress on device vs cloud`
-      default:
-        return 'Unknown conflict'
+    if (localStatus === 'completed-won') {
+      return `Won in ${localData.attempts} attempt${localData.attempts !== 1 ? 's' : ''}`
+    } else if (localStatus === 'completed-lost') {
+      return `Lost after ${localData.attempts} attempts`
+    } else if (localStatus === 'in-progress') {
+      return `In progress - Scene ${localData.currentHintLevel}, ${localData.attempts} attempt${localData.attempts !== 1 ? 's' : ''}`
     }
+    
+    return 'Not started'
   }
 
   if (loading) {
@@ -152,6 +157,112 @@ export default function DataMergeModal({
     )
   }
 
+  // Empty account scenario
+  if (isAccountEmpty) {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-2xl border border-stone-200 dark:border-stone-700 overflow-hidden max-w-md w-full">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                <Zap className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">
+                  Save Your Streak!
+                </h2>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-stone-500 dark:text-stone-400" />
+            </button>
+          </div>
+
+          <div className="p-6">
+            {/* Stats Summary */}
+            {dataSummary && (
+              <div className="text-center mb-6">
+                <div className="mb-4">
+                  <div className="text-4xl font-bold text-amber-600 dark:text-amber-400 mb-1">
+                    {dataSummary.localGames}
+                  </div>
+                  <div className="text-stone-600 dark:text-stone-400">
+                    puzzle{dataSummary.localGames !== 1 ? 's' : ''} found on this device
+                  </div>
+                </div>
+                
+                {dataSummary.localCompleted > 0 && (
+                  <div className="flex items-center justify-center gap-6 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Trophy className="w-4 h-4 text-green-600" />
+                      <span className="text-stone-700 dark:text-stone-300">
+                        {dataSummary.localCompleted} completed
+                      </span>
+                    </div>
+                    {dataSummary.localInProgress > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-amber-600" />
+                        <span className="text-stone-700 dark:text-stone-300">
+                          {dataSummary.localInProgress} in progress
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Main Message */}
+            <div className="text-center mb-6">
+              <p className="text-stone-600 dark:text-stone-400">
+                Create a free account and we'll back up today's game, plus every puzzle you've finished on this device.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleImportAll}
+                className="w-full p-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-[1.02] shadow-lg flex items-center justify-center gap-3"
+              >
+                <Cloud className="w-5 h-5" />
+                Save All Progress to Account
+              </button>
+
+              <button
+                onClick={handleCleanStart}
+                className="w-full p-4 border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-3"
+              >
+                <Database className="w-5 h-5" />
+                Start Fresh Account
+              </button>
+            </div>
+
+            {/* Info note */}
+            <div className="mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/30 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-blue-800 dark:text-blue-200">
+                  <p className="font-medium mb-1">What happens next:</p>
+                  <ul className="text-xs space-y-1 text-blue-700 dark:text-blue-300">
+                    <li>• Your progress syncs across all devices</li>
+                    <li>• When you log out, local data is cleared to avoid duplicates</li>
+                    <li>• You can always play as guest when logged out</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Account with existing data scenario
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-2xl border border-stone-200 dark:border-stone-700 overflow-hidden max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -163,7 +274,7 @@ export default function DataMergeModal({
             </div>
             <div>
               <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">
-                Save Your Progress
+                Merge Found Data
               </h2>
               <p className="text-sm text-stone-600 dark:text-stone-400">
                 We found games on your device
@@ -185,14 +296,14 @@ export default function DataMergeModal({
               <div className="text-center p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700/30">
                 <Smartphone className="w-6 h-6 text-amber-600 mx-auto mb-2" />
                 <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">
-                  {dataSummary.localCompleted}
+                  {dataSummary.localGames}
                 </div>
                 <div className="text-sm text-amber-700 dark:text-amber-300">
-                  Completed on Device
+                  On This Device
                 </div>
                 {dataSummary.localInProgress > 0 && (
                   <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                    +{dataSummary.localInProgress} in progress
+                    {dataSummary.localInProgress} in progress
                   </div>
                 )}
               </div>
@@ -203,7 +314,7 @@ export default function DataMergeModal({
                   {dataSummary.cloudGames}
                 </div>
                 <div className="text-sm text-blue-700 dark:text-blue-300">
-                  Saved in Account
+                  In Your Account
                 </div>
               </div>
             </div>
@@ -212,85 +323,64 @@ export default function DataMergeModal({
           {/* Main Message */}
           <div className="text-center mb-6">
             <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-2">
-              {conflicts.length > 0 ? (
-                dataSummary?.cloudGames === 0 ? (
-                  "Create a free account and we'll back up your progress"
-                ) : (
-                  `We found ${conflicts.length} puzzle${conflicts.length !== 1 ? 's' : ''} that differ from your account`
-                )
-              ) : (
-                "Your account is up to date"
-              )}
+              We noticed you solved {conflicts.length} puzzle{conflicts.length !== 1 ? 's' : ''} on this device
             </h3>
             <p className="text-sm text-stone-600 dark:text-stone-400">
-              {dataSummary?.cloudGames === 0 ? (
-                "Plus every puzzle you've finished on this device."
-              ) : (
-                "Choose what to do with your device progress."
-              )}
+              Choose what to do with your device progress:
             </p>
           </div>
 
           {/* Tabs for detailed view */}
-          {conflicts.length > 0 && (
-            <div className="flex border-b border-stone-200 dark:border-stone-700 mb-4">
-              <button
-                onClick={() => setViewMode('summary')}
-                className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
-                  viewMode === 'summary'
-                    ? 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-600 dark:border-amber-400'
-                    : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
-                }`}
-              >
-                Quick Actions
-              </button>
-              <button
-                onClick={() => setViewMode('detailed')}
-                className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
-                  viewMode === 'detailed'
-                    ? 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-600 dark:border-amber-400'
-                    : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
-                }`}
-              >
-                Choose Specific Days
-              </button>
-            </div>
-          )}
+          <div className="flex border-b border-stone-200 dark:border-stone-700 mb-4">
+            <button
+              onClick={() => setViewMode('summary')}
+              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                viewMode === 'summary'
+                  ? 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-600 dark:border-amber-400'
+                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+              }`}
+            >
+              Quick Actions
+            </button>
+            <button
+              onClick={() => setViewMode('detailed')}
+              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                viewMode === 'detailed'
+                  ? 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-600 dark:border-amber-400'
+                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+              }`}
+            >
+              Choose Specific Days ({conflicts.length})
+            </button>
+          </div>
 
           {/* Content based on view mode */}
           {viewMode === 'summary' ? (
             <div className="space-y-3">
-              {/* Import All Option */}
               <button
                 onClick={handleImportAll}
                 className="w-full p-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-[1.02] shadow-lg flex items-center justify-center gap-3"
               >
-                <Trophy className="w-5 h-5" />
-                Save All Progress to Account
-                {conflicts.length > 0 && (
-                  <span className="text-sm opacity-90">({conflicts.length} puzzles)</span>
-                )}
+                <Database className="w-5 h-5" />
+                Merge All Device Progress
+                <span className="text-sm opacity-90">({conflicts.length} puzzles)</span>
               </button>
 
-              {/* Clean Start Option */}
+              <button
+                onClick={handleKeepAccountOnly}
+                className="w-full p-4 border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-3"
+              >
+                <Cloud className="w-5 h-5" />
+                Keep Account Progress Only
+              </button>
+
               <button
                 onClick={handleCleanStart}
                 className="w-full p-4 border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-3"
               >
-                <Database className="w-5 h-5" />
-                Start Fresh (Keep Device Data for Guest Play)
+                <Smartphone className="w-5 h-5" />
+                Keep Separate (Play as Guest When Logged Out)
               </button>
-
-              {/* Keep Account Only Option (if cloud has data) */}
-              {dataSummary && dataSummary.cloudGames > 0 && (
-                <button
-                  onClick={handleKeepAccountOnly}
-                  className="w-full p-4 border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-3"
-                >
-                  <Cloud className="w-5 h-5" />
-                  Keep Account Progress Only
-                </button>
-              )}
             </div>
           ) : (
             <div>
@@ -318,7 +408,7 @@ export default function DataMergeModal({
                     
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        {getConflictIcon(conflict.type)}
+                        {getConflictIcon(conflict)}
                         <span className="font-medium text-stone-900 dark:text-stone-100">
                           {formatDate(conflict.date)}
                         </span>
@@ -338,14 +428,14 @@ export default function DataMergeModal({
                   disabled={selectedDates.size === 0}
                   className="w-full p-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 disabled:from-stone-400 disabled:to-stone-500 text-white rounded-xl font-semibold transition-all duration-300 disabled:cursor-not-allowed"
                 >
-                  Save Selected to Account ({selectedDates.size})
+                  Merge Selected ({selectedDates.size})
                 </button>
                 
                 <button
                   onClick={handleCleanStart}
                   className="w-full p-3 border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-xl font-medium transition-all duration-300"
                 >
-                  Keep Separate (Guest & Account)
+                  Don't Merge - Keep Separate
                 </button>
               </div>
             </div>
@@ -356,11 +446,11 @@ export default function DataMergeModal({
             <div className="flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-blue-800 dark:text-blue-200">
-                <p className="font-medium mb-1">What happens next:</p>
+                <p className="font-medium mb-1">About data handling:</p>
                 <ul className="text-xs space-y-1 text-blue-700 dark:text-blue-300">
-                  <li>• Saved progress syncs across all your devices</li>
-                  <li>• You can always play as guest when logged out</li>
-                  <li>• Your device data is preserved until you log out</li>
+                  <li>• Merged progress syncs across all your devices</li>
+                  <li>• "Keep Separate" lets you play as guest when logged out</li>
+                  <li>• In-progress games are preserved and can be continued</li>
                 </ul>
               </div>
             </div>
