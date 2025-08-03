@@ -1,4 +1,5 @@
 import { GameState, Guess, getGameStatus, hasProgress } from '@/types'
+import { validateGameState, getValidatedGameState } from '@/utils/gameStateValidation'
 import { supabase } from '@/lib/supabase'
 
 export interface UserProgressRow {
