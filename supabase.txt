@@ -1,175 +1,60 @@
-create table public.daily_movies (
-  id serial not null,
-  date date not null,
-  tmdb_id integer not null,
-  media_type character varying(10) not null,
-  title character varying(255) not null,
-  year integer null,
-  image_url text not null,
-  hints jsonb null,
-  created_at timestamp with time zone null default now(),
-  deezer_track_id bigint null,
-  constraint daily_movies_pkey primary key (id),
-  constraint daily_movies_date_key unique (date)
-) TABLESPACE pg_default;
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
 
-create index IF not exists idx_daily_movies_deezer_track_id on public.daily_movies using btree (deezer_track_id) TABLESPACE pg_default;
-
-
-
-create view public.daily_movies_with_audio as
-select
-  date,
-  title,
-  media_type,
-  year,
-  deezer_track_id,
-  deezer_track_id is not null as has_audio_hint
-from
-  daily_movies
-where
-  deezer_track_id is not null
-order by
-  date desc;
-
-
-  create table public.game_analytics (
-  id bigserial not null,
-  date date not null,
-  movie_id integer not null,
-  total_players integer null default 0,
-  successful_players integer null default 0,
-  average_attempts numeric(3, 2) null,
-  most_common_wrong_guess text null,
-  created_at timestamp with time zone null default now(),
-  constraint game_analytics_pkey primary key (id),
-  constraint game_analytics_date_movie_id_key unique (date, movie_id)
-) TABLESPACE pg_default;
-
-
-
-create table public.leaderboard (
-  id serial not null,
-  user_id uuid null,
-  streak integer null default 0,
-  total_solved integer null default 0,
-  updated_at timestamp with time zone null default now(),
-  constraint leaderboard_pkey primary key (id),
-  constraint leaderboard_user_id_fkey foreign KEY (user_id) references auth.users (id)
-) TABLESPACE pg_default;
-
-
-
-create table public.profiles (
-  id uuid not null,
-  username text null,
-  display_name text null,
-  avatar_url text null,
-  created_at timestamp with time zone null default now(),
-  updated_at timestamp with time zone null default now(),
-  constraint profiles_pkey primary key (id),
-  constraint profiles_username_key unique (username),
-  constraint profiles_id_fkey foreign KEY (id) references auth.users (id) on delete CASCADE,
-  constraint username_length check ((char_length(username) >= 3))
-) TABLESPACE pg_default;
-
-
-
-create table public.user_progress (
-  id serial not null,
-  user_id uuid null,
-  date date not null,
-  attempts integer null default 0,
-  completed boolean null default false,
-  guesses jsonb null default '[]'::jsonb,
-  created_at timestamp with time zone null default now(),
-  won boolean null default false,
-  current_hint_level integer null default 1,
-  updated_at timestamp with time zone null default now(),
-  constraint user_progress_pkey primary key (id),
-  constraint user_progress_user_id_date_key unique (user_id, date),
-  constraint user_progress_user_id_fkey foreign KEY (user_id) references auth.users (id)
-) TABLESPACE pg_default;
-
-create index IF not exists idx_user_progress_user_date on public.user_progress using btree (user_id, date) TABLESPACE pg_default;
-
-create index IF not exists idx_user_progress_completed on public.user_progress using btree (user_id, completed) TABLESPACE pg_default;
-
-create trigger update_user_progress_updated_at BEFORE
-update on user_progress for EACH row
-execute FUNCTION update_updated_at_column ();
-
-
-
-create view public.user_streaks as
-with
-  user_games as (
-    select
-      user_progress.user_id,
-      user_progress.date,
-      user_progress.won,
-      row_number() over (
-        partition by
-          user_progress.user_id
-        order by
-          user_progress.date desc
-      ) as rn
-    from
-      user_progress
-    where
-      user_progress.completed = true
-  ),
-  streak_groups as (
-    select
-      user_games.user_id,
-      user_games.date,
-      user_games.won,
-      user_games.rn,
-      user_games.rn - row_number() over (
-        partition by
-          user_games.user_id,
-          user_games.won
-        order by
-          user_games.date desc
-      ) as grp
-    from
-      user_games
-  ),
-  current_streaks as (
-    select
-      streak_groups.user_id,
-      count(*) as streak_length
-    from
-      streak_groups
-    where
-      streak_groups.won = true
-      and streak_groups.grp = (
-        (
-          select
-            min(s2.grp) as min
-          from
-            streak_groups s2
-          where
-            s2.user_id = streak_groups.user_id
-            and s2.won = true
-        )
-      )
-    group by
-      streak_groups.user_id
-  )
-select
-  cs.user_id,
-  p.username,
-  p.display_name,
-  cs.streak_length,
-  row_number() over (
-    order by
-      cs.streak_length desc,
-      cs.user_id
-  ) as rank
-from
-  current_streaks cs
-  left join profiles p on p.id = cs.user_id
-order by
-  cs.streak_length desc,
-  cs.user_id;
+CREATE TABLE public.daily_movies (
+  date date NOT NULL UNIQUE,
+  tmdb_id integer NOT NULL,
+  media_type character varying NOT NULL,
+  title character varying NOT NULL,
+  year integer,
+  image_url text NOT NULL,
+  hints jsonb,
+  id integer NOT NULL DEFAULT nextval('daily_movies_id_seq'::regclass),
+  created_at timestamp with time zone DEFAULT now(),
+  deezer_track_id bigint,
+  CONSTRAINT daily_movies_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.game_analytics (
+  date date NOT NULL,
+  movie_id integer NOT NULL,
+  average_attempts numeric,
+  most_common_wrong_guess text,
+  id bigint NOT NULL DEFAULT nextval('game_analytics_id_seq'::regclass),
+  total_players integer DEFAULT 0,
+  successful_players integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT game_analytics_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.leaderboard (
+  user_id uuid,
+  id integer NOT NULL DEFAULT nextval('leaderboard_id_seq'::regclass),
+  streak integer DEFAULT 0,
+  total_solved integer DEFAULT 0,
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT leaderboard_pkey PRIMARY KEY (id),
+  CONSTRAINT leaderboard_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  username text UNIQUE CHECK (char_length(username) >= 3),
+  display_name text,
+  avatar_url text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.user_progress (
+  won boolean DEFAULT false,
+  current_hint_level integer DEFAULT 1,
+  updated_at timestamp with time zone DEFAULT now(),
+  user_id uuid,
+  date date NOT NULL,
+  id integer NOT NULL DEFAULT nextval('user_progress_id_seq'::regclass),
+  attempts integer DEFAULT 0,
+  completed boolean DEFAULT false,
+  guesses jsonb DEFAULT '[]'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_progress_pkey PRIMARY KEY (id),
+  CONSTRAINT user_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
