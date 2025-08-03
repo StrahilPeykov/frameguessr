@@ -26,9 +26,7 @@ export interface UserProgressRow {
 }
 
 export interface LocalGameData extends GameState {
-  createdWhileLoggedOut?: boolean
   lastModified: number
-  syncStatus?: 'local-only' | 'synced' | 'conflict'
   version?: number
 }
 
@@ -36,19 +34,17 @@ export interface DataConflict {
   date: string
   localData: LocalGameData
   cloudData?: GameState
-  type: 'local-only' | 'cloud-only' | 'local-newer' | 'cloud-newer' | 'different-progress'
+  type: 'mergeable' | 'not-mergeable'
 }
 
 export interface SyncDecision {
-  type: 'import-all' | 'clean-start' | 'merge-selected' | 'keep-account-only'
-  selectedDates?: string[]
-  clearLocalOnLogout?: boolean
+  type: 'merge-selected'
+  selectedDates: string[]
 }
 
 export class GameStorage {
   private static instance: GameStorage
   private user: any = null
-  private syncDecision: SyncDecision | null = null
   
   static getInstance(): GameStorage {
     if (!GameStorage.instance) {
@@ -61,105 +57,17 @@ export class GameStorage {
     const { data: { user } } = await supabase.auth.getUser()
     this.user = user
     
-    // Load saved sync decision
-    const savedDecision = localStorage.getItem('frameguessr-sync-decision')
-    if (savedDecision && this.user) {
-      try {
-        this.syncDecision = JSON.parse(savedDecision)
-      } catch (e) {
-        console.error('Failed to parse sync decision:', e)
-      }
-    }
-    
     supabase.auth.onAuthStateChange((event, session) => {
-      const wasLoggedOut = !this.user
       this.user = session?.user || null
-      
-      if (event === 'SIGNED_IN' && wasLoggedOut) {
-        this.handleSignIn()
-      } else if (event === 'SIGNED_OUT') {
-        this.handleSignOut()
-      }
     })
   }
 
-  private async handleSignIn() {
-    // Check for conflicts and present options to user
-    const conflicts = await this.analyzeDataConflicts()
-    
-    if (conflicts.length === 0) {
-      // No conflicts, nothing to merge
-      return
-    }
-
-    // Check if account is empty (all conflicts are local-only)
-    const isAccountEmpty = conflicts.every(c => c.type === 'local-only')
-    
-    // Dispatch event to show data merge modal
-    window.dispatchEvent(new CustomEvent('show-data-merge-modal', {
-      detail: { 
-        conflicts,
-        isAccountEmpty 
-      }
-    }))
-  }
-
-  private async handleSignOut() {
-    if (this.syncDecision?.clearLocalOnLogout) {
-      // Clear local storage as promised when they chose to import data
-      this.clearAllLocalData()
-      // Dispatch event to notify components
-      window.dispatchEvent(new Event('auth-data-cleared'))
-    }
-    // Clear sync decision on logout
-    this.syncDecision = null
-    localStorage.removeItem('frameguessr-sync-decision')
-  }
-
-  setSyncDecision(decision: SyncDecision) {
-    this.syncDecision = decision
-    // Persist the decision
-    if (this.user) {
-      localStorage.setItem('frameguessr-sync-decision', JSON.stringify(decision))
-    }
-    this.executeSyncDecision(decision)
-    
-    // Dispatch event for components to react
-    window.dispatchEvent(new CustomEvent('sync-decision-changed', {
-      detail: { decision }
-    }))
-  }
-
-  getSyncDecision(): SyncDecision | null {
-    return this.syncDecision
-  }
-
-  private async executeSyncDecision(decision: SyncDecision) {
-    switch (decision.type) {
-      case 'import-all':
-        await this.importAllLocalData()
-        break
-      case 'merge-selected':
-        if (decision.selectedDates) {
-          await this.importSelectedDates(decision.selectedDates)
-        }
-        break
-      case 'clean-start':
-        // Keep local data for guest play, don't sync anything
-        break
-      case 'keep-account-only':
-        // Don't import local data, just use account data
-        break
-    }
-  }
-
-  private async analyzeDataConflicts(): Promise<DataConflict[]> {
+  async getMergeableConflicts(): Promise<DataConflict[]> {
     if (!this.user) return []
 
     const conflicts: DataConflict[] = []
     const localDates = this.getAllLocalDates()
     
-    // Get all cloud data for this user
     const { data: cloudData, error } = await supabase
       .from('user_progress')
       .select('*')
@@ -172,126 +80,30 @@ export class GameStorage {
 
     const cloudDateMap = new Map(cloudData?.map(item => [item.date, item]) || [])
 
-    // Check each local date
     for (const date of localDates) {
       const localData = this.getLocalDataWithMetadata(date)
-      if (!localData || !hasProgress(localData)) continue // Skip unplayed games
+      if (!localData || !hasProgress(localData)) continue
 
       const cloudItem = cloudDateMap.get(date)
 
-      if (!cloudItem) {
-        // Local-only data (not in cloud)
+      if (!cloudItem || cloudItem.attempts === 0) {
         conflicts.push({
           date,
           localData,
-          type: 'local-only'
+          type: 'mergeable'
         })
       } else {
-        // Both have data - compare them
         const cloudGameState = this.cloudRowToGameState(cloudItem, date)
-        
-        // Check if they're different
-        if (this.hasSignificantDifference(localData, cloudGameState)) {
-          // Determine which is newer/better
-          if (this.shouldPreferLocal(localData, cloudGameState, cloudItem)) {
-            conflicts.push({
-              date,
-              localData,
-              cloudData: cloudGameState,
-              type: 'local-newer'
-            })
-          } else if (this.shouldPreferCloud(localData, cloudGameState, cloudItem)) {
-            conflicts.push({
-              date,
-              localData,
-              cloudData: cloudGameState,
-              type: 'cloud-newer'
-            })
-          } else {
-            // Different progress, let user choose
-            conflicts.push({
-              date,
-              localData,
-              cloudData: cloudGameState,
-              type: 'different-progress'
-            })
-          }
-        }
+        conflicts.push({
+          date,
+          localData,
+          cloudData: cloudGameState,
+          type: 'not-mergeable'
+        })
       }
     }
 
     return conflicts
-  }
-
-  private shouldPreferLocal(localData: LocalGameData, cloudData: GameState, cloudRow?: UserProgressRow): boolean {
-    // Use validation utils for consistent status checking
-    const localStatus = getGameStatus(localData)
-    const cloudStatus = getGameStatus(cloudData)
-    
-    // Prefer local if it's won and cloud isn't
-    if (localStatus === 'completed-won' && cloudStatus !== 'completed-won') return true
-    
-    // Prefer local if it has more progress
-    if (localData.attempts > cloudData.attempts) return true
-    if (localData.currentHintLevel > cloudData.currentHintLevel) return true
-    
-    // Use timestamps if available for more accurate comparison
-    if (cloudRow?.last_modified && localData.lastModified) {
-      const cloudTime = new Date(cloudRow.last_modified).getTime()
-      const localTime = localData.lastModified
-      
-      // If local is significantly newer (more than 1 minute), prefer it
-      if (localTime > cloudTime + 60000) {
-        return true
-      }
-    } else {
-      // Fallback: prefer local if it's newer (played in last 24 hours)
-      if (localData.lastModified > Date.now() - 24 * 60 * 60 * 1000) {
-        return true
-      }
-    }
-    
-    return false
-  }
-
-  private shouldPreferCloud(localData: LocalGameData, cloudData: GameState, cloudRow?: UserProgressRow): boolean {
-    // Use validation utils for consistent status checking
-    const localStatus = getGameStatus(localData)
-    const cloudStatus = getGameStatus(cloudData)
-    
-    // Prefer cloud if it's won and local isn't
-    if (cloudStatus === 'completed-won' && localStatus !== 'completed-won') return true
-    
-    // Prefer cloud if it has more progress
-    if (cloudData.attempts > localData.attempts) return true
-    if (cloudData.currentHintLevel > localData.currentHintLevel) return true
-    
-    // Use timestamps if available
-    if (cloudRow?.last_modified && localData.lastModified) {
-      const cloudTime = new Date(cloudRow.last_modified).getTime()
-      const localTime = localData.lastModified
-      
-      // If cloud is significantly newer, prefer it
-      if (cloudTime > localTime + 60000) {
-        return true
-      }
-    }
-    
-    return false
-  }
-
-  private hasSignificantDifference(localData: GameState, cloudData: GameState): boolean {
-    // Use validation to ensure both states are normalized before comparison
-    const validatedLocal = getValidatedGameState(localData)
-    const validatedCloud = getValidatedGameState(cloudData)
-    
-    return (
-      validatedLocal.attempts !== validatedCloud.attempts ||
-      validatedLocal.completed !== validatedCloud.completed ||
-      validatedLocal.won !== validatedCloud.won ||
-      validatedLocal.currentHintLevel !== validatedCloud.currentHintLevel ||
-      validatedLocal.guesses.length !== validatedCloud.guesses.length
-    )
   }
 
   private getAllLocalDates(): string[] {
@@ -317,19 +129,15 @@ export class GameStorage {
       
       const parsed = JSON.parse(saved)
       
-      // Handle old format that might not have metadata
       if (!parsed.lastModified) {
         return {
           ...parsed,
-          lastModified: Date.now() - 30 * 24 * 60 * 60 * 1000, // Assume old
-          syncStatus: 'local-only',
+          lastModified: Date.now() - 30 * 24 * 60 * 60 * 1000,
           version: 1
         }
       }
       
-      // Handle version 1 data that might not have allAttempts
       if (parsed.version === 1 && (!parsed.allAttempts || parsed.allAttempts.length === 0)) {
-        // Migrate guesses to allAttempts format
         if (parsed.guesses && parsed.guesses.length > 0) {
           parsed.allAttempts = parsed.guesses.map((guess: Guess) => ({
             id: guess.id,
@@ -342,7 +150,6 @@ export class GameStorage {
           }))
           parsed.version = 2
           
-          // Save the migrated data
           this.saveToLocalStorage(date, parsed)
         }
       }
@@ -354,14 +161,11 @@ export class GameStorage {
     }
   }
 
-  // Use validation utils instead of custom conversion
   private cloudRowToGameState(row: UserProgressRow, date: string): GameState {
     const guesses = row.guesses || []
     
-    // Use all_attempts if available, otherwise convert guesses for backward compatibility
     let allAttempts = row.all_attempts || []
     
-    // Backward compatibility: if all_attempts is empty but we have guesses, convert them
     if (allAttempts.length === 0 && guesses.length > 0) {
       allAttempts = guesses.map((guess: any) => ({
         id: guess.id,
@@ -385,83 +189,47 @@ export class GameStorage {
       currentHintLevel: row.current_hint_level || 1
     }
 
-    // Use validation to ensure consistent state
     return getValidatedGameState(rawState)
   }
 
-  private async importAllLocalData() {
-    const localDates = this.getAllLocalDates()
-    const datesToImport = localDates.filter(date => {
-      const localData = this.loadFromLocalStorage(date)
-      return localData && hasMeaningfulProgress(localData)
-    })
-    
-    await this.importSelectedDates(datesToImport)
-  }
-
-  private async importSelectedDates(dates: string[]) {
-    const importPromises: Promise<void>[] = []
+  async mergeSelectedDates(dates: string[]) {
+    const mergePromises: Promise<void>[] = []
     
     for (const date of dates) {
       const localData = this.loadFromLocalStorage(date)
       if (localData && hasMeaningfulProgress(localData)) {
-        importPromises.push(this.saveToDatabase(date, localData).then(() => {
-          // Mark as synced in local storage
-          const localDataFull = this.getLocalDataWithMetadata(date)
-          if (localDataFull) {
-            localDataFull.syncStatus = 'synced'
-            this.saveToLocalStorage(date, localDataFull)
-          }
+        mergePromises.push(this.saveToDatabase(date, localData).then(() => {
+          console.log(`Merged data for ${date}`)
         }).catch(error => {
-          console.error(`Failed to import data for ${date}:`, error)
+          console.error(`Failed to merge data for ${date}:`, error)
         }))
       }
     }
     
-    await Promise.all(importPromises)
+    await Promise.all(mergePromises)
     
-    // Dispatch event to notify components
     window.dispatchEvent(new Event('game-data-imported'))
   }
 
-  private clearAllLocalData() {
-    const dates = this.getAllLocalDates()
-    dates.forEach(date => {
-      localStorage.removeItem(`frameguessr-${date}`)
-    })
-  }
-
   async saveGameState(date: string, state: GameState): Promise<void> {
-    // Validate state before saving
     const validatedState = getValidatedGameState(state)
     
-    // Always save to local storage
     this.saveToLocalStorage(date, validatedState)
     
-    // Only save to database if user is logged in and decision allows it
-    if (this.user && this.shouldSyncToCloud()) {
+    if (this.user) {
       await this.saveToDatabaseQuietly(date, validatedState)
     }
     
-    // Dispatch event to notify components
     window.dispatchEvent(new CustomEvent('game-data-changed', {
       detail: { date, state: validatedState }
     }))
   }
 
-  private shouldSyncToCloud(): boolean {
-    if (!this.syncDecision) return true // Default behavior
-    return this.syncDecision.type !== 'clean-start'
-  }
-
   async loadGameState(date: string): Promise<GameState | null> {
-    // If logged in and should load from cloud
-    if (this.user && this.shouldLoadFromCloud()) {
+    if (this.user) {
       try {
         const dbState = await this.loadFromDatabase(date)
         if (dbState) {
-          // Update local storage with cloud data
-          this.saveToLocalStorage(date, dbState)
           return dbState
         }
       } catch (error) {
@@ -469,22 +237,14 @@ export class GameStorage {
       }
     }
     
-    // Load from local storage (either as fallback or primary source)
     return this.loadFromLocalStorage(date)
-  }
-
-  private shouldLoadFromCloud(): boolean {
-    if (!this.syncDecision) return true // Default behavior
-    return this.syncDecision.type !== 'clean-start'
   }
 
   private saveToLocalStorage(date: string, state: GameState): void {
     try {
       const localData: LocalGameData = {
         ...state,
-        createdWhileLoggedOut: !this.user,
         lastModified: Date.now(),
-        syncStatus: this.user && this.shouldSyncToCloud() ? 'synced' : 'local-only',
         version: 2
       }
       localStorage.setItem(`frameguessr-${date}`, JSON.stringify(localData))
@@ -500,10 +260,8 @@ export class GameStorage {
       
       const data = JSON.parse(saved)
       
-      // Extract game state without metadata
-      const { createdWhileLoggedOut, lastModified, syncStatus, version, ...gameState } = data
+      const { lastModified, version, ...gameState } = data
       
-      // Use validation utils to ensure valid state
       return getValidatedGameState(gameState)
     } catch (error) {
       console.error('Failed to load from localStorage:', error)
@@ -522,7 +280,6 @@ export class GameStorage {
   private async saveToDatabase(date: string, state: GameState): Promise<void> {
     if (!this.user) return
 
-    // Ensure state is validated
     const validatedState = getValidatedGameState(state)
 
     const progressData: Omit<UserProgressRow, 'id' | 'created_at'> = {
@@ -535,7 +292,6 @@ export class GameStorage {
       won: validatedState.won,
       current_hint_level: validatedState.currentHintLevel,
       max_attempts: validatedState.maxAttempts
-      // last_modified will be automatically set by the database trigger
     }
 
     const { error } = await supabase
@@ -545,12 +301,9 @@ export class GameStorage {
       })
 
     if (error) {
-      // Handle specific error types
       if (error.code === '23505') {
-        // Unique constraint violation - this shouldn't happen with upsert, but just in case
         console.warn(`Unique constraint violation for ${date}, retrying...`)
         
-        // Try a direct update instead
         const { error: updateError } = await supabase
           .from('user_progress')
           .update(progressData)
@@ -578,7 +331,7 @@ export class GameStorage {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return null // No data found
+        return null
       }
       throw new Error(`Database load failed: ${error.message}`)
     }
@@ -586,13 +339,12 @@ export class GameStorage {
     return this.cloudRowToGameState(data, date)
   }
 
-  // Get summary of local vs cloud data for UI
   async getDataSummary(): Promise<{
     localGames: number
     localCompleted: number
     localInProgress: number
     cloudGames: number
-    conflicts: number
+    mergeableGames: number
   }> {
     const localDates = this.getAllLocalDates()
     let localCompleted = 0
@@ -619,14 +371,15 @@ export class GameStorage {
       cloudGames = cloudData?.filter(item => item.completed || item.attempts > 0).length || 0
     }
 
-    const conflicts = await this.analyzeDataConflicts()
+    const conflicts = await this.getMergeableConflicts()
+    const mergeableGames = conflicts.filter(c => c.type === 'mergeable').length
 
     return {
       localGames: localCompleted + localInProgress,
       localCompleted,
       localInProgress,
       cloudGames,
-      conflicts: conflicts.length
+      mergeableGames
     }
   }
 
@@ -639,7 +392,7 @@ export class GameStorage {
     guessDistribution: number[]
     gamesInProgress: number
   }> {
-    if (!this.user || this.syncDecision?.type === 'clean-start') {
+    if (!this.user) {
       return this.getLocalStorageStats()
     }
 
@@ -684,7 +437,6 @@ export class GameStorage {
     const gamesInProgress = games.filter(g => !g.state.completed).length
     const winPercentage = gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0
 
-    // Calculate current streak
     let currentStreak = 0
     const sortedGames = completedGames.sort((a, b) => a.date.localeCompare(b.date))
     for (let i = sortedGames.length - 1; i >= 0; i--) {
@@ -695,7 +447,6 @@ export class GameStorage {
       }
     }
 
-    // Calculate average attempts and distribution
     const wonGames = completedGames.filter(g => g.state.won)
     const averageAttempts = wonGames.length > 0 
       ? wonGames.reduce((sum, game) => sum + game.state.attempts, 0) / wonGames.length 
@@ -719,33 +470,10 @@ export class GameStorage {
     }
   }
 
-  // Force sync all local data (for manual sync button)
-  async forceSyncAllData() {
-    if (!this.user) {
-      throw new Error('Must be authenticated to sync data')
-    }
-    
-    const conflicts = await this.analyzeDataConflicts()
-    const localOnlyDates = conflicts
-      .filter(c => c.type === 'local-only')
-      .map(c => c.date)
-    
-    if (localOnlyDates.length > 0) {
-      await this.importSelectedDates(localOnlyDates)
-    }
-    
-    return { 
-      success: true, 
-      syncedCount: localOnlyDates.length 
-    }
-  }
-
-  // Track hint levels viewed (optional enhancement)
   async saveHintLevelViewed(date: string, hintLevel: number): Promise<void> {
     if (!this.user) return
     
     try {
-      // Get current hint levels viewed
       const { data: currentData } = await supabase
         .from('user_progress')
         .select('hint_levels_viewed')
@@ -755,7 +483,6 @@ export class GameStorage {
       
       const currentLevels = currentData?.hint_levels_viewed || [1]
       
-      // Add new hint level if not already present
       if (!currentLevels.includes(hintLevel)) {
         const updatedLevels = [...currentLevels, hintLevel].sort((a, b) => a - b)
         
@@ -766,7 +493,6 @@ export class GameStorage {
           .eq('date', date)
       }
     } catch (error) {
-      // Don't fail the game if hint tracking fails
       console.warn('Failed to track hint level viewed:', error)
     }
   }

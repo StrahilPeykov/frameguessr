@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Sun, Moon, BarChart3, Share2, Menu, X, Archive, HelpCircle } from 'lucide-react'
 import { useTheme } from '@/hooks/useTheme'
 import { useNavigation } from '@/hooks/useNavigation'
@@ -10,10 +10,8 @@ import DatePicker from './DatePicker'
 import UserMenu from '@/components/auth/UserMenu'
 import MobileMenu from './MobileMenu'
 import AuthModal from '@/components/auth/AuthModal'
-import DataMergeModal from '@/components/auth/DataMergeModal'
 import AboutModal from './AboutModal'
 import FrameGuessrLogo from '@/components/ui/FrameGuessrLogo'
-import { DataConflict, SyncDecision, gameStorage } from '@/lib/gameStorage'
 
 interface GameHeaderProps {
   currentDate: string
@@ -35,41 +33,10 @@ function GameHeader({
   // Modal states
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showAboutModal, setShowAboutModal] = useState(false)
-  const [showDataMergeModal, setShowDataMergeModal] = useState(false)
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin')
-  
-  // Data merge state
-  const [dataConflicts, setDataConflicts] = useState<DataConflict[]>([])
-
-  // Listen for data merge modal events from GameStorage
-  useEffect(() => {
-    const handleShowDataMerge = (event: CustomEvent) => {
-      const { conflicts } = event.detail
-      setDataConflicts(conflicts)
-      setShowDataMergeModal(true)
-      setShowAuthModal(false) // Close auth modal if open
-    }
-
-    window.addEventListener('show-data-merge-modal', handleShowDataMerge as EventListener)
-    return () => {
-      window.removeEventListener('show-data-merge-modal', handleShowDataMerge as EventListener)
-    }
-  }, [])
 
   const handleAuthSuccess = () => {
-    // Don't close immediately - let the data merge flow handle it
-    // The auth modal will close itself or be closed by the data merge modal
-  }
-
-  const handleDataMergeDecision = (decision: SyncDecision) => {
-    gameStorage.setSyncDecision(decision)
-    setShowDataMergeModal(false)
-    
-    // Show success message based on decision
-    if (decision.type === 'import-all' || (decision.type === 'merge-selected' && decision.selectedDates && decision.selectedDates.length > 0)) {
-      // Could show a toast notification here
-      console.log('Data imported successfully!')
-    }
+    setShowAuthModal(false)
   }
 
   const handleAboutClick = () => {
@@ -265,14 +232,6 @@ function GameHeader({
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
         initialMode={authModalMode}
-      />
-
-      {/* Data Merge Modal */}
-      <DataMergeModal
-        isOpen={showDataMergeModal}
-        onClose={() => setShowDataMergeModal(false)}
-        conflicts={dataConflicts}
-        onDecision={handleDataMergeDecision}
       />
 
       {/* About Modal */}

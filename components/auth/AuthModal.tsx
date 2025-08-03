@@ -24,7 +24,6 @@ export default function AuthModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
-  const [justSignedIn, setJustSignedIn] = useState(false)
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -35,20 +34,8 @@ export default function AuthModal({
       setConfirmPassword('')
       setError('')
       setSuccessMessage('')
-      setJustSignedIn(false)
     }
   }, [isOpen, initialMode])
-
-  // Listen for data merge modal events
-  useEffect(() => {
-    const handleDataMergeShown = () => {
-      // Close this modal when data merge modal is shown
-      onClose()
-    }
-
-    window.addEventListener('show-data-merge-modal', handleDataMergeShown)
-    return () => window.removeEventListener('show-data-merge-modal', handleDataMergeShown)
-  }, [onClose])
 
   if (!isOpen) return null
 
@@ -79,16 +66,11 @@ export default function AuthModal({
         })
         if (error) throw error
         
-        setJustSignedIn(true)
         setSuccessMessage('Welcome back!')
         
-        // The auth state change listener in GameStorage will handle showing
-        // the data merge modal if needed. We don't close immediately here
-        // because the user might need to make data decisions first.
         setTimeout(() => {
-          if (!justSignedIn) return // Modal might have closed already
           onSuccess?.()
-          // Don't close here - let the data merge flow handle it
+          onClose()
         }, 1500)
         
       } else {
@@ -122,8 +104,6 @@ export default function AuthModal({
         }
       })
       if (error) throw error
-      
-      // OAuth will redirect, so we don't need to handle success here
     } catch (error: any) {
       console.error('Google auth error:', error)
       setError(error.message || 'Google sign in failed')

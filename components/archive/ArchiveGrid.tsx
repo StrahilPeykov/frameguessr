@@ -29,27 +29,21 @@ interface AvailableDate {
 }
 
 export default function ArchiveGrid() {
-  const { isAuthenticated, syncDecision } = useAuth()
+  const { isAuthenticated } = useAuth()
   const [challenges, setChallenges] = useState<DayChallenge[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [filter, setFilter] = useState<'all' | 'played' | 'won' | 'lost' | 'in-progress'>('all')
-  const itemsPerPage = 36 // 6x6 grid
+  const itemsPerPage = 36
   const today = getTodayLocal()
 
   useEffect(() => {
     loadChallenges()
-  }, [isAuthenticated, syncDecision]) // React to auth changes
+  }, [isAuthenticated])
 
-  // Listen for data change events from GameStorage
   useEffect(() => {
     const handleDataChange = () => {
       console.log('[ArchiveGrid] Data change event received, reloading challenges...')
-      loadChallenges()
-    }
-
-    const handleDataCleared = () => {
-      console.log('[ArchiveGrid] Data cleared event received, reloading challenges...')
       loadChallenges()
     }
 
@@ -58,14 +52,11 @@ export default function ArchiveGrid() {
       loadChallenges()
     }
 
-    // Listen for GameStorage events
     window.addEventListener('game-data-changed', handleDataChange)
-    window.addEventListener('auth-data-cleared', handleDataCleared)
     window.addEventListener('game-data-imported', handleDataImported)
     
     return () => {
       window.removeEventListener('game-data-changed', handleDataChange)
-      window.removeEventListener('auth-data-cleared', handleDataCleared)
       window.removeEventListener('game-data-imported', handleDataImported)
     }
   }, [])
@@ -73,7 +64,7 @@ export default function ArchiveGrid() {
   const loadChallenges = async () => {
     try {
       setLoading(true)
-      console.log(`[ArchiveGrid] Loading challenges, auth: ${isAuthenticated}, syncDecision: ${syncDecision?.type}`)
+      console.log(`[ArchiveGrid] Loading challenges, auth: ${isAuthenticated}`)
       
       const { data: availableDates, error } = await supabase
         .from('daily_movies')
@@ -99,7 +90,7 @@ export default function ArchiveGrid() {
             mediaType: movie.media_type as 'movie' | 'tv',
             attempts: gameState?.attempts || 0,
             currentHintLevel: gameState?.currentHintLevel || 1,
-            lastPlayed: gameState ? Date.now() : undefined // Could track actual last played time
+            lastPlayed: gameState ? Date.now() : undefined
           }
         } catch (error) {
           console.error(`Failed to load game state for ${movie.date}:`, error)
@@ -266,22 +257,6 @@ export default function ArchiveGrid() {
     }
   }
 
-  const getAuthIndicatorText = () => {
-    if (!isAuthenticated) return null
-    
-    switch (syncDecision?.type) {
-      case 'clean-start':
-        return '🏠 Local'
-      case 'import-all':
-      case 'keep-account-only':
-        return '☁️ Synced'
-      case 'merge-selected':
-        return '🔄 Mixed'
-      default:
-        return '☁️ Synced'
-    }
-  }
-
   if (loading) {
     return (
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-4">
@@ -340,13 +315,6 @@ export default function ArchiveGrid() {
             <span className="mx-1">/</span>
             <span>{challenges.length} total</span>
           </div>
-          
-          {/* Auth indicator */}
-          {isAuthenticated && (
-            <div className="text-xs text-blue-600 dark:text-blue-400">
-              {getAuthIndicatorText()}
-            </div>
-          )}
         </div>
       </div>
 
