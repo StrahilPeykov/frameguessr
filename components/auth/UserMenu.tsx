@@ -121,18 +121,6 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
   const userEmail = user.email || ''
   const displayName = userEmail.split('@')[0] || 'User'
 
-  const getDataStatusIndicator = () => {
-    if (loadingData) {
-      return <RefreshCw className="w-3 h-3 animate-spin text-amber-500" />
-    }
-    
-    if (dataSummary?.mergeableGames > 0) {
-      return <AlertCircle className="w-3 h-3 text-orange-500" />
-    }
-    
-    return <CheckCircle className="w-3 h-3 text-green-500" />
-  }
-
   return (
     <>
       <div className="relative" ref={menuRef}>
@@ -141,11 +129,8 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
           disabled={signingOut}
           className="flex items-center gap-2 px-3 py-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors text-sm disabled:opacity-50"
         >
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center relative">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
             <User className="w-4 h-4 text-white" />
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-white dark:bg-stone-900 rounded-full flex items-center justify-center">
-              {getDataStatusIndicator()}
-            </div>
           </div>
           <span className="hidden sm:block text-stone-700 dark:text-stone-200 font-medium">
             {displayName}
