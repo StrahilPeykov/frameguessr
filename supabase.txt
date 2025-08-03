@@ -8,7 +8,6 @@ CREATE TABLE public.daily_movies (
   title character varying NOT NULL,
   year integer,
   image_url text NOT NULL,
-  hints jsonb,
   id integer NOT NULL DEFAULT nextval('daily_movies_id_seq'::regclass),
   created_at timestamp with time zone DEFAULT now(),
   deezer_track_id bigint,

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Sun, Moon, BarChart3, Share2, User, LogOut, Check, Archive, HelpCircle, RefreshCw, AlertTriangle } from 'lucide-react'
+import { X, Sun, Moon, BarChart3, Share2, User, LogOut, Check, Archive, HelpCircle, RefreshCw, AlertTriangle, Settings } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
@@ -19,6 +19,7 @@ interface MobileMenuProps {
   onAboutClick: () => void
   onSignInClick: () => void
   onSignUpClick: () => void
+  onSettingsClick?: () => void
 }
 
 export default function MobileMenu({
@@ -34,20 +35,42 @@ export default function MobileMenu({
   onShareClick,
   onAboutClick,
   onSignInClick,
-  onSignUpClick
+  onSignUpClick,
+  onSettingsClick
 }: MobileMenuProps) {
   const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
   const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated) {
       supabase.auth.getUser().then(({ data: { user } }) => {
         setUser(user)
+        if (user) {
+          loadUserProfile(user.id)
+        }
       })
     } else {
       setUser(null)
+      setProfile(null)
     }
   }, [isAuthenticated])
+
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, display_name, avatar_url')
+        .eq('id', userId)
+        .single()
+
+      if (!error && data) {
+        setProfile(data)
+      }
+    } catch (error) {
+      console.error('Failed to load user profile:', error)
+    }
+  }
 
   // Handle body scroll locking
   useEffect(() => {
@@ -100,8 +123,24 @@ export default function MobileMenu({
     }
   }
 
+  const handleSettingsClickWrapper = () => {
+    onSettingsClick?.()
+    onClose()
+  }
+
   const userEmail = user?.email || ''
-  const displayName = userEmail.split('@')[0] || 'User'
+  const displayName = profile?.display_name || profile?.username || userEmail.split('@')[0] || 'User'
+  const username = profile?.username || null
+  const avatarUrl = profile?.avatar_url || null
+
+  // Get user initials for avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join('')
+  }
 
   // Enhanced sync status display
   const getSyncStatusDisplay = () => {
@@ -164,13 +203,26 @@ export default function MobileMenu({
         {isAuthenticated && user && (
           <div className="p-4 border-b border-stone-200 dark:border-stone-800">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-sm font-semibold">
+                {avatarUrl ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt={displayName}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  getInitials(displayName)
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-stone-900 dark:text-stone-100 truncate">
+                <p className="font-medium text-stone-900 dark:text-stone-100 truncate text-sm">
                   {displayName}
                 </p>
+                {username && username !== displayName && (
+                  <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
+                    @{username}
+                  </p>
+                )}
                 <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
                   {userEmail}
                 </p>
@@ -214,24 +266,6 @@ export default function MobileMenu({
             </span>
           </button>
 
-          {/*
-          //Theme Toggle
-          {/* Theme Toggle
-          <button
-            onClick={onThemeToggle}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors text-left"
-          >
-            {theme === 'dark' ? (
-              <Sun className="w-5 h-5 text-amber-600" />
-            ) : (
-              <Moon className="w-5 h-5 text-amber-600" />
-            )}
-            <span className="font-medium text-stone-700 dark:text-stone-200">
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </span>
-          </button>
-          */}
-
           {/* Statistics */}
           <button
             onClick={onStatsClick}
@@ -242,6 +276,19 @@ export default function MobileMenu({
               Statistics
             </span>
           </button>
+
+          {/* Profile Settings - Only show if authenticated */}
+          {isAuthenticated && onSettingsClick && (
+            <button
+              onClick={handleSettingsClickWrapper}
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors text-left"
+            >
+              <Settings className="w-5 h-5 text-amber-600" />
+              <span className="font-medium text-stone-700 dark:text-stone-200">
+                Profile Settings
+              </span>
+            </button>
+          )}
 
           {/* Share (only when game is completed) */}
           {gameCompleted && (
