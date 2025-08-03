@@ -403,7 +403,7 @@ export default function ArchiveGrid() {
                       )}
                       {challenge.status === 'completed-lost' && (
                         <span className="text-xs bg-red-600 text-white px-2 py-1 rounded-full">
-                          Try Again
+                          View Result
                         </span>
                       )}
                     </div>
