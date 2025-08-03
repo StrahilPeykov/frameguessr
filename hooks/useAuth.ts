@@ -1,4 +1,3 @@
-// hooks/useAuth.ts - Updated with data sync integration
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { gameStorage } from '@/lib/gameStorage'

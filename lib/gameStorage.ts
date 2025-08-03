@@ -508,7 +508,7 @@ export class GameStorage {
     if (this.user) {
       const { data: cloudData } = await supabase
         .from('user_progress')
-        .select('id, completed')
+        .select('id, completed, attempts')
         .eq('user_id', this.user.id)
       cloudGames = cloudData?.filter(item => item.completed || item.attempts > 0).length || 0
     }

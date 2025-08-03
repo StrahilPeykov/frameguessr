@@ -1,4 +1,3 @@
-// hooks/useGameState.ts - Enhanced with better sync logic and in-progress handling
 import { useState, useEffect } from 'react'
 import { GameState, Guess, SearchResult, Attempt, getGameStatus, isWorthSaving } from '@/types'
 import { gameStorage } from '@/lib/gameStorage'

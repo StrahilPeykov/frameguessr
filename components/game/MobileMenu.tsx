@@ -1,4 +1,3 @@
-// components/game/MobileMenu.tsx - Enhanced with sync status display
 'use client'
 
 import { useState, useEffect } from 'react'

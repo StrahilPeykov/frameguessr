@@ -1,4 +1,3 @@
-// components/auth/DataMergeModal.tsx
 'use client'
 
 import { useState, useEffect } from 'react'

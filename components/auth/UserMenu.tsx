@@ -1,4 +1,3 @@
-// components/auth/UserMenu.tsx - Enhanced with data sync awareness
 'use client'
 
 import { useState, useEffect, useRef } from 'react'

@@ -1,4 +1,3 @@
-// components/game/GameProgress.tsx - Enhanced with in-progress game awareness
 'use client'
 
 import { Trophy, Clapperboard, Clock, RotateCcw, Target } from 'lucide-react'

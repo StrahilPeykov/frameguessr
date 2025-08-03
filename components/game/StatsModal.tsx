@@ -1,4 +1,3 @@
-// components/game/StatsModal.tsx
 'use client'
 
 import { useState, useEffect } from 'react'

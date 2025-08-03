@@ -1,4 +1,3 @@
-// components/auth/AuthModal.tsx - Updated with data import flow
 'use client'
 
 import { useState, useEffect } from 'react'

@@ -1,4 +1,3 @@
-// components/archive/ArchiveGrid.tsx - Updated with in-progress states
 'use client'
 
 import { useState, useEffect } from 'react'

@@ -1,4 +1,3 @@
-// contexts/GameContext.tsx - Updated with reactive auth
 'use client'
 
 import { createContext, useContext, ReactNode } from 'react'

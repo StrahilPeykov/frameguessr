@@ -1,4 +1,3 @@
-// components/game/GameHeader.tsx - Updated with data merge integration
 'use client'
 
 import Link from 'next/link'
