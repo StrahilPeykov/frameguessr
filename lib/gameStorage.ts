@@ -1,13 +1,12 @@
 import { GameState, Guess, Attempt } from '@/types'
-import { 
-  getValidatedGameState, 
-  hasProgress, 
+import {
+  getValidatedGameState,
+  hasProgress,
   hasMeaningfulProgress,
-  mergeGameStates,
-  getGameStatus,
-  createDefaultGameState
+  getGameStatus
 } from '@/utils/gameStateValidation'
 import { supabase } from '@/lib/supabase'
+import type { User } from '@supabase/supabase-js'
 
 export interface UserProgressRow {
   id?: number
@@ -28,6 +27,7 @@ export interface UserProgressRow {
 export interface LocalGameData extends GameState {
   lastModified: number
   version?: number
+  userId?: string | null
 }
 
 export interface DataConflict {
@@ -44,7 +44,7 @@ export interface SyncDecision {
 
 export class GameStorage {
   private static instance: GameStorage
-  private user: any = null
+    private user: User | null = null
   
   static getInstance(): GameStorage {
     if (!GameStorage.instance) {
@@ -133,7 +133,8 @@ export class GameStorage {
         return {
           ...parsed,
           lastModified: Date.now() - 30 * 24 * 60 * 60 * 1000,
-          version: 1
+          version: 1,
+          userId: parsed.userId ?? null
         }
       }
       
@@ -149,11 +150,15 @@ export class GameStorage {
             timestamp: guess.timestamp,
           }))
           parsed.version = 2
-          
+
           this.saveToLocalStorage(date, parsed)
         }
       }
-      
+
+      if (parsed.userId === undefined) {
+        parsed.userId = null
+      }
+
       return parsed as LocalGameData
     } catch (error) {
       console.error('Failed to load local data with metadata:', error)
@@ -167,11 +172,11 @@ export class GameStorage {
     let allAttempts = row.all_attempts || []
     
     if (allAttempts.length === 0 && guesses.length > 0) {
-      allAttempts = guesses.map((guess: any) => ({
-        id: guess.id,
-        type: 'guess' as const,
-        correct: guess.correct,
-        title: guess.title,
+        allAttempts = guesses.map((guess: Guess) => ({
+          id: guess.id,
+          type: 'guess' as const,
+          correct: guess.correct,
+          title: guess.title,
         tmdbId: guess.tmdbId,
         mediaType: guess.mediaType,
         timestamp: guess.timestamp,
@@ -199,6 +204,8 @@ export class GameStorage {
       const localData = this.loadFromLocalStorage(date)
       if (localData && hasMeaningfulProgress(localData)) {
         mergePromises.push(this.saveToDatabase(date, localData).then(() => {
+          // Update local storage to mark data as belonging to this user
+          this.saveToLocalStorage(date, localData)
           console.log(`Merged data for ${date}`)
         }).catch(error => {
           console.error(`Failed to merge data for ${date}:`, error)
@@ -235,17 +242,29 @@ export class GameStorage {
       } catch (error) {
         console.warn('Failed to load from database, trying local:', error)
       }
+
+      const localData = this.getLocalDataWithMetadata(date)
+      if (localData && localData.userId === this.user.id) {
+        const { lastModified: _lm, version: _v, userId: _uid, ...gameState } = localData
+        return getValidatedGameState(gameState)
+      }
+
+      return null
     }
-    
+
     return this.loadFromLocalStorage(date)
   }
 
-  private saveToLocalStorage(date: string, state: GameState): void {
+  private saveToLocalStorage(date: string, state: GameState | LocalGameData): void {
     try {
       const localData: LocalGameData = {
         ...state,
         lastModified: Date.now(),
-        version: 2
+        version: 2,
+        userId:
+          (state as LocalGameData).userId !== undefined
+            ? (state as LocalGameData).userId
+            : this.user?.id || null
       }
       localStorage.setItem(`frameguessr-${date}`, JSON.stringify(localData))
     } catch (error) {
@@ -259,9 +278,9 @@ export class GameStorage {
       if (!saved) return null
       
       const data = JSON.parse(saved)
-      
-      const { lastModified, version, ...gameState } = data
-      
+
+      const { lastModified: _lm, version: _v, userId: _uid, ...gameState } = data
+
       return getValidatedGameState(gameState)
     } catch (error) {
       console.error('Failed to load from localStorage:', error)
