@@ -6,8 +6,9 @@ import { Trophy, X, Calendar, ChevronLeft, ChevronRight, Film, Tv, Lock, Clock, 
 import { gameStorage } from '@/lib/gameStorage'
 import { supabase } from '@/lib/supabase'
 import { getTodayLocal, formatDateLocal } from '@/utils/dateUtils'
-import { GameStatus, getGameStatus, hasProgress } from '@/types'
+import { getGameStatus, hasProgress } from '@/utils/gameStateValidation'
 import { useAuth } from '@/hooks/useAuth'
+import { GameStatus } from '@/types'
 
 interface DayChallenge {
   date: string
@@ -265,6 +266,22 @@ export default function ArchiveGrid() {
     }
   }
 
+  const getAuthIndicatorText = () => {
+    if (!isAuthenticated) return null
+    
+    switch (syncDecision?.type) {
+      case 'clean-start':
+        return '🏠 Local'
+      case 'import-all':
+      case 'keep-account-only':
+        return '☁️ Synced'
+      case 'merge-selected':
+        return '🔄 Mixed'
+      default:
+        return '☁️ Synced'
+    }
+  }
+
   if (loading) {
     return (
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-4">
@@ -327,7 +344,7 @@ export default function ArchiveGrid() {
           {/* Auth indicator */}
           {isAuthenticated && (
             <div className="text-xs text-blue-600 dark:text-blue-400">
-              {syncDecision?.type === 'clean-start' ? '🏠 Local' : '☁️ Synced'}
+              {getAuthIndicatorText()}
             </div>
           )}
         </div>

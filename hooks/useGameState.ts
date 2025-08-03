@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react'
-import { GameState, Guess, SearchResult, Attempt, getGameStatus, isWorthSaving } from '@/types'
-import { validateGameState, getValidatedGameState } from '@/utils/gameStateValidation'
+import { GameState, Guess, SearchResult } from '@/types'
+import { 
+  getValidatedGameState,
+  createDefaultGameState,
+  createStateAfterGuess,
+  createStateAfterSkip,
+  getGameStatus,
+  isWorthSaving,
+  isGameCompleted,
+  hasProgress
+} from '@/utils/gameStateValidation'
 import { gameStorage } from '@/lib/gameStorage'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -11,17 +20,9 @@ interface UseGameStateOptions {
 
 export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptions) {
   const { isAuthenticated, syncDecision } = useAuth()
-  const [gameState, setGameState] = useState<GameState>({
-    currentDate: initialDate,
-    attempts: 0,
-    maxAttempts,
-    allAttempts: [],
-    guesses: [],
-    completed: false,
-    won: false,
-    currentHintLevel: 1,
-  })
-
+  const [gameState, setGameState] = useState<GameState>(() => 
+    createDefaultGameState(initialDate)
+  )
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle')
   const [isLoading, setIsLoading] = useState(true)
 
@@ -34,10 +35,11 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
         
         const savedState = await gameStorage.loadGameState(initialDate)
         if (savedState) {
-          // GameStorage already returns validated data, but ensure it matches our date
+          // GameStorage already returns validated data
           const validatedState = getValidatedGameState({
             ...savedState,
             currentDate: initialDate, // Ensure date matches
+            maxAttempts // Ensure maxAttempts is set
           })
           
           console.log(`[GameState] Loaded validated state:`, validatedState)
@@ -45,31 +47,12 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
         } else {
           // No saved state, start fresh
           console.log(`[GameState] No saved state, starting fresh`)
-          const freshState = {
-            currentDate: initialDate,
-            attempts: 0,
-            maxAttempts,
-            allAttempts: [],
-            guesses: [],
-            completed: false,
-            won: false,
-            currentHintLevel: 1,
-          }
-          setGameState(freshState)
+          setGameState(createDefaultGameState(initialDate))
         }
       } catch (error) {
         console.error('Failed to load game state:', error)
         // Fall back to fresh state on error
-        setGameState({
-          currentDate: initialDate,
-          attempts: 0,
-          maxAttempts,
-          allAttempts: [],
-          guesses: [],
-          completed: false,
-          won: false,
-          currentHintLevel: 1,
-        })
+        setGameState(createDefaultGameState(initialDate))
       } finally {
         setIsLoading(false)
       }
@@ -80,42 +63,46 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
 
   // Listen for data changes from GameStorage
   useEffect(() => {
-    const handleDataChange = () => {
-      console.log('[GameState] Data change event received, reloading...')
-      // Reload the current game state
-      const loadGameState = async () => {
-        try {
-          const savedState = await gameStorage.loadGameState(initialDate)
-          if (savedState) {
-            const validatedState = getValidatedGameState(savedState)
-            setGameState(validatedState)
-          } else {
-            // Reset to fresh state if no data
-            setGameState({
-              currentDate: initialDate,
-              attempts: 0,
-              maxAttempts,
-              allAttempts: [],
-              guesses: [],
-              completed: false,
-              won: false,
-              currentHintLevel: 1,
-            })
+    const handleDataChange = (event: CustomEvent) => {
+      const { date } = event.detail
+      if (date === initialDate) {
+        console.log('[GameState] Data change event received for current date, reloading...')
+        // Reload the current game state
+        const loadGameState = async () => {
+          try {
+            const savedState = await gameStorage.loadGameState(initialDate)
+            if (savedState) {
+              const validatedState = getValidatedGameState({
+                ...savedState,
+                maxAttempts
+              })
+              setGameState(validatedState)
+            } else {
+              // Reset to fresh state if no data
+              setGameState(createDefaultGameState(initialDate))
+            }
+          } catch (error) {
+            console.error('Failed to reload game state after data change:', error)
           }
-        } catch (error) {
-          console.error('Failed to reload game state after data change:', error)
         }
+        loadGameState()
       }
-      loadGameState()
+    }
+
+    const handleDataCleared = () => {
+      console.log('[GameState] Data cleared event received, resetting...')
+      setGameState(createDefaultGameState(initialDate))
     }
 
     // Listen for custom events from GameStorage
-    window.addEventListener('game-data-changed', handleDataChange)
-    window.addEventListener('auth-data-cleared', handleDataChange)
+    window.addEventListener('game-data-changed', handleDataChange as EventListener)
+    window.addEventListener('auth-data-cleared', handleDataCleared)
+    window.addEventListener('game-data-imported', handleDataChange as EventListener)
     
     return () => {
-      window.removeEventListener('game-data-changed', handleDataChange)
-      window.removeEventListener('auth-data-cleared', handleDataChange)
+      window.removeEventListener('game-data-changed', handleDataChange as EventListener)
+      window.removeEventListener('auth-data-cleared', handleDataCleared)
+      window.removeEventListener('game-data-imported', handleDataChange as EventListener)
     }
   }, [initialDate, maxAttempts])
 
@@ -133,20 +120,11 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
       try {
         setSyncStatus('syncing')
         
-        // Validate before saving (defensive programming)
-        const validationResult = validateGameState(gameState)
-        const stateToSave = validationResult.validatedState
-
-        if (validationResult.wasFixed) {
-          console.log(`[GameState] Fixed state before saving:`, validationResult.issues)
-          // Update our local state with the fixed version
-          setGameState(stateToSave)
-        }
-
-        await gameStorage.saveGameState(initialDate, stateToSave)
+        // GameStorage will handle validation internally
+        await gameStorage.saveGameState(initialDate, gameState)
         
         // Show sync confirmation only for significant milestones
-        if (gameState.completed && gameState.won) {
+        if (isGameCompleted(gameState) && gameState.won) {
           setSyncStatus('synced')
           setTimeout(() => setSyncStatus('idle'), 2000)
         } else {
@@ -179,27 +157,9 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
       timestamp: Date.now(),
     }
 
-    const newAttempt: Attempt = {
-      id: `attempt-${Date.now()}`,
-      type: 'guess',
-      correct: isCorrect,
-      title: result.title,
-      tmdbId: result.id,
-      mediaType: result.mediaType,
-      timestamp: Date.now(),
-    }
-
-    // Create new state with the guess/attempt
-    const updatedState: GameState = {
-      ...gameState,
-      allAttempts: [...gameState.allAttempts, newAttempt],
-      guesses: [...gameState.guesses, newGuess],
-    }
-
-    // Use centralized validation to determine the final state
-    const validatedState = getValidatedGameState(updatedState)
-
-    setGameState(validatedState)
+    // Use validation utility to create new state
+    const newGameState = createStateAfterGuess(gameState, newGuess, isCorrect)
+    setGameState(newGameState)
 
     // Log guess to API for analytics (no UI feedback needed)
     try {
@@ -208,7 +168,7 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           guess: newGuess, 
-          gameState: validatedState
+          gameState: newGameState
         }),
       })
     } catch (error) {
@@ -216,7 +176,7 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
       // Don't show error to user for analytics failure
     }
 
-    return { isCorrect, newGameState: validatedState }
+    return { isCorrect, newGameState }
   }
 
   const skipHint = () => {
@@ -224,39 +184,14 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
       return
     }
 
-    const skipAttempt: Attempt = {
-      id: `skip-${Date.now()}`,
-      type: 'skip',
-      correct: false,
-      timestamp: Date.now(),
-    }
-
-    // Create new state with the skip attempt
-    const updatedState: GameState = {
-      ...gameState,
-      allAttempts: [...gameState.allAttempts, skipAttempt],
-    }
-
-    // Use centralized validation to determine the final state
-    const validatedState = getValidatedGameState(updatedState)
-
-    setGameState(validatedState)
+    // Use validation utility to create new state
+    const newGameState = createStateAfterSkip(gameState)
+    setGameState(newGameState)
   }
 
   const resetGame = (date?: string) => {
     const targetDate = date || initialDate
-    const freshState: GameState = {
-      currentDate: targetDate,
-      attempts: 0,
-      maxAttempts,
-      allAttempts: [],
-      guesses: [],
-      completed: false,
-      won: false,
-      currentHintLevel: 1,
-    }
-    
-    setGameState(freshState)
+    setGameState(createDefaultGameState(targetDate))
     setSyncStatus('idle')
   }
 

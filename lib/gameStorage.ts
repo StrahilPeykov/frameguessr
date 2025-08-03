@@ -1,5 +1,12 @@
-import { GameState, Guess, getGameStatus, hasProgress } from '@/types'
-import { validateGameState, getValidatedGameState } from '@/utils/gameStateValidation'
+import { GameState, Guess } from '@/types'
+import { 
+  getValidatedGameState, 
+  hasProgress, 
+  hasMeaningfulProgress,
+  mergeGameStates,
+  getGameStatus,
+  createDefaultGameState
+} from '@/utils/gameStateValidation'
 import { supabase } from '@/lib/supabase'
 
 export interface UserProgressRow {
@@ -96,6 +103,8 @@ export class GameStorage {
     if (this.syncDecision?.clearLocalOnLogout) {
       // Clear local storage as promised when they chose to import data
       this.clearAllLocalData()
+      // Dispatch event to notify components
+      window.dispatchEvent(new Event('auth-data-cleared'))
     }
     // Clear sync decision on logout
     this.syncDecision = null
@@ -109,6 +118,11 @@ export class GameStorage {
       localStorage.setItem('frameguessr-sync-decision', JSON.stringify(decision))
     }
     this.executeSyncDecision(decision)
+    
+    // Dispatch event for components to react
+    window.dispatchEvent(new CustomEvent('sync-decision-changed', {
+      detail: { decision }
+    }))
   }
 
   getSyncDecision(): SyncDecision | null {
@@ -205,9 +219,14 @@ export class GameStorage {
   }
 
   private shouldPreferLocal(localData: LocalGameData, cloudData: GameState): boolean {
+    // Use validation utils for consistent status checking
+    const localStatus = getGameStatus(localData)
+    const cloudStatus = getGameStatus(cloudData)
+    
+    // Prefer local if it's won and cloud isn't
+    if (localStatus === 'completed-won' && cloudStatus !== 'completed-won') return true
+    
     // Prefer local if it has more progress
-    if (localData.completed && !cloudData.completed) return true
-    if (localData.won && !cloudData.won) return true
     if (localData.attempts > cloudData.attempts) return true
     if (localData.currentHintLevel > cloudData.currentHintLevel) return true
     
@@ -220,9 +239,14 @@ export class GameStorage {
   }
 
   private shouldPreferCloud(localData: LocalGameData, cloudData: GameState): boolean {
+    // Use validation utils for consistent status checking
+    const localStatus = getGameStatus(localData)
+    const cloudStatus = getGameStatus(cloudData)
+    
+    // Prefer cloud if it's won and local isn't
+    if (cloudStatus === 'completed-won' && localStatus !== 'completed-won') return true
+    
     // Prefer cloud if it has more progress
-    if (cloudData.completed && !localData.completed) return true
-    if (cloudData.won && !localData.won) return true
     if (cloudData.attempts > localData.attempts) return true
     if (cloudData.currentHintLevel > localData.currentHintLevel) return true
     
@@ -230,11 +254,17 @@ export class GameStorage {
   }
 
   private hasSignificantDifference(localData: GameState, cloudData: GameState): boolean {
-    return localData.attempts !== cloudData.attempts ||
-           localData.completed !== cloudData.completed ||
-           localData.won !== cloudData.won ||
-           localData.currentHintLevel !== cloudData.currentHintLevel ||
-           localData.guesses.length !== cloudData.guesses.length
+    // Use validation to ensure both states are normalized before comparison
+    const validatedLocal = getValidatedGameState(localData)
+    const validatedCloud = getValidatedGameState(cloudData)
+    
+    return (
+      validatedLocal.attempts !== validatedCloud.attempts ||
+      validatedLocal.completed !== validatedCloud.completed ||
+      validatedLocal.won !== validatedCloud.won ||
+      validatedLocal.currentHintLevel !== validatedCloud.currentHintLevel ||
+      validatedLocal.guesses.length !== validatedCloud.guesses.length
+    )
   }
 
   private getAllLocalDates(): string[] {
@@ -274,7 +304,7 @@ export class GameStorage {
     }
   }
 
-  // Enhanced validation for cloud data conversion
+  // Use validation utils instead of custom conversion
   private cloudRowToGameState(row: UserProgressRow, date: string): GameState {
     const guesses = row.guesses || []
     const allAttempts = guesses.map((guess: any) => ({
@@ -287,35 +317,26 @@ export class GameStorage {
       timestamp: guess.timestamp,
     }))
 
-    // Apply the same validation logic as in useGameState
-    const actualAttempts = Math.max(row.attempts, allAttempts.length)
-    const hasWinningGuess = Boolean(allAttempts.some(attempt => attempt.correct) || row.won)
-    const shouldBeCompleted = hasWinningGuess || actualAttempts >= 3
-
-    const baseState: GameState = {
+    const rawState: GameState = {
       currentDate: date,
-      attempts: actualAttempts,
+      attempts: row.attempts || 0,
       maxAttempts: 3,
       guesses: guesses,
       allAttempts: allAttempts,
-      completed: shouldBeCompleted, // Use calculated value
-      won: hasWinningGuess, // Use calculated value
-      currentHintLevel: row.current_hint_level || (shouldBeCompleted ? 3 : Math.min(actualAttempts + 1, 3))
+      completed: row.completed || false,
+      won: row.won || false,
+      currentHintLevel: row.current_hint_level || 1
     }
 
-    // Log if we're fixing cloud data
-    if (row.completed !== shouldBeCompleted || row.won !== hasWinningGuess) {
-      console.log(`[GameStorage] Fixed cloud data for ${date}: completed ${row.completed}->${shouldBeCompleted}, won ${row.won}->${hasWinningGuess}`)
-    }
-
-    return baseState
+    // Use validation to ensure consistent state
+    return getValidatedGameState(rawState)
   }
 
   private async importAllLocalData() {
     const localDates = this.getAllLocalDates()
     const datesToImport = localDates.filter(date => {
       const localData = this.loadFromLocalStorage(date)
-      return localData && hasProgress(localData)
+      return localData && hasMeaningfulProgress(localData)
     })
     
     await this.importSelectedDates(datesToImport)
@@ -326,7 +347,7 @@ export class GameStorage {
     
     for (const date of dates) {
       const localData = this.loadFromLocalStorage(date)
-      if (localData && hasProgress(localData)) {
+      if (localData && hasMeaningfulProgress(localData)) {
         importPromises.push(this.saveToDatabase(date, localData).then(() => {
           // Mark as synced in local storage
           const localDataFull = this.getLocalDataWithMetadata(date)
@@ -341,6 +362,9 @@ export class GameStorage {
     }
     
     await Promise.all(importPromises)
+    
+    // Dispatch event to notify components
+    window.dispatchEvent(new Event('game-data-imported'))
   }
 
   private clearAllLocalData() {
@@ -351,13 +375,21 @@ export class GameStorage {
   }
 
   async saveGameState(date: string, state: GameState): Promise<void> {
+    // Validate state before saving
+    const validatedState = getValidatedGameState(state)
+    
     // Always save to local storage
-    this.saveToLocalStorage(date, state)
+    this.saveToLocalStorage(date, validatedState)
     
     // Only save to database if user is logged in and decision allows it
     if (this.user && this.shouldSyncToCloud()) {
-      await this.saveToDatabaseQuietly(date, state)
+      await this.saveToDatabaseQuietly(date, validatedState)
     }
+    
+    // Dispatch event to notify components
+    window.dispatchEvent(new CustomEvent('game-data-changed', {
+      detail: { date, state: validatedState }
+    }))
   }
 
   private shouldSyncToCloud(): boolean {
@@ -413,49 +445,11 @@ export class GameStorage {
       // Extract game state without metadata
       const { createdWhileLoggedOut, lastModified, syncStatus, ...gameState } = data
       
-      // Apply validation to ensure old data is fixed
-      const baseState: GameState = {
-        currentDate: date,
-        attempts: gameState.attempts || 0,
-        maxAttempts: gameState.maxAttempts || 3,
-        guesses: gameState.guesses || [],
-        allAttempts: gameState.allAttempts || gameState.guesses || [],
-        completed: gameState.completed || false,
-        won: gameState.won || false,
-        currentHintLevel: gameState.currentHintLevel || 1,
-        ...gameState
-      }
-
-      // Validate the state before returning
-      return this.validateGameState(baseState)
+      // Use validation utils to ensure valid state
+      return getValidatedGameState(gameState)
     } catch (error) {
       console.error('Failed to load from localStorage:', error)
       return null
-    }
-  }
-
-  // Centralized validation method
-  private validateGameState(state: GameState): GameState {
-    const actualAttempts = Math.max(
-      state.attempts || 0,
-      state.allAttempts?.length || 0,
-      state.guesses?.length || 0
-    )
-
-    const hasWinningGuess = Boolean(
-      state.won || 
-      state.allAttempts?.some(attempt => attempt.type === 'guess' && attempt.correct) ||
-      state.guesses?.some(guess => guess.correct)
-    )
-
-    const shouldBeCompleted = hasWinningGuess || actualAttempts >= (state.maxAttempts || 3)
-
-    return {
-      ...state,
-      attempts: actualAttempts,
-      completed: shouldBeCompleted,
-      won: hasWinningGuess,
-      currentHintLevel: state.currentHintLevel || (shouldBeCompleted ? 3 : Math.min(actualAttempts + 1, 3))
     }
   }
 
@@ -470,14 +464,17 @@ export class GameStorage {
   private async saveToDatabase(date: string, state: GameState): Promise<void> {
     if (!this.user) return
 
+    // Ensure state is validated
+    const validatedState = getValidatedGameState(state)
+
     const progressData: Omit<UserProgressRow, 'id' | 'created_at'> = {
       user_id: this.user.id,
       date,
-      attempts: state.attempts,
-      completed: state.completed,
-      guesses: state.guesses,
-      won: state.won,
-      current_hint_level: state.currentHintLevel
+      attempts: validatedState.attempts,
+      completed: validatedState.completed,
+      guesses: validatedState.guesses,
+      won: validatedState.won,
+      current_hint_level: validatedState.currentHintLevel
     }
 
     const { error } = await supabase
@@ -526,9 +523,10 @@ export class GameStorage {
     localDates.forEach(date => {
       const data = this.loadFromLocalStorage(date)
       if (data && hasProgress(data)) {
-        if (data.completed) {
+        const status = getGameStatus(data)
+        if (status === 'completed-won' || status === 'completed-lost') {
           localCompleted++
-        } else {
+        } else if (status === 'in-progress') {
           localInProgress++
         }
       }
@@ -576,43 +574,12 @@ export class GameStorage {
 
       if (error) throw error
 
-      const completedGames = data.filter(game => game.completed)
-      const gamesPlayed = completedGames.length
-      const gamesWon = completedGames.filter(game => game.won).length
-      const gamesInProgress = data.filter(game => !game.completed && game.attempts > 0).length
-      const winPercentage = gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0
+      const validatedGames = data.map(row => ({
+        date: row.date,
+        state: this.cloudRowToGameState(row, row.date)
+      }))
 
-      // Calculate current streak
-      let currentStreak = 0
-      for (let i = completedGames.length - 1; i >= 0; i--) {
-        if (completedGames[i].won) {
-          currentStreak++
-        } else {
-          break
-        }
-      }
-
-      const wonGames = completedGames.filter(game => game.won)
-      const averageAttempts = wonGames.length > 0 
-        ? wonGames.reduce((sum, game) => sum + game.attempts, 0) / wonGames.length 
-        : 0
-
-      const guessDistribution = [0, 0, 0]
-      wonGames.forEach(game => {
-        if (game.attempts >= 1 && game.attempts <= 3) {
-          guessDistribution[game.attempts - 1]++
-        }
-      })
-
-      return {
-        gamesPlayed,
-        gamesWon,
-        winPercentage,
-        currentStreak,
-        averageAttempts: Math.round(averageAttempts * 10) / 10,
-        guessDistribution,
-        gamesInProgress
-      }
+      return this.calculateStats(validatedGames)
     } catch (error) {
       console.error('Failed to get database stats:', error)
       return this.getLocalStorageStats()
@@ -620,45 +587,48 @@ export class GameStorage {
   }
 
   private getLocalStorageStats() {
-    const allGames: LocalGameData[] = []
+    const allGames: { date: string; state: GameState }[] = []
     
     for (const date of this.getAllLocalDates()) {
-      const gameData = this.getLocalDataWithMetadata(date)
-      if (gameData && hasProgress(gameData)) {
-        allGames.push(gameData)
+      const gameState = this.loadFromLocalStorage(date)
+      if (gameState && hasProgress(gameState)) {
+        allGames.push({ date, state: gameState })
       }
     }
 
-    const completedGames = allGames.filter(g => g.completed)
-    const gamesPlayed = completedGames.length
-    const gamesWon = completedGames.filter(g => g.won).length
-    const gamesInProgress = allGames.filter(g => !g.completed).length
-    const winPercentage = gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0
+    return this.calculateStats(allGames)
+  }
 
-    const distribution = [0, 0, 0]
-    completedGames.forEach(game => {
-      if (game.won && game.attempts > 0 && game.attempts <= 3) {
-        distribution[game.attempts - 1]++
-      }
-    })
+  private calculateStats(games: { date: string; state: GameState }[]) {
+    const completedGames = games.filter(g => g.state.completed)
+    const gamesPlayed = completedGames.length
+    const gamesWon = completedGames.filter(g => g.state.won).length
+    const gamesInProgress = games.filter(g => !g.state.completed).length
+    const winPercentage = gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0
 
     // Calculate current streak
     let currentStreak = 0
-    const sortedGames = completedGames.sort((a, b) => 
-      a.currentDate.localeCompare(b.currentDate)
-    )
+    const sortedGames = completedGames.sort((a, b) => a.date.localeCompare(b.date))
     for (let i = sortedGames.length - 1; i >= 0; i--) {
-      if (sortedGames[i].won) {
+      if (sortedGames[i].state.won) {
         currentStreak++
       } else {
         break
       }
     }
 
-    const wonGames = completedGames.filter(g => g.won)
+    // Calculate average attempts and distribution
+    const wonGames = completedGames.filter(g => g.state.won)
     const averageAttempts = wonGames.length > 0 
-      ? wonGames.reduce((sum, game) => sum + game.attempts, 0) / wonGames.length 
+      ? wonGames.reduce((sum, game) => sum + game.state.attempts, 0) / wonGames.length 
       : 0
+
+    const guessDistribution = [0, 0, 0]
+    wonGames.forEach(game => {
+      if (game.state.attempts >= 1 && game.state.attempts <= 3) {
+        guessDistribution[game.state.attempts - 1]++
+      }
+    })
 
     return {
       gamesPlayed,
@@ -666,7 +636,7 @@ export class GameStorage {
       winPercentage,
       currentStreak,
       averageAttempts: Math.round(averageAttempts * 10) / 10,
-      guessDistribution: distribution,
+      guessDistribution,
       gamesInProgress
     }
   }
