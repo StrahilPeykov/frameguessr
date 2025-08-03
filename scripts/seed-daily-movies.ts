@@ -191,6 +191,7 @@ const SEED_MOVIES: SeedMovie[] = [
 // TMDB Client (still needed for getting movie details and hints)
 class TMDBClient {
   private accessToken: string
+  private cache = new Map<string, any>()
 
   constructor() {
     this.accessToken = process.env.TMDB_ACCESS_TOKEN!
@@ -199,34 +200,52 @@ class TMDBClient {
     }
   }
 
-  async getMovieDetails(movieId: number) {
-    const response = await fetch(
-      `https://api.themoviedb.org/3/movie/${movieId}?append_to_response=credits`,
-      {
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          'Content-Type': 'application/json',
-        },
+  private async fetchWithRetry(url: string, retries = 3): Promise<any> {
+    const cacheKey = url
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey)
+    }
+
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            const retryAfter = response.headers.get('retry-after') || '1'
+            console.log(`    Rate limited, waiting ${retryAfter}s...`)
+            await new Promise(resolve => setTimeout(resolve, parseInt(retryAfter) * 1000))
+            continue
+          }
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        this.cache.set(cacheKey, data)
+        return data
+      } catch (error) {
+        if (attempt === retries - 1) throw error
+        console.log(`    Retrying TMDB request (${attempt + 1}/${retries})...`)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
       }
+    }
+  }
+
+  async getMovieDetails(movieId: number) {
+    return this.fetchWithRetry(
+      `https://api.themoviedb.org/3/movie/${movieId}?append_to_response=credits`
     )
-    return response.json()
   }
 
   async getTVDetails(tvId: number) {
-    const response = await fetch(
-      `https://api.themoviedb.org/3/tv/${tvId}?append_to_response=credits`,
-      {
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
+    return this.fetchWithRetry(
+      `https://api.themoviedb.org/3/tv/${tvId}?append_to_response=credits`
     )
-    return response.json()
-  }
-
-  getImageUrl(path: string, size: string = 'original'): string {
-    return `https://image.tmdb.org/t/p/${size}${path}`
   }
 }
 
@@ -238,11 +257,34 @@ function constructImageUrl(imagePath: string): string {
   return `https://image.tmdb.org/t/p/original/${imagePath}`
 }
 
+// Validate image URL is accessible
+async function validateImageUrl(url: string): Promise<boolean> {
+  if (!url) return false
+  try {
+    const response = await fetch(url, { method: 'HEAD' })
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
+// Validate Deezer track ID
+async function validateDeezerTrack(trackId: number): Promise<boolean> {
+  try {
+    const response = await fetch(`https://api.deezer.com/track/${trackId}`)
+    if (!response.ok) return false
+    const data = await response.json()
+    return !!data.preview // Must have a preview URL
+  } catch {
+    return false
+  }
+}
+
 async function seedDatabase() {
   console.log('🎬 FrameGuessr Database Seeder (Manual Mode)')
   console.log('============================================')
   console.log('⚠️  This script will SKIP existing dates to protect your handpicked data')
-  console.log('📝 Using manual image URLs and Deezer track IDs from the array')
+  console.log('📝 Using manual image URLs and Deezer track IDs with validation')
   console.log('Loading environment variables...')
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -263,19 +305,28 @@ async function seedDatabase() {
   }
 
   console.log('✓ Environment variables loaded')
-  console.log('Creating Supabase client...')
+  console.log('Creating clients...')
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
-  
-  console.log('Creating TMDB client...')
   const tmdb = new TMDBClient()
 
   // Start from July 1, 2025
   const startDate = new Date('2025-07-01')
+  const today = new Date()
+  const maxFutureDays = 365 // Don't seed more than 1 year in advance
+  
   console.log('Starting seed from date:', format(startDate, 'yyyy-MM-dd'))
   console.log('Total movies to seed:', SEED_MOVIES.length)
   
-  // First, check which dates already exist
+  // Validate we're not seeding too far in the future
   const endDate = addDays(startDate, SEED_MOVIES.length - 1)
+  const daysDifference = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  
+  if (daysDifference > maxFutureDays) {
+    console.warn(`⚠️  Warning: Seeding ${daysDifference} days in the future (max recommended: ${maxFutureDays})`)
+    console.log('Consider reducing the number of movies or starting from a later date')
+  }
+  
+  // Check which dates already exist
   console.log('Checking existing data from', format(startDate, 'yyyy-MM-dd'), 'to', format(endDate, 'yyyy-MM-dd'))
   
   const { data: existingMovies } = await supabase
@@ -293,6 +344,8 @@ async function seedDatabase() {
   let skippedCount = 0
   let manualImageCount = 0
   let manualAudioCount = 0
+  let validatedImageCount = 0
+  let validatedAudioCount = 0
 
   for (let i = 0; i < SEED_MOVIES.length; i++) {
     const movie = SEED_MOVIES[i]
@@ -308,30 +361,52 @@ async function seedDatabase() {
     console.log(`[${i + 1}/${SEED_MOVIES.length}] Processing ${movie.title} for ${date}...`)
 
     try {
-      // Get movie/show details from TMDB (still needed for metadata)
+      // Get movie/show details from TMDB
       const isMovie = movie.media_type === 'movie'
+      console.log(`  → Fetching ${isMovie ? 'movie' : 'TV'} details from TMDB...`)
       const details = isMovie
         ? await tmdb.getMovieDetails(movie.tmdb_id)
         : await tmdb.getTVDetails(movie.tmdb_id)
 
-      // Use manual image URL if provided, otherwise use empty string
+      // Handle image URL with validation
       const imageUrl = movie.imagePath ? constructImageUrl(movie.imagePath) : ''
+      let imageValidated = false
       
       if (movie.imagePath) {
-        console.log(`  → using manual image: ${movie.imagePath}`)
+        console.log(`  → Using manual image: ${movie.imagePath}`)
         manualImageCount++
+        
+        console.log(`  → Validating image URL...`)
+        imageValidated = await validateImageUrl(imageUrl)
+        if (imageValidated) {
+          validatedImageCount++
+          console.log(`  ✅ Image URL is accessible`)
+        } else {
+          console.log(`  ⚠️  Image URL may not be accessible`)
+        }
       } else {
-        console.log(`  → no manual image provided`)
+        console.log(`  → No manual image provided`)
       }
 
+      // Handle Deezer track with validation
+      let audioValidated = false
       if (movie.deezerTrackId) {
-        console.log(`  → using manual Deezer track ID: ${movie.deezerTrackId}`)
+        console.log(`  → Using manual Deezer track ID: ${movie.deezerTrackId}`)
         manualAudioCount++
+        
+        console.log(`  → Validating Deezer track...`)
+        audioValidated = await validateDeezerTrack(movie.deezerTrackId)
+        if (audioValidated) {
+          validatedAudioCount++
+          console.log(`  ✅ Deezer track has preview available`)
+        } else {
+          console.log(`  ⚠️  Deezer track may not have preview`)
+        }
       } else {
-        console.log(`  → no manual Deezer track ID provided`)
+        console.log(`  → No manual Deezer track ID provided`)
       }
 
-      // Extract information for hints
+      // Extract information for hints - FIXED STRUCTURE
       const releaseYear = isMovie 
         ? details.release_date ? new Date(details.release_date).getFullYear() : movie.year
         : details.first_air_date ? new Date(details.first_air_date).getFullYear() : movie.year
@@ -344,24 +419,32 @@ async function seedDatabase() {
         ? details.credits?.crew?.find((c: any) => c.job === 'Director')?.name || ''
         : details.created_by?.[0]?.name || ''
 
+      const genre = details.genres?.[0]?.name || 'Unknown'
+      const tagline = details.tagline || ''
+
+      // FIXED: Use correct hint structure that matches your TypeScript types
       const hints = {
-        level1: { type: 'image', data: imageUrl },
+        level1: { 
+          type: 'image', 
+          data: imageUrl 
+        },
         level2: {
-          type: 'mixed',
+          type: 'tagline',  // Fixed: was 'mixed'
           data: {
             image: imageUrl,
-            tagline: details.tagline || ''
+            tagline: tagline
           }
         },
         level3: {
-          type: 'full',
+          type: 'metadata',  // Fixed: was 'full'
           data: {
             image: imageUrl,
-            actors: cast.slice(0, 3),
-            tagline: details.tagline || '',
-            director: director,
+            tagline: tagline,
             year: releaseYear,
-            genre: details.genres?.[0]?.name || 'Unknown'
+            genre: genre,
+            // Store additional details for the completion screen
+            director: director,
+            actors: cast.slice(0, 3)
           }
         }
       }
@@ -374,7 +457,12 @@ async function seedDatabase() {
         year: releaseYear,
         image_url: imageUrl,
         hints: hints,
-        deezer_track_id: movie.deezerTrackId || null
+        deezer_track_id: movie.deezerTrackId || null,
+        // Store additional metadata for potential future use
+        overview: details.overview || '',
+        genre: genre,
+        director: director,
+        actors: cast
       }
 
       // Use INSERT with ON CONFLICT DO NOTHING to avoid overwriting existing data
@@ -383,7 +471,7 @@ async function seedDatabase() {
         .insert(seedData)
 
       if (error) {
-        if (error.code === '23505') { // Unique constraint violation (date already exists)
+        if (error.code === '23505') { // Unique constraint violation
           console.log(`  ⏭️  SKIPPED - ${date} already exists`)
           skippedCount++
         } else {
@@ -399,8 +487,8 @@ async function seedDatabase() {
       failCount++
     }
 
-    // Add a small delay to avoid rate limiting TMDB
-    await new Promise(resolve => setTimeout(resolve, 500))
+    // Add a delay to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 750))
   }
 
   console.log('\n=============================')
@@ -410,8 +498,17 @@ async function seedDatabase() {
   console.log(`   Failed: ${failCount}`)
   console.log(`   Total processed: ${SEED_MOVIES.length}`)
   console.log('')
-  console.log(`📸 Manual Images: ${manualImageCount}`)
-  console.log(`🎵 Manual Audio: ${manualAudioCount}`)
+  console.log(`📸 Manual Images: ${manualImageCount} (${validatedImageCount} validated)`)
+  console.log(`🎵 Manual Audio: ${manualAudioCount} (${validatedAudioCount} validated)`)
+  console.log('')
+  
+  if (manualImageCount > validatedImageCount) {
+    console.log(`⚠️  ${manualImageCount - validatedImageCount} image(s) may not be accessible`)
+  }
+  if (manualAudioCount > validatedAudioCount) {
+    console.log(`⚠️  ${manualAudioCount - validatedAudioCount} audio track(s) may not have previews`)
+  }
+  
   console.log('')
   console.log('🛡️  Your existing handpicked data was protected!')
   if (skippedCount > 0) {
@@ -424,6 +521,7 @@ async function seedDatabase() {
   console.log('   1. Add them to the SEED_MOVIES array with imagePath and deezerTrackId')
   console.log('   2. For imagePath, use just the filename like "nkmtCLg6afpSfdQcyNs2jemfSLR.jpg"')
   console.log('   3. Run this script again - existing dates will be protected')
+  console.log('   4. The script now validates image and audio URLs automatically')
 }
 
 // Run the seed function
