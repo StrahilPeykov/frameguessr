@@ -1,4 +1,3 @@
-// types/index.ts - Updated with in-progress game states and data sync types
 export interface GameState {
   currentDate: string
   attempts: number
@@ -33,27 +32,84 @@ export interface Attempt {
 // Game status enum for better type safety
 export type GameStatus = 'unplayed' | 'in-progress' | 'completed-won' | 'completed-lost'
 
-// Helper function to determine game status
+// Enhanced helper function to determine game status with robust fallback logic
 export function getGameStatus(gameState: GameState | null): GameStatus {
-  if (!gameState || gameState.attempts === 0) {
+  if (!gameState) {
     return 'unplayed'
   }
-  
-  if (gameState.completed) {
-    return gameState.won ? 'completed-won' : 'completed-lost'
+
+  // Check if no attempts have been made
+  const actualAttempts = Math.max(
+    gameState.attempts || 0,
+    gameState.allAttempts?.length || 0,
+    gameState.guesses?.length || 0
+  )
+
+  if (actualAttempts === 0) {
+    return 'unplayed'
   }
-  
+
+  // Check for winning condition
+  const hasWinningGuess = Boolean(
+    gameState.won || 
+    gameState.allAttempts?.some(attempt => attempt.type === 'guess' && attempt.correct) ||
+    gameState.guesses?.some(guess => guess.correct)
+  )
+
+  if (hasWinningGuess) {
+    return 'completed-won'
+  }
+
+  // Check if game should be completed (3+ attempts OR explicitly marked completed)
+  const shouldBeCompleted = gameState.completed || actualAttempts >= (gameState.maxAttempts || 3)
+
+  if (shouldBeCompleted) {
+    return 'completed-lost'
+  }
+
   return 'in-progress'
 }
 
 // Helper to check if a game has meaningful progress
 export function hasProgress(gameState: GameState | null): boolean {
-  return gameState !== null && gameState.attempts > 0
+  if (!gameState) return false
+  
+  const actualAttempts = Math.max(
+    gameState.attempts || 0,
+    gameState.allAttempts?.length || 0,
+    gameState.guesses?.length || 0
+  )
+  
+  return actualAttempts > 0
 }
 
 // Helper to check if a game is worth saving/syncing
 export function isWorthSaving(gameState: GameState | null): boolean {
   return hasProgress(gameState) // Save if any attempts were made
+}
+
+// Helper to check if a game is truly completed (for UI decisions)
+export function isGameCompleted(gameState: GameState | null): boolean {
+  if (!gameState) return false
+  
+  const status = getGameStatus(gameState)
+  return status === 'completed-won' || status === 'completed-lost'
+}
+
+// Helper to check if a game was won
+export function isGameWon(gameState: GameState | null): boolean {
+  return getGameStatus(gameState) === 'completed-won'
+}
+
+// Helper to get attempts count reliably
+export function getAttemptCount(gameState: GameState | null): number {
+  if (!gameState) return 0
+  
+  return Math.max(
+    gameState.attempts || 0,
+    gameState.allAttempts?.length || 0,
+    gameState.guesses?.length || 0
+  )
 }
 
 export interface DailyChallenge {

@@ -48,10 +48,20 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
             }))
           }
           
-          // Validate the loaded state
-          const validatedState = validateGameState(modernState)
-          console.log(`[GameState] Loaded state:`, validatedState)
+          // Validate and fix the loaded state
+          const validatedState = validateAndFixGameState(modernState)
+          console.log(`[GameState] Loaded and validated state:`, validatedState)
           setGameState(validatedState)
+          
+          // If we fixed the state, save it back to storage
+          if (stateWasFixed(savedState, validatedState)) {
+            console.log(`[GameState] State was fixed, saving back to storage`)
+            try {
+              await gameStorage.saveGameState(initialDate, validatedState)
+            } catch (error) {
+              console.warn('Failed to save fixed state:', error)
+            }
+          }
         } else {
           // No saved state, start fresh
           console.log(`[GameState] No saved state, starting fresh`)
@@ -97,7 +107,7 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
         try {
           const savedState = await gameStorage.loadGameState(initialDate)
           if (savedState) {
-            const validatedState = validateGameState(savedState)
+            const validatedState = validateAndFixGameState(savedState)
             setGameState(validatedState)
           } else {
             // Reset to fresh state if no data
@@ -162,25 +172,63 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
     saveGameState()
   }, [gameState, initialDate, isLoading])
 
-  // Validate and clean up game state
-  const validateGameState = (state: GameState): GameState => {
-    // Ensure attempts count matches allAttempts length
-    const actualAttempts = state.allAttempts.length
-    const calculatedHintLevel = Math.min(actualAttempts + 1, 3)
-    
-    // Check if game should be completed
-    const hasWinningGuess = state.allAttempts.some(attempt => 
+  // Enhanced validation that fixes old data issues
+  const validateAndFixGameState = (state: GameState): GameState => {
+    // Ensure allAttempts exists and is populated from guesses if needed
+    let allAttempts = state.allAttempts || []
+    if (allAttempts.length === 0 && state.guesses.length > 0) {
+      // Migrate from old format
+      allAttempts = state.guesses.map(guess => ({
+        id: guess.id,
+        type: 'guess' as const,
+        correct: guess.correct,
+        title: guess.title,
+        tmdbId: guess.tmdbId,
+        mediaType: guess.mediaType,
+        timestamp: guess.timestamp,
+      }))
+    }
+
+    // Calculate actual state based on attempts
+    const actualAttempts = allAttempts.length
+    const hasWinningGuess = allAttempts.some(attempt => 
       attempt.type === 'guess' && attempt.correct
     )
+    
+    // CRITICAL FIX: Game should be completed if we have max attempts OR a winning guess
     const shouldBeCompleted = hasWinningGuess || actualAttempts >= state.maxAttempts
+    
+    // Calculate hint level - if won, keep current level, otherwise progress based on attempts
+    let currentHintLevel = state.currentHintLevel || 1
+    if (!hasWinningGuess && !shouldBeCompleted) {
+      // Only update hint level if game is still in progress
+      currentHintLevel = Math.min(actualAttempts + 1, 3)
+    }
+    // If game is completed (won or lost), keep the hint level as-is
 
-    return {
+    const fixedState: GameState = {
       ...state,
+      allAttempts,
       attempts: actualAttempts,
-      currentHintLevel: hasWinningGuess ? state.currentHintLevel : calculatedHintLevel,
+      currentHintLevel,
       completed: shouldBeCompleted,
       won: hasWinningGuess,
     }
+
+    // Log if we made significant fixes
+    if (state.completed !== shouldBeCompleted) {
+      console.log(`[GameState] Fixed completion status: ${state.completed} -> ${shouldBeCompleted} (attempts: ${actualAttempts}/${state.maxAttempts})`)
+    }
+
+    return fixedState
+  }
+
+  // Check if the state was significantly changed during validation
+  const stateWasFixed = (original: GameState, fixed: GameState): boolean => {
+    return original.completed !== fixed.completed || 
+           original.won !== fixed.won ||
+           original.attempts !== fixed.attempts ||
+           (original.allAttempts?.length || 0) !== fixed.allAttempts.length
   }
 
   const makeGuess = async (result: SearchResult, correctMovieId: number, correctMediaType: string) => {

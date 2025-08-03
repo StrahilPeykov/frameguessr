@@ -1,4 +1,3 @@
-// lib/gameStorage.ts - Complete implementation with all sync scenarios
 import { GameState, Guess, getGameStatus, hasProgress } from '@/types'
 import { supabase } from '@/lib/supabase'
 
@@ -201,17 +200,6 @@ export class GameStorage {
       }
     }
 
-    // Check for cloud-only data (games played on other devices)
-    cloudDateMap.forEach((cloudItem, date) => {
-      if (!localDates.includes(date)) {
-        const cloudGameState = this.cloudRowToGameState(cloudItem, date)
-        if (hasProgress(cloudGameState)) {
-          // Don't add cloud-only as conflicts - these will sync down automatically
-          // Only conflicts are when local has data that cloud doesn't or differs
-        }
-      }
-    })
-
     return conflicts
   }
 
@@ -285,6 +273,7 @@ export class GameStorage {
     }
   }
 
+  // Enhanced validation for cloud data conversion
   private cloudRowToGameState(row: UserProgressRow, date: string): GameState {
     const guesses = row.guesses || []
     const allAttempts = guesses.map((guess: any) => ({
@@ -297,16 +286,28 @@ export class GameStorage {
       timestamp: guess.timestamp,
     }))
 
-    return {
+    // Apply the same validation logic as in useGameState
+    const actualAttempts = Math.max(row.attempts, allAttempts.length)
+    const hasWinningGuess = Boolean(allAttempts.some(attempt => attempt.correct) || row.won)
+    const shouldBeCompleted = hasWinningGuess || actualAttempts >= 3
+
+    const baseState: GameState = {
       currentDate: date,
-      attempts: row.attempts,
+      attempts: actualAttempts,
       maxAttempts: 3,
       guesses: guesses,
       allAttempts: allAttempts,
-      completed: row.completed,
-      won: row.won || false,
-      currentHintLevel: row.current_hint_level || 1
+      completed: shouldBeCompleted, // Use calculated value
+      won: hasWinningGuess, // Use calculated value
+      currentHintLevel: row.current_hint_level || (shouldBeCompleted ? 3 : Math.min(actualAttempts + 1, 3))
     }
+
+    // Log if we're fixing cloud data
+    if (row.completed !== shouldBeCompleted || row.won !== hasWinningGuess) {
+      console.log(`[GameStorage] Fixed cloud data for ${date}: completed ${row.completed}->${shouldBeCompleted}, won ${row.won}->${hasWinningGuess}`)
+    }
+
+    return baseState
   }
 
   private async importAllLocalData() {
@@ -411,8 +412,8 @@ export class GameStorage {
       // Extract game state without metadata
       const { createdWhileLoggedOut, lastModified, syncStatus, ...gameState } = data
       
-      // Ensure we have all required fields
-      return {
+      // Apply validation to ensure old data is fixed
+      const baseState: GameState = {
         currentDate: date,
         attempts: gameState.attempts || 0,
         maxAttempts: gameState.maxAttempts || 3,
@@ -422,10 +423,38 @@ export class GameStorage {
         won: gameState.won || false,
         currentHintLevel: gameState.currentHintLevel || 1,
         ...gameState
-      } as GameState
+      }
+
+      // Validate the state before returning
+      return this.validateGameState(baseState)
     } catch (error) {
       console.error('Failed to load from localStorage:', error)
       return null
+    }
+  }
+
+  // Centralized validation method
+  private validateGameState(state: GameState): GameState {
+    const actualAttempts = Math.max(
+      state.attempts || 0,
+      state.allAttempts?.length || 0,
+      state.guesses?.length || 0
+    )
+
+    const hasWinningGuess = Boolean(
+      state.won || 
+      state.allAttempts?.some(attempt => attempt.type === 'guess' && attempt.correct) ||
+      state.guesses?.some(guess => guess.correct)
+    )
+
+    const shouldBeCompleted = hasWinningGuess || actualAttempts >= (state.maxAttempts || 3)
+
+    return {
+      ...state,
+      attempts: actualAttempts,
+      completed: shouldBeCompleted,
+      won: hasWinningGuess,
+      currentHintLevel: state.currentHintLevel || (shouldBeCompleted ? 3 : Math.min(actualAttempts + 1, 3))
     }
   }
 
