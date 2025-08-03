@@ -23,6 +23,8 @@ interface TMDBMovieDetails {
   poster_path?: string
   backdrop_path?: string
   genres: { id: number; name: string }[]
+  runtime?: number
+  vote_average?: number
   credits?: {
     cast: { name: string; character: string; order: number }[]
     crew: { name: string; job: string; department: string }[]
@@ -38,6 +40,7 @@ interface TMDBTVDetails {
   poster_path?: string
   backdrop_path?: string
   genres: { id: number; name: string }[]
+  vote_average?: number
   created_by?: { name: string }[]
   credits?: {
     cast: { name: string; character: string; order: number }[]
@@ -63,8 +66,14 @@ interface TMDBImages {
 export class TMDBClient {
   private apiKey: string
   private accessToken: string
+  
+  // General purpose cache (1 hour)
   private cache: Map<string, { data: any; timestamp: number }> = new Map()
   private cacheTimeout = 1000 * 60 * 60 // 1 hour
+
+  // Special cache for daily API calls (2 hours, more stable)
+  private dailyCache: Map<string, { data: any; timestamp: number }> = new Map()
+  private dailyCacheTimeout = 1000 * 60 * 60 * 2 // 2 hours
 
   constructor() {
     this.apiKey = process.env.TMDB_API_KEY!
@@ -131,6 +140,66 @@ export class TMDBClient {
     }
   }
 
+  /**
+   * Special fetch method for daily API calls with longer caching
+   * This is more stable and reduces TMDB API calls for daily challenges
+   */
+  private async fetchForDaily(endpoint: string, retries = 3): Promise<any> {
+    // Check daily cache first (longer cache time)
+    const cacheKey = `daily-${endpoint}`
+    const cached = this.dailyCache.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < this.dailyCacheTimeout) {
+      console.log(`[TMDB] Using cached daily data for ${endpoint}`)
+      return cached.data
+    }
+
+    console.log(`[TMDB] Fetching fresh daily data for ${endpoint}`)
+    const url = `${TMDB_BASE_URL}${endpoint}`
+    
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        }
+
+        if (this.accessToken) {
+          headers['Authorization'] = `Bearer ${this.accessToken}`
+        } else if (this.apiKey) {
+          const separator = endpoint.includes('?') ? '&' : '?'
+          endpoint += `${separator}api_key=${this.apiKey}`
+        }
+
+        const response = await fetch(url, {
+          headers,
+          next: { revalidate: 7200 }, // Longer cache for daily challenges
+        })
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            const retryAfter = response.headers.get('retry-after') || '2'
+            console.log(`[TMDB] Rate limited, waiting ${retryAfter}s...`)
+            await new Promise(resolve => setTimeout(resolve, parseInt(retryAfter) * 1000))
+            continue
+          }
+          throw new Error(`TMDB API error: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        
+        // Cache with longer timeout for daily calls
+        this.dailyCache.set(cacheKey, { data, timestamp: Date.now() })
+        console.log(`[TMDB] Cached daily data for ${endpoint}`)
+        
+        return data
+      } catch (error) {
+        console.error(`[TMDB] Daily fetch error (attempt ${attempt + 1}/${retries}):`, error)
+        if (attempt === retries - 1) throw error
+        
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+      }
+    }
+  }
+
   // Search for movies and TV shows
   async search(query: string): Promise<TMDBSearchResult[]> {
     try {
@@ -152,7 +221,7 @@ export class TMDBClient {
     }
   }
 
-  // Get movie details with credits
+  // Get movie details with credits (general purpose)
   async getMovieDetails(movieId: number): Promise<TMDBMovieDetails> {
     try {
       const data = await this.fetchFromTMDB(`/movie/${movieId}?append_to_response=credits`)
@@ -163,13 +232,34 @@ export class TMDBClient {
     }
   }
 
-  // Get TV show details with credits
+  // Get TV show details with credits (general purpose)
   async getTVDetails(tvId: number): Promise<TMDBTVDetails> {
     try {
       const data = await this.fetchFromTMDB(`/tv/${tvId}?append_to_response=credits`)
       return data
     } catch (error) {
       console.error(`Failed to get TV details for ${tvId}:`, error)
+      throw error
+    }
+  }
+
+  // Special methods for daily API with extended caching
+  async getMovieDetailsForDaily(movieId: number): Promise<TMDBMovieDetails> {
+    try {
+      const data = await this.fetchForDaily(`/movie/${movieId}?append_to_response=credits`)
+      return data
+    } catch (error) {
+      console.error(`Failed to get movie details for daily ${movieId}:`, error)
+      throw error
+    }
+  }
+
+  async getTVDetailsForDaily(tvId: number): Promise<TMDBTVDetails> {
+    try {
+      const data = await this.fetchForDaily(`/tv/${tvId}?append_to_response=credits`)
+      return data
+    } catch (error) {
+      console.error(`Failed to get TV details for daily ${tvId}:`, error)
       throw error
     }
   }
@@ -204,7 +294,7 @@ export class TMDBClient {
 
   // Helper to get full image URL with fallback
   getImageUrl(path: string | null | undefined, size: 'w300' | 'w500' | 'w780' | 'w1280' | 'original' = 'w1280'): string {
-    if (!path) return '/placeholder-movie.svg' // Updated to use SVG
+    if (!path) return '/placeholder-movie.svg'
     return `${TMDB_IMAGE_BASE}/${size}${path}`
   }
 
@@ -266,9 +356,47 @@ export class TMDBClient {
     }
   }
 
-  // Clear cache (useful for cron jobs)
+  // Clear cache (useful for maintenance)
   clearCache() {
     this.cache.clear()
+    console.log('[TMDB] General cache cleared')
+  }
+
+  // Clear daily cache specifically
+  clearDailyCache() {
+    this.dailyCache.clear()
+    console.log('[TMDB] Daily cache cleared')
+  }
+
+  // Clear both caches
+  clearAllCaches() {
+    this.clearCache()
+    this.clearDailyCache()
+    console.log('[TMDB] All caches cleared')
+  }
+
+  // Get cache stats for monitoring
+  getCacheStats() {
+    const now = Date.now()
+    
+    const generalValid = Array.from(this.cache.values())
+      .filter(item => now - item.timestamp < this.cacheTimeout).length
+    
+    const dailyValid = Array.from(this.dailyCache.values())
+      .filter(item => now - item.timestamp < this.dailyCacheTimeout).length
+
+    return {
+      general: {
+        total: this.cache.size,
+        valid: generalValid,
+        expired: this.cache.size - generalValid
+      },
+      daily: {
+        total: this.dailyCache.size,
+        valid: dailyValid,
+        expired: this.dailyCache.size - dailyValid
+      }
+    }
   }
 }
 

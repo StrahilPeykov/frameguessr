@@ -14,17 +14,6 @@ export interface DailyMovie {
   title: string
   year?: number
   image_url: string
-  blur_levels?: {
-    level1: string // Most blurred/cropped
-    level2: string // Medium blur
-    level3: string // Least blur
-  }
-  hints?: {
-    actors?: string[]
-    tagline?: string
-    genre?: string
-    director?: string
-  }
   deezer_track_id?: number
   created_at: string
 }

@@ -422,33 +422,6 @@ async function seedDatabase() {
       const genre = details.genres?.[0]?.name || 'Unknown'
       const tagline = details.tagline || ''
 
-      // FIXED: Use correct hint structure that matches your TypeScript types
-      const hints = {
-        level1: { 
-          type: 'image', 
-          data: imageUrl 
-        },
-        level2: {
-          type: 'tagline',  // Fixed: was 'mixed'
-          data: {
-            image: imageUrl,
-            tagline: tagline
-          }
-        },
-        level3: {
-          type: 'metadata',  // Fixed: was 'full'
-          data: {
-            image: imageUrl,
-            tagline: tagline,
-            year: releaseYear,
-            genre: genre,
-            // Store additional details for the completion screen
-            director: director,
-            actors: cast.slice(0, 3)
-          }
-        }
-      }
-
       const seedData = {
         date,
         tmdb_id: movie.tmdb_id,
@@ -456,13 +429,7 @@ async function seedDatabase() {
         title: isMovie ? details.title : details.name,
         year: releaseYear,
         image_url: imageUrl,
-        hints: hints,
-        deezer_track_id: movie.deezerTrackId || null,
-        // Store additional metadata for potential future use
-        overview: details.overview || '',
-        genre: genre,
-        director: director,
-        actors: cast
+        deezer_track_id: movie.deezerTrackId || null
       }
 
       // Use INSERT with ON CONFLICT DO NOTHING to avoid overwriting existing data
