@@ -99,12 +99,12 @@ body {
 
 /* Enhanced Blur System */
 .blur-heavy {
-  filter: blur(28px) brightness(0.7) contrast(1.1) saturate(1.2);
+  filter: blur(16px) brightness(0.7) contrast(1.1) saturate(1.2);
   transition: filter 0.6s ease-in-out;
 }
 
 .blur-medium {
-  filter: blur(14px) brightness(0.85) contrast(1.08) saturate(1.1);
+  filter: blur(10px) brightness(0.85) contrast(1.08) saturate(1.1);
   transition: filter 0.6s ease-in-out;
 }
 
@@ -614,9 +614,9 @@ body.menu-open {
     min-width: 48px;
   }
 
-  /* Reduce blur on mobile for better performance */
+  /* Blur on mobile for better performance */
   .blur-heavy {
-    filter: blur(20px) brightness(0.8);
+    filter: blur(16px) brightness(0.8);
   }
   
   .blur-medium {
@@ -624,7 +624,7 @@ body.menu-open {
   }
   
   .blur-light {
-    filter: blur(4px);
+    filter: blur(6px);
   }
 }
 
