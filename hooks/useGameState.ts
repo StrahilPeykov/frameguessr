@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { GameState, Guess, SearchResult } from '@/types'
 import { 
   getValidatedGameState,
@@ -25,6 +25,12 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
   )
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle')
   const [isLoading, setIsLoading] = useState(true)
+
+  // Keep a ref to the latest game state so event handlers can compare
+  const gameStateRef = useRef<GameState>(gameState)
+  useEffect(() => {
+    gameStateRef.current = gameState
+  }, [gameState])
 
   // Load game state on mount, date change, OR auth state change
   useEffect(() => {
@@ -64,8 +70,13 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
   // Listen for data changes from GameStorage
   useEffect(() => {
     const handleDataChange = (event: CustomEvent) => {
-      const { date } = event.detail
+      const { date, state } = event.detail || {}
       if (date === initialDate) {
+        // If the incoming state matches the current one, ignore to prevent loops
+        if (state && JSON.stringify(state) === JSON.stringify(gameStateRef.current)) {
+          return
+        }
+
         console.log('[GameState] Data change event received for current date, reloading...')
         // Reload the current game state
         const loadGameState = async () => {
