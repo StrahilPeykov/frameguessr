@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { X, Sun, Moon, BarChart3, Share2, User, LogOut, Check, Archive, HelpCircle, RefreshCw, AlertTriangle, Settings } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import Avatar from '@/components/ui/Avatar'
 
 interface MobileMenuProps {
   isOpen: boolean
@@ -20,6 +21,12 @@ interface MobileMenuProps {
   onSignInClick: () => void
   onSignUpClick: () => void
   onSettingsClick?: () => void
+}
+
+interface UserProfile {
+  username: string
+  display_name: string
+  avatar_url?: string
 }
 
 export default function MobileMenu({
@@ -39,7 +46,7 @@ export default function MobileMenu({
   onSettingsClick
 }: MobileMenuProps) {
   const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
@@ -133,15 +140,6 @@ export default function MobileMenu({
   const username = profile?.username || null
   const avatarUrl = profile?.avatar_url || null
 
-  // Get user initials for avatar
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
-      .slice(0, 2)
-      .join('')
-  }
-
   // Enhanced sync status display
   const getSyncStatusDisplay = () => {
     if (!isAuthenticated) return null
@@ -203,17 +201,11 @@ export default function MobileMenu({
         {isAuthenticated && user && (
           <div className="p-4 border-b border-stone-200 dark:border-stone-800">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-sm font-semibold">
-                {avatarUrl ? (
-                  <img 
-                    src={avatarUrl} 
-                    alt={displayName}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  getInitials(displayName)
-                )}
-              </div>
+              <Avatar
+                avatarValue={avatarUrl}
+                displayName={displayName}
+                size={40}
+              />
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-stone-900 dark:text-stone-100 truncate text-sm">
                   {displayName}

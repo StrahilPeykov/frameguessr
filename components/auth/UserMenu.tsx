@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import DataMergeModal from './DataMergeModal'
 import ProfileSettings from './ProfileSettings'
+import Avatar from '@/components/ui/Avatar'
 
 interface UserProfile {
   username: string
@@ -171,15 +172,6 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
   const username = profile?.username || null
   const avatarUrl = profile?.avatar_url || null
 
-  // Get user initials for avatar
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
-      .slice(0, 2)
-      .join('')
-  }
-
   return (
     <>
       <div className="relative" ref={menuRef}>
@@ -188,17 +180,11 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
           disabled={signingOut}
           className="flex items-center gap-2 px-3 py-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors text-sm disabled:opacity-50"
         >
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-semibold">
-            {avatarUrl ? (
-              <img 
-                src={avatarUrl} 
-                alt={displayName}
-                className="w-full h-full rounded-full object-cover"
-              />
-            ) : (
-              getInitials(displayName)
-            )}
-          </div>
+          <Avatar
+            avatarValue={avatarUrl}
+            displayName={displayName}
+            size={28}
+          />
           <span className="hidden sm:block text-stone-700 dark:text-stone-200 font-medium max-w-24 truncate">
             {displayName}
           </span>
@@ -212,17 +198,11 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
           <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-stone-800 rounded-lg shadow-xl border border-stone-200 dark:border-stone-700 py-1 z-50 overflow-hidden">
             <div className="px-3 py-2 border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900/50">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-semibold">
-                  {avatarUrl ? (
-                    <img 
-                      src={avatarUrl} 
-                      alt={displayName}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    getInitials(displayName)
-                  )}
-                </div>
+                <Avatar
+                  avatarValue={avatarUrl}
+                  displayName={displayName}
+                  size={32}
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-stone-900 dark:text-stone-100 truncate">
                     {displayName}

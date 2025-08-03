@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { X, User, UserCheck, Save, Camera, CheckCircle } from 'lucide-react'
+import { X, User, UserCheck, Save, CheckCircle, Camera } from 'lucide-react'
+import { PREDEFINED_AVATARS, getAvatarById, generateAvatarSVG, getInitials } from '@/utils/avatars'
+import Avatar from '@/components/ui/Avatar'
 
 interface ProfileSettingsProps {
   isOpen: boolean
@@ -24,12 +26,14 @@ export default function ProfileSettings({ isOpen, onClose, onSuccess }: ProfileS
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [user, setUser] = useState<any>(null)
+  const [showAvatarSelection, setShowAvatarSelection] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
       loadUserProfile()
       setError('')
       setSuccessMessage('')
+      setShowAvatarSelection(false)
     }
   }, [isOpen])
 
@@ -98,6 +102,13 @@ export default function ProfileSettings({ isOpen, onClose, onSuccess }: ProfileS
     return !data // Available if no data returned
   }
 
+  const handleAvatarSelect = (avatarId: string) => {
+    if (profile) {
+      setProfile({ ...profile, avatar_url: avatarId })
+      setShowAvatarSelection(false)
+    }
+  }
+
   const handleSave = async () => {
     if (!profile || !user) return
 
@@ -132,6 +143,7 @@ export default function ProfileSettings({ isOpen, onClose, onSuccess }: ProfileS
         .update({
           username: profile.username.toLowerCase().trim(),
           display_name: profile.display_name.trim(),
+          avatar_url: profile.avatar_url,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id)
@@ -164,17 +176,9 @@ export default function ProfileSettings({ isOpen, onClose, onSuccess }: ProfileS
 
   const hasChanges = profile && originalProfile && (
     profile.username !== originalProfile.username ||
-    profile.display_name !== originalProfile.display_name
+    profile.display_name !== originalProfile.display_name ||
+    profile.avatar_url !== originalProfile.avatar_url
   )
-
-  // Get user initials for avatar
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
-      .slice(0, 2)
-      .join('')
-  }
 
   if (!isOpen) return null
 
@@ -222,25 +226,66 @@ export default function ProfileSettings({ isOpen, onClose, onSuccess }: ProfileS
                   {/* Avatar Section */}
                   <div className="text-center">
                     <div className="relative inline-block">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xl font-bold mx-auto">
-                        {profile.avatar_url ? (
-                          <img 
-                            src={profile.avatar_url} 
-                            alt={profile.display_name}
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          getInitials(profile.display_name)
-                        )}
-                      </div>
-                      <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-amber-600 hover:bg-amber-700 rounded-full flex items-center justify-center text-white transition-colors shadow-lg">
+                      <Avatar
+                        avatarValue={profile.avatar_url}
+                        displayName={profile.display_name}
+                        size={64}
+                        onClick={() => setShowAvatarSelection(true)}
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                      />
+                      <button 
+                        onClick={() => setShowAvatarSelection(true)}
+                        className="absolute -bottom-1 -right-1 w-6 h-6 bg-amber-600 hover:bg-amber-700 rounded-full flex items-center justify-center text-white transition-colors shadow-lg"
+                      >
                         <Camera className="w-3 h-3" />
                       </button>
                     </div>
                     <p className="text-xs text-stone-500 dark:text-stone-400 mt-2">
-                      Avatar upload coming soon
+                      Click to change avatar
                     </p>
                   </div>
+
+                  {/* Avatar Selection Grid */}
+                  {showAvatarSelection && (
+                    <div className="border border-stone-200 dark:border-stone-700 rounded-lg p-4 bg-stone-50 dark:bg-stone-800/50">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-medium text-stone-700 dark:text-stone-300">
+                          Choose an Avatar
+                        </h3>
+                        <button
+                          onClick={() => setShowAvatarSelection(false)}
+                          className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                        {PREDEFINED_AVATARS.map((avatarOption) => (
+                          <button
+                            key={avatarOption.id}
+                            onClick={() => handleAvatarSelect(avatarOption.id)}
+                            className={`relative p-2 rounded-lg transition-all hover:bg-stone-100 dark:hover:bg-stone-700 ${
+                              profile.avatar_url === avatarOption.id 
+                                ? 'bg-amber-50 dark:bg-amber-900/20 ring-2 ring-amber-500' 
+                                : ''
+                            }`}
+                            title={avatarOption.name}
+                          >
+                            <div 
+                              className="w-8 h-8 mx-auto"
+                              dangerouslySetInnerHTML={{ __html: generateAvatarSVG(avatarOption, 32) }}
+                            />
+                            {profile.avatar_url === avatarOption.id && (
+                              <div className="absolute top-0 right-0 w-3 h-3 bg-amber-500 rounded-full flex items-center justify-center">
+                                <CheckCircle className="w-2 h-2 text-white" />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Form Fields */}
                   <div className="space-y-3">

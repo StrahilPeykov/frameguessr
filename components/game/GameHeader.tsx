@@ -11,6 +11,7 @@ import UserMenu from '@/components/auth/UserMenu'
 import MobileMenu from './MobileMenu'
 import AuthModal from '@/components/auth/AuthModal'
 import AboutModal from './AboutModal'
+import ProfileSettings from '@/components/auth/ProfileSettings'
 import FrameGuessrLogo from '@/components/ui/FrameGuessrLogo'
 
 interface GameHeaderProps {
@@ -33,6 +34,7 @@ function GameHeader({
   // Modal states
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showAboutModal, setShowAboutModal] = useState(false)
+  const [showProfileSettings, setShowProfileSettings] = useState(false)
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin')
 
   const handleAuthSuccess = () => {
@@ -51,6 +53,14 @@ function GameHeader({
   const handleSignUpClick = () => {
     setShowAuthModal(true)
     setAuthModalMode('signup')
+  }
+
+  const handleSettingsClick = () => {
+    setShowProfileSettings(true)
+  }
+
+  const handleProfileUpdated = () => {
+    // Profile updated successfully - no additional action needed
   }
 
   // Only show sync status for errors - wins are obvious from game completion screen
@@ -226,6 +236,10 @@ function GameHeader({
           closeMobileMenu()
           handleSignUpClick()
         }}
+        onSettingsClick={() => {
+          closeMobileMenu()
+          handleSettingsClick()
+        }}
       />
 
       {/* Auth Modal */}
@@ -240,6 +254,13 @@ function GameHeader({
       <AboutModal
         isOpen={showAboutModal}
         onClose={() => setShowAboutModal(false)}
+      />
+
+      {/* Profile Settings Modal */}
+      <ProfileSettings
+        isOpen={showProfileSettings}
+        onClose={() => setShowProfileSettings(false)}
+        onSuccess={handleProfileUpdated}
       />
     </>
   )
