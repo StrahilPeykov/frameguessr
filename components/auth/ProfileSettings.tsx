@@ -179,8 +179,8 @@ export default function ProfileSettings({ isOpen, onClose, onSuccess }: ProfileS
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-md w-full shadow-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center pt-4 sm:pt-8 p-4 z-50">
+      <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-md w-full shadow-2xl border border-stone-200 dark:border-stone-700 overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
           <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100">
