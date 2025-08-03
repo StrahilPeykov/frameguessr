@@ -19,7 +19,7 @@ interface UseGameStateOptions {
 }
 
 export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptions) {
-  const { isAuthenticated, syncDecision } = useAuth()
+  const { isAuthenticated } = useAuth()
   const [gameState, setGameState] = useState<GameState>(() => 
     createDefaultGameState(initialDate, maxAttempts)
   )
@@ -65,7 +65,7 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
     }
 
     loadGameState()
-  }, [initialDate, maxAttempts, isAuthenticated, syncDecision])
+  }, [initialDate, maxAttempts, isAuthenticated])
 
   // Listen for data changes from GameStorage
   useEffect(() => {
