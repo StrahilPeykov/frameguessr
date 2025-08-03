@@ -259,7 +259,7 @@ export default function ArchiveGrid() {
       case 'completed-won':
         return `Won in ${challenge.attempts}`
       case 'completed-lost':
-        return `Lost after ${challenge.attempts}`
+        return `Lost`
       default:
         return null
     }
