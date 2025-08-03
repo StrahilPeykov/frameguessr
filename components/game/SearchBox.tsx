@@ -235,11 +235,9 @@ export default function SearchBox({
           aria-haspopup="listbox"
         />
         
-        {/* Loading/Clear Button */}
+        {/* Clear Button */}
         <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-          {isSearching ? (
-            <div className="cinema-spinner w-5 h-5" />
-          ) : query.length > 0 ? (
+          {query.length > 0 && (
             <button
               onClick={clearSearch}
               className="p-1 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-full transition-colors cinema-touch"
@@ -247,11 +245,11 @@ export default function SearchBox({
             >
               <X className="w-4 h-4 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300" />
             </button>
-          ) : null}
+          )}
         </div>
       </div>
 
-      {/* Cinema Search Results - Enhanced Dropdown */}
+      {/* Cinema Search Results - Dropdown */}
       {shouldShowResults && (
         <div 
           ref={resultsRef}

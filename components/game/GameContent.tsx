@@ -142,7 +142,7 @@ export default function GameContent({ currentDate }: GameContentProps) {
 
           {/* Skip Button - Now floating/contextual instead of full-width */}
           {!gameState.completed && (
-            <div className="flex justify-center">
+            <div className="flex justify-center mt-4">
               <button
                 onClick={handleSkip}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm cinema-glass hover:bg-stone-100/80 dark:hover:bg-stone-800/80 text-stone-600 dark:text-stone-400 rounded-lg transition-all duration-300 border border-stone-200/30 dark:border-amber-700/30 font-medium cinema-btn group"
@@ -154,13 +154,17 @@ export default function GameContent({ currentDate }: GameContentProps) {
           )}
         </div>
 
-        {/* Completion Screen - Full width for impact */}
-        <CompletionScreen currentDate={currentDate} />
+        {/* Completion Screen - Full width for impact with added spacing */}
+        {gameState.completed && (
+          <div className="mt-8">
+            <CompletionScreen currentDate={currentDate} />
+          </div>
+        )}
 
-        {/* Guess History - Narrower for better readability */}
-        <div className="max-w-2xl mx-auto">
+        {/* Guess History - Narrower for better readability with proper spacing */}
+        {gameState.guesses.length > 0 && (
           <GuessHistory />
-        </div>
+        )}
       </div>
     </div>
   )

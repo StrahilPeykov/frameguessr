@@ -178,20 +178,20 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
         <button
           onClick={() => setShowMenu(!showMenu)}
           disabled={signingOut}
-          className="flex items-center gap-2 px-3 py-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors text-sm disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors text-sm disabled:opacity-50 max-w-[180px]"
         >
           <Avatar
             avatarValue={avatarUrl}
             displayName={displayName}
             size={28}
           />
-          <span className="hidden sm:block text-stone-700 dark:text-stone-200 font-medium max-w-24 truncate">
+          <span className="hidden sm:block text-stone-700 dark:text-stone-200 font-medium truncate min-w-0 flex-1">
             {displayName}
           </span>
           {loadingProfile && (
-            <div className="w-3 h-3 border border-stone-400 border-t-transparent rounded-full animate-spin" />
+            <div className="w-3 h-3 border border-stone-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
           )}
-          <ChevronDown className={`w-4 h-4 text-stone-500 dark:text-stone-400 transition-transform ${showMenu ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-4 h-4 text-stone-500 dark:text-stone-400 transition-transform flex-shrink-0 ${showMenu ? 'rotate-180' : ''}`} />
         </button>
 
         {showMenu && (

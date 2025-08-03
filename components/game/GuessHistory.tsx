@@ -13,7 +13,7 @@ export default function GuessHistory() {
   }
 
   return (
-    <div className="cinema-glass rounded-xl p-4 border border-stone-200/30 dark:border-stone-800/30 bg-stone-50/50 dark:bg-stone-900/50">
+    <div className="max-w-xl mx-auto mt-6 cinema-glass rounded-xl p-4 border border-stone-200/30 dark:border-stone-800/30 bg-stone-50/50 dark:bg-stone-900/50">
       <button
         onClick={() => setShowGuesses(!showGuesses)}
         className="flex items-center justify-between w-full text-left group"

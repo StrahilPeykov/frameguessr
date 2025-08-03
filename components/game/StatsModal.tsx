@@ -40,10 +40,22 @@ export default function StatsModal({ isOpen, onClose }: StatsModalProps) {
   const loadStats = async () => {
     try {
       setLoading(true)
+      console.log('[StatsModal] Loading user stats...')
       const userStats = await gameStorage.getUserStats()
+      console.log('[StatsModal] Loaded stats:', userStats)
       setStats(userStats)
     } catch (error) {
-      console.error('Failed to load stats:', error)
+      console.error('[StatsModal] Failed to load stats:', error)
+      // Set default stats on error
+      setStats({
+        gamesPlayed: 0,
+        gamesWon: 0,
+        winPercentage: 0,
+        currentStreak: 0,
+        averageAttempts: 0,
+        guessDistribution: [0, 0, 0],
+        gamesInProgress: 0,
+      })
     } finally {
       setLoading(false)
     }
@@ -112,7 +124,7 @@ export default function StatsModal({ isOpen, onClose }: StatsModalProps) {
                 
                 <div className="text-center p-4 bg-stone-100 dark:bg-stone-800 rounded-lg">
                   <div className="text-3xl font-bold text-stone-900 dark:text-stone-100">
-                    {stats.averageAttempts}
+                    {stats.averageAttempts || '-'}
                   </div>
                   <div className="text-sm text-stone-600 dark:text-stone-400">
                     Avg. Guesses
@@ -145,12 +157,12 @@ export default function StatsModal({ isOpen, onClose }: StatsModalProps) {
                 
                 {stats.gamesWon === 0 ? (
                   <div className="text-center py-8 text-stone-500 dark:text-stone-400">
-                    Play more games to see your distribution
+                    <p className="text-sm">Play and win games to see your distribution</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {[1, 2, 3].map((attempts) => {
-                      const count = stats.guessDistribution[attempts - 1]
+                      const count = stats.guessDistribution[attempts - 1] || 0
                       const percentage = maxDistribution > 0 ? (count / maxDistribution) * 100 : 0
                       
                       return (
@@ -190,7 +202,7 @@ export default function StatsModal({ isOpen, onClose }: StatsModalProps) {
                       🔥 Incredible {stats.currentStreak} game winning streak!
                     </p>
                   )}
-                  {stats.averageAttempts <= 1.5 && stats.gamesWon >= 5 && (
+                  {stats.averageAttempts > 0 && stats.averageAttempts <= 1.5 && stats.gamesWon >= 5 && (
                     <p className="text-sm text-green-600 dark:text-green-400 font-medium">
                       🎯 Movie expert! Average of {stats.averageAttempts} guesses
                     </p>
@@ -200,6 +212,23 @@ export default function StatsModal({ isOpen, onClose }: StatsModalProps) {
                       Keep playing to build your stats!
                     </p>
                   )}
+                  {stats.gamesPlayed > 1 && stats.gamesWon === 0 && (
+                    <p className="text-sm text-stone-600 dark:text-stone-400">
+                      Keep trying! Every game is a chance to improve.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* No games played */}
+              {stats.gamesPlayed === 0 && (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center mx-auto mb-3">
+                    <TrendingUp className="w-8 h-8 text-stone-400 dark:text-stone-600" />
+                  </div>
+                  <p className="text-sm text-stone-600 dark:text-stone-400">
+                    Start playing to track your statistics!
+                  </p>
                 </div>
               )}
             </>
