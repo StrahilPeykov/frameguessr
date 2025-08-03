@@ -1,4 +1,4 @@
-import { GameState, Guess } from '@/types'
+import { GameState, Guess, Attempt } from '@/types'
 import { 
   getValidatedGameState, 
   hasProgress, 
@@ -16,15 +16,20 @@ export interface UserProgressRow {
   attempts: number
   completed: boolean
   guesses: Guess[]
+  all_attempts?: Attempt[]
   won?: boolean
   current_hint_level?: number
+  max_attempts?: number
+  last_modified?: string
   created_at?: string
+  hint_levels_viewed?: number[]
 }
 
 export interface LocalGameData extends GameState {
   createdWhileLoggedOut?: boolean
   lastModified: number
   syncStatus?: 'local-only' | 'synced' | 'conflict'
+  version?: number
 }
 
 export interface DataConflict {
@@ -188,14 +193,14 @@ export class GameStorage {
         // Check if they're different
         if (this.hasSignificantDifference(localData, cloudGameState)) {
           // Determine which is newer/better
-          if (this.shouldPreferLocal(localData, cloudGameState)) {
+          if (this.shouldPreferLocal(localData, cloudGameState, cloudItem)) {
             conflicts.push({
               date,
               localData,
               cloudData: cloudGameState,
               type: 'local-newer'
             })
-          } else if (this.shouldPreferCloud(localData, cloudGameState)) {
+          } else if (this.shouldPreferCloud(localData, cloudGameState, cloudItem)) {
             conflicts.push({
               date,
               localData,
@@ -218,7 +223,7 @@ export class GameStorage {
     return conflicts
   }
 
-  private shouldPreferLocal(localData: LocalGameData, cloudData: GameState): boolean {
+  private shouldPreferLocal(localData: LocalGameData, cloudData: GameState, cloudRow?: UserProgressRow): boolean {
     // Use validation utils for consistent status checking
     const localStatus = getGameStatus(localData)
     const cloudStatus = getGameStatus(cloudData)
@@ -230,15 +235,26 @@ export class GameStorage {
     if (localData.attempts > cloudData.attempts) return true
     if (localData.currentHintLevel > cloudData.currentHintLevel) return true
     
-    // Prefer local if it's newer (played in last 24 hours)
-    if (localData.lastModified > Date.now() - 24 * 60 * 60 * 1000) {
-      return true
+    // Use timestamps if available for more accurate comparison
+    if (cloudRow?.last_modified && localData.lastModified) {
+      const cloudTime = new Date(cloudRow.last_modified).getTime()
+      const localTime = localData.lastModified
+      
+      // If local is significantly newer (more than 1 minute), prefer it
+      if (localTime > cloudTime + 60000) {
+        return true
+      }
+    } else {
+      // Fallback: prefer local if it's newer (played in last 24 hours)
+      if (localData.lastModified > Date.now() - 24 * 60 * 60 * 1000) {
+        return true
+      }
     }
     
     return false
   }
 
-  private shouldPreferCloud(localData: LocalGameData, cloudData: GameState): boolean {
+  private shouldPreferCloud(localData: LocalGameData, cloudData: GameState, cloudRow?: UserProgressRow): boolean {
     // Use validation utils for consistent status checking
     const localStatus = getGameStatus(localData)
     const cloudStatus = getGameStatus(cloudData)
@@ -249,6 +265,17 @@ export class GameStorage {
     // Prefer cloud if it has more progress
     if (cloudData.attempts > localData.attempts) return true
     if (cloudData.currentHintLevel > localData.currentHintLevel) return true
+    
+    // Use timestamps if available
+    if (cloudRow?.last_modified && localData.lastModified) {
+      const cloudTime = new Date(cloudRow.last_modified).getTime()
+      const localTime = localData.lastModified
+      
+      // If cloud is significantly newer, prefer it
+      if (cloudTime > localTime + 60000) {
+        return true
+      }
+    }
     
     return false
   }
@@ -289,14 +316,37 @@ export class GameStorage {
       if (!saved) return null
       
       const parsed = JSON.parse(saved)
+      
       // Handle old format that might not have metadata
       if (!parsed.lastModified) {
         return {
           ...parsed,
           lastModified: Date.now() - 30 * 24 * 60 * 60 * 1000, // Assume old
-          syncStatus: 'local-only'
+          syncStatus: 'local-only',
+          version: 1
         }
       }
+      
+      // Handle version 1 data that might not have allAttempts
+      if (parsed.version === 1 && (!parsed.allAttempts || parsed.allAttempts.length === 0)) {
+        // Migrate guesses to allAttempts format
+        if (parsed.guesses && parsed.guesses.length > 0) {
+          parsed.allAttempts = parsed.guesses.map((guess: Guess) => ({
+            id: guess.id,
+            type: 'guess' as const,
+            correct: guess.correct,
+            title: guess.title,
+            tmdbId: guess.tmdbId,
+            mediaType: guess.mediaType,
+            timestamp: guess.timestamp,
+          }))
+          parsed.version = 2
+          
+          // Save the migrated data
+          this.saveToLocalStorage(date, parsed)
+        }
+      }
+      
       return parsed as LocalGameData
     } catch (error) {
       console.error('Failed to load local data with metadata:', error)
@@ -307,20 +357,27 @@ export class GameStorage {
   // Use validation utils instead of custom conversion
   private cloudRowToGameState(row: UserProgressRow, date: string): GameState {
     const guesses = row.guesses || []
-    const allAttempts = guesses.map((guess: any) => ({
-      id: guess.id,
-      type: 'guess' as const,
-      correct: guess.correct,
-      title: guess.title,
-      tmdbId: guess.tmdbId,
-      mediaType: guess.mediaType,
-      timestamp: guess.timestamp,
-    }))
+    
+    // Use all_attempts if available, otherwise convert guesses for backward compatibility
+    let allAttempts = row.all_attempts || []
+    
+    // Backward compatibility: if all_attempts is empty but we have guesses, convert them
+    if (allAttempts.length === 0 && guesses.length > 0) {
+      allAttempts = guesses.map((guess: any) => ({
+        id: guess.id,
+        type: 'guess' as const,
+        correct: guess.correct,
+        title: guess.title,
+        tmdbId: guess.tmdbId,
+        mediaType: guess.mediaType,
+        timestamp: guess.timestamp,
+      }))
+    }
 
     const rawState: GameState = {
       currentDate: date,
       attempts: row.attempts || 0,
-      maxAttempts: 3,
+      maxAttempts: row.max_attempts || 3,
       guesses: guesses,
       allAttempts: allAttempts,
       completed: row.completed || false,
@@ -427,7 +484,8 @@ export class GameStorage {
         ...state,
         createdWhileLoggedOut: !this.user,
         lastModified: Date.now(),
-        syncStatus: this.user && this.shouldSyncToCloud() ? 'synced' : 'local-only'
+        syncStatus: this.user && this.shouldSyncToCloud() ? 'synced' : 'local-only',
+        version: 2
       }
       localStorage.setItem(`frameguessr-${date}`, JSON.stringify(localData))
     } catch (error) {
@@ -443,7 +501,7 @@ export class GameStorage {
       const data = JSON.parse(saved)
       
       // Extract game state without metadata
-      const { createdWhileLoggedOut, lastModified, syncStatus, ...gameState } = data
+      const { createdWhileLoggedOut, lastModified, syncStatus, version, ...gameState } = data
       
       // Use validation utils to ensure valid state
       return getValidatedGameState(gameState)
@@ -473,8 +531,11 @@ export class GameStorage {
       attempts: validatedState.attempts,
       completed: validatedState.completed,
       guesses: validatedState.guesses,
+      all_attempts: validatedState.allAttempts,
       won: validatedState.won,
-      current_hint_level: validatedState.currentHintLevel
+      current_hint_level: validatedState.currentHintLevel,
+      max_attempts: validatedState.maxAttempts
+      // last_modified will be automatically set by the database trigger
     }
 
     const { error } = await supabase
@@ -484,7 +545,24 @@ export class GameStorage {
       })
 
     if (error) {
-      throw new Error(`Database save failed: ${error.message}`)
+      // Handle specific error types
+      if (error.code === '23505') {
+        // Unique constraint violation - this shouldn't happen with upsert, but just in case
+        console.warn(`Unique constraint violation for ${date}, retrying...`)
+        
+        // Try a direct update instead
+        const { error: updateError } = await supabase
+          .from('user_progress')
+          .update(progressData)
+          .eq('user_id', this.user.id)
+          .eq('date', date)
+        
+        if (updateError) {
+          throw new Error(`Database update failed: ${updateError.message}`)
+        }
+      } else {
+        throw new Error(`Database save failed: ${error.message}`)
+      }
     }
   }
 
@@ -659,6 +737,37 @@ export class GameStorage {
     return { 
       success: true, 
       syncedCount: localOnlyDates.length 
+    }
+  }
+
+  // Track hint levels viewed (optional enhancement)
+  async saveHintLevelViewed(date: string, hintLevel: number): Promise<void> {
+    if (!this.user) return
+    
+    try {
+      // Get current hint levels viewed
+      const { data: currentData } = await supabase
+        .from('user_progress')
+        .select('hint_levels_viewed')
+        .eq('user_id', this.user.id)
+        .eq('date', date)
+        .single()
+      
+      const currentLevels = currentData?.hint_levels_viewed || [1]
+      
+      // Add new hint level if not already present
+      if (!currentLevels.includes(hintLevel)) {
+        const updatedLevels = [...currentLevels, hintLevel].sort((a, b) => a - b)
+        
+        await supabase
+          .from('user_progress')
+          .update({ hint_levels_viewed: updatedLevels })
+          .eq('user_id', this.user.id)
+          .eq('date', date)
+      }
+    } catch (error) {
+      // Don't fail the game if hint tracking fails
+      console.warn('Failed to track hint level viewed:', error)
     }
   }
 

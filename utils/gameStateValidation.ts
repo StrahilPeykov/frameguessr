@@ -290,11 +290,11 @@ function validateAttempts(attempts: Attempt[]): {
 /**
  * Create a default game state for a given date
  */
-export function createDefaultGameState(date?: string): GameState {
+export function createDefaultGameState(date?: string, maxAttempts: number = 3): GameState {
   return {
     currentDate: date || new Date().toISOString().split('T')[0],
     attempts: 0,
-    maxAttempts: 3,
+    maxAttempts: maxAttempts,
     guesses: [],
     allAttempts: [],
     completed: false,

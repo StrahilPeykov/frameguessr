@@ -21,7 +21,7 @@ interface UseGameStateOptions {
 export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptions) {
   const { isAuthenticated, syncDecision } = useAuth()
   const [gameState, setGameState] = useState<GameState>(() => 
-    createDefaultGameState(initialDate)
+    createDefaultGameState(initialDate, maxAttempts)
   )
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle')
   const [isLoading, setIsLoading] = useState(true)
@@ -53,12 +53,12 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
         } else {
           // No saved state, start fresh
           console.log(`[GameState] No saved state, starting fresh`)
-          setGameState(createDefaultGameState(initialDate))
+          setGameState(createDefaultGameState(initialDate, maxAttempts))
         }
       } catch (error) {
         console.error('Failed to load game state:', error)
         // Fall back to fresh state on error
-        setGameState(createDefaultGameState(initialDate))
+        setGameState(createDefaultGameState(initialDate, maxAttempts))
       } finally {
         setIsLoading(false)
       }
@@ -90,7 +90,7 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
               setGameState(validatedState)
             } else {
               // Reset to fresh state if no data
-              setGameState(createDefaultGameState(initialDate))
+              setGameState(createDefaultGameState(initialDate, maxAttempts))
             }
           } catch (error) {
             console.error('Failed to reload game state after data change:', error)
@@ -102,7 +102,7 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
 
     const handleDataCleared = () => {
       console.log('[GameState] Data cleared event received, resetting...')
-      setGameState(createDefaultGameState(initialDate))
+      setGameState(createDefaultGameState(initialDate, maxAttempts))
     }
 
     // Listen for custom events from GameStorage
@@ -202,7 +202,7 @@ export function useGameState({ initialDate, maxAttempts = 3 }: UseGameStateOptio
 
   const resetGame = (date?: string) => {
     const targetDate = date || initialDate
-    setGameState(createDefaultGameState(targetDate))
+    setGameState(createDefaultGameState(targetDate, maxAttempts))
     setSyncStatus('idle')
   }
 

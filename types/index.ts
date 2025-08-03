@@ -118,7 +118,7 @@ export interface AudioHintData {
 export interface DataConflict {
   date: string
   localData: LocalGameData
-  cloudData: GameState
+  cloudData?: GameState
   type: 'local-only' | 'cloud-newer' | 'local-newer' | 'different-progress'
 }
 
@@ -126,6 +126,7 @@ export interface LocalGameData extends GameState {
   createdWhileLoggedOut?: boolean
   lastModified: number
   syncStatus?: 'local-only' | 'synced' | 'conflict'
+  version?: number // Added for migration support
 }
 
 export interface SyncDecision {
@@ -234,6 +235,23 @@ export interface GameError {
   message: string
   code?: string
   retry?: boolean
+}
+
+// Supabase row types for database operations
+export interface UserProgressRow {
+  id?: number
+  user_id?: string | null
+  date: string
+  attempts: number
+  completed: boolean
+  guesses: Guess[]
+  all_attempts?: Attempt[]
+  won?: boolean
+  current_hint_level?: number
+  max_attempts?: number
+  last_modified?: string
+  created_at?: string
+  hint_levels_viewed?: number[]
 }
 
 // Global window extensions
