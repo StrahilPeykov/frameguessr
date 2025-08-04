@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Trophy, X, Calendar, ChevronLeft, ChevronRight, Film, Tv, Lock, Clock, Play } from 'lucide-react'
+import { Trophy, Clock, Play, ChevronLeft, ChevronRight, Film, Tv } from 'lucide-react'
 import { gameStorage } from '@/lib/gameStorage'
 import { supabase } from '@/lib/supabase'
 import { getTodayLocal, formatDateLocal } from '@/utils/dateUtils'
@@ -33,8 +33,8 @@ export default function ArchiveGrid() {
   const [challenges, setChallenges] = useState<DayChallenge[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const [filter, setFilter] = useState<'all' | 'played' | 'won' | 'lost' | 'in-progress'>('all')
-  const itemsPerPage = 24 // Optimized for better mobile UX and performance
+  const [filter, setFilter] = useState<'all' | 'completed'>('all')
+  const itemsPerPage = 24 // Keep original 24 items per page
   const today = getTodayLocal()
 
   useEffect(() => {
@@ -125,13 +125,10 @@ export default function ArchiveGrid() {
     }
   }
 
-  // Filter challenges
+  // Simplified filter
   const filteredChallenges = challenges.filter(challenge => {
     if (filter === 'all') return true
-    if (filter === 'played') return challenge.status !== 'unplayed'
-    if (filter === 'won') return challenge.status === 'completed-won'
-    if (filter === 'lost') return challenge.status === 'completed-lost'
-    if (filter === 'in-progress') return challenge.status === 'in-progress'
+    if (filter === 'completed') return challenge.status.startsWith('completed')
     return true
   })
 
@@ -140,118 +137,61 @@ export default function ArchiveGrid() {
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedChallenges = filteredChallenges.slice(startIndex, startIndex + itemsPerPage)
 
+  // Simple stats
+  const completedCount = challenges.filter(c => c.status.startsWith('completed')).length
+  const wonCount = challenges.filter(c => c.status === 'completed-won').length
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr + 'T00:00:00')
-    const month = date.toLocaleDateString('en-US', { month: 'short' })
     const day = date.getDate()
-    const year = date.getFullYear()
-    return { month, day, year }
+    const month = date.toLocaleDateString('en-US', { month: 'short' })
+    return { day, month }
   }
 
   const isToday = (dateStr: string) => dateStr === today
   const isFuture = (dateStr: string) => dateStr > today
 
-  const getStatusIcon = (challenge: DayChallenge) => {
+  const getStatusDisplay = (challenge: DayChallenge) => {
     switch (challenge.status) {
       case 'completed-won':
-        return (
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center shadow-sm">
-              <div className="w-3 h-3 rounded-full bg-white" />
-            </div>
-            <div className="text-xs text-green-600 dark:text-green-400 font-medium">
-              {challenge.attempts}/3
-            </div>
-          </div>
-        )
-      
-      case 'completed-lost':
-        return (
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-red-500 to-rose-500 flex items-center justify-center shadow-sm">
-              <X className="w-3 h-3 text-white" />
-            </div>
-            <div className="text-xs text-red-600 dark:text-red-400">
-              Lost
-            </div>
-          </div>
-        )
-      
-      case 'in-progress':
-        return (
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center shadow-sm">
-              <Clock className="w-3 h-3 text-white" />
-            </div>
-            <div className="text-xs text-amber-600 dark:text-amber-400">
-              Scene {challenge.currentHintLevel}
-            </div>
-          </div>
-        )
-      
-      case 'unplayed':
-        if (isFuture(challenge.date)) {
-          return (
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-6 h-6 rounded-full bg-stone-300 dark:bg-stone-600 flex items-center justify-center">
-                <Lock className="w-3 h-3 text-stone-500 dark:text-stone-400" />
-              </div>
-              <div className="text-xs text-stone-400">
-                Soon
-              </div>
-            </div>
-          )
-        } else {
-          return (
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-6 h-6 rounded-full border-2 border-amber-300 dark:border-amber-600 border-dashed group-hover:border-amber-400 dark:group-hover:border-amber-500 transition-colors flex items-center justify-center">
-                <Play className="w-3 h-3 text-amber-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-300" />
-              </div>
-              <div className="text-xs text-stone-500 dark:text-stone-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                Play
-              </div>
-            </div>
-          )
+        return {
+          icon: <Trophy className="w-3.5 h-3.5 text-amber-600" />,
+          bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+          borderColor: 'border-amber-200 dark:border-amber-800/50',
+          textColor: 'text-amber-800 dark:text-amber-200'
         }
-      
-      default:
-        return null
-    }
-  }
-
-  const getChallengeCardStyle = (challenge: DayChallenge) => {
-    const baseStyle = "relative group aspect-square rounded-xl p-4 flex flex-col justify-between transition-all duration-200 hover:scale-[1.02] cinema-glass border overflow-hidden"
-    
-    switch (challenge.status) {
-      case 'completed-won':
-        return `${baseStyle} border-green-300/50 dark:border-green-600/50 bg-gradient-to-br from-green-50/80 to-emerald-50/60 dark:from-green-900/30 dark:to-emerald-900/20 hover:border-green-400/60 dark:hover:border-green-500/60`
-      
       case 'completed-lost':
-        return `${baseStyle} border-red-300/50 dark:border-red-600/50 bg-gradient-to-br from-red-50/80 to-rose-50/60 dark:from-red-900/30 dark:to-rose-900/20 hover:border-red-400/60 dark:hover:border-red-500/60`
-      
-      case 'in-progress':
-        return `${baseStyle} border-amber-300/50 dark:border-amber-600/50 bg-gradient-to-br from-amber-50/80 to-orange-50/60 dark:from-amber-900/30 dark:to-orange-900/20 hover:border-amber-400/60 dark:hover:border-amber-500/60`
-      
-      case 'unplayed':
-        if (isFuture(challenge.date)) {
-          return `${baseStyle} border-stone-200/50 dark:border-stone-700/50 bg-stone-50/50 dark:bg-stone-900/30 opacity-60`
-        } else {
-          return `${baseStyle} border-stone-200/50 dark:border-stone-700/50 hover:border-amber-300/50 dark:hover:border-amber-600/50`
+        return {
+          icon: <div className="w-3.5 h-3.5 rounded-full bg-stone-400 dark:bg-stone-600" />,
+          bgColor: 'bg-stone-50 dark:bg-stone-900/20',
+          borderColor: 'border-stone-200 dark:border-stone-700',
+          textColor: 'text-stone-600 dark:text-stone-400'
         }
-      
+      case 'in-progress':
+        return {
+          icon: <Clock className="w-3.5 h-3.5 text-blue-600" />,
+          bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+          borderColor: 'border-blue-200 dark:border-blue-800/50',
+          textColor: 'text-blue-800 dark:text-blue-200'
+        }
       default:
-        return baseStyle
+        return {
+          icon: <Play className="w-3.5 h-3.5 text-stone-400" />,
+          bgColor: 'bg-white dark:bg-stone-800/50',
+          borderColor: 'border-stone-200 dark:border-stone-700',
+          textColor: 'text-stone-600 dark:text-stone-400'
+        }
     }
   }
 
   const getProgressText = (challenge: DayChallenge) => {
     switch (challenge.status) {
-      case 'in-progress':
-        return `${challenge.attempts} attempt${challenge.attempts !== 1 ? 's' : ''}`
       case 'completed-won':
-        return `Won in ${challenge.attempts}`
+        return `✓ ${challenge.attempts}`
       case 'completed-lost':
-        return `Lost`
+        return '✗'
+      case 'in-progress':
+        return `${challenge.attempts}/3`
       default:
         return null
     }
@@ -259,139 +199,139 @@ export default function ArchiveGrid() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-4">
-        {Array.from({ length: 24 }).map((_, i) => (
-          <div key={i} className="aspect-square bg-stone-100 dark:bg-stone-800/50 rounded-xl animate-pulse" />
-        ))}
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-6 w-48 bg-stone-200 dark:bg-stone-700 rounded animate-pulse" />
+            <div className="h-4 w-32 bg-stone-200 dark:bg-stone-700 rounded animate-pulse" />
+          </div>
+          <div className="flex gap-2">
+            <div className="h-9 w-20 bg-stone-200 dark:bg-stone-700 rounded animate-pulse" />
+            <div className="h-9 w-24 bg-stone-200 dark:bg-stone-700 rounded animate-pulse" />
+          </div>
+        </div>
+        
+        {/* Grid skeleton */}
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8 gap-2">
+          {Array.from({ length: 24 }).map((_, i) => (
+            <div key={i} className="aspect-square bg-stone-200 dark:bg-stone-700 rounded-lg animate-pulse" />
+          ))}
+        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      {/* Enhanced filter buttons */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-1 cinema-glass p-1 rounded-lg border border-stone-200/50 dark:border-amber-700/30">
-          {(['all', 'played', 'won', 'lost', 'in-progress'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => {
-                setFilter(f)
-                setCurrentPage(1)
-              }}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                filter === f
-                  ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-sm'
-                  : 'text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400'
-              }`}
-            >
-              {f === 'in-progress' ? 'In Progress' : f.charAt(0).toUpperCase() + f.slice(1)}
-            </button>
-          ))}
+      {/* Simplified Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100 mb-1">
+            Your Progress
+          </h2>
+          <p className="text-stone-600 dark:text-stone-400 text-sm">
+            {completedCount > 0 && (
+              <span className="font-medium">{wonCount}/{completedCount} completed</span>
+            )}
+            {completedCount > 0 && filteredChallenges.length > completedCount && <span> • </span>}
+            <span>{filteredChallenges.length} total challenges</span>
+          </p>
         </div>
         
-        {/* Enhanced stats */}
-        <div className="text-sm text-stone-500 dark:text-stone-400 flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            <span className="text-green-600 dark:text-green-400 font-medium">
-              {challenges.filter(c => c.status === 'completed-won').length}
-            </span>
-            <span>won</span>
-          </div>
-          
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-            <span className="text-amber-600 dark:text-amber-400 font-medium">
-              {challenges.filter(c => c.status === 'in-progress').length}
-            </span>
-            <span>in progress</span>
-          </div>
-          
-          <div>
-            <span className="font-medium">
-              {challenges.filter(c => c.status !== 'unplayed').length}
-            </span>
-            <span className="mx-1">/</span>
-            <span>{challenges.length} total</span>
-          </div>
+        {/* Simplified Filter */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setFilter('all')
+              setCurrentPage(1)
+            }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              filter === 'all'
+                ? 'bg-amber-600 text-white shadow-md'
+                : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700'
+            }`}
+          >
+            All Days
+          </button>
+          <button
+            onClick={() => {
+              setFilter('completed')
+              setCurrentPage(1)
+            }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              filter === 'completed'
+                ? 'bg-amber-600 text-white shadow-md'
+                : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700'
+            }`}
+          >
+            Completed
+          </button>
         </div>
       </div>
 
-      {/* Challenge grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-4">
+      {/* Compact Grid */}
+      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8 gap-2">
         {paginatedChallenges.map((challenge) => {
-          const { month, day, year } = formatDate(challenge.date)
+          const { day, month } = formatDate(challenge.date)
           const todayChallenge = isToday(challenge.date)
           const futureChallenge = isFuture(challenge.date)
+          const statusDisplay = getStatusDisplay(challenge)
           
           return (
             <Link
               key={challenge.date}
               href={`/day/${challenge.date}`}
-              className={getChallengeCardStyle(challenge)}
-              aria-label={`Challenge ${challenge.dayNumber} - ${month} ${day}, ${year} - ${challenge.status}`}
+              className={`
+                relative group aspect-square rounded-lg p-2 flex flex-col justify-between
+                transition-all duration-200 hover:scale-105
+                ${statusDisplay.bgColor} ${statusDisplay.borderColor} ${statusDisplay.textColor}
+                border-2 hover:shadow-lg
+                ${futureChallenge ? 'opacity-50 pointer-events-none' : ''}
+              `}
+              aria-label={`Challenge ${challenge.dayNumber} - ${month} ${day} - ${challenge.status}`}
             >
               {/* Today indicator */}
               {todayChallenge && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full animate-pulse shadow-lg" />
+                <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse" />
               )}
               
-              {/* Date */}
+              {/* Date Display - Smaller */}
               <div className="text-center">
-                <div className="text-lg md:text-xl font-bold text-stone-900 dark:text-stone-100">
+                <div className="text-lg font-bold leading-none">
                   {day}
                 </div>
-                <div className="text-xs text-stone-500 dark:text-stone-400 leading-tight">
+                <div className="text-xs opacity-75 mt-0.5">
                   {month}
                 </div>
               </div>
               
-              {/* Status indicator */}
-              <div className="flex items-center justify-center">
-                {getStatusIcon(challenge)}
+              {/* Simple Status Icon - Smaller */}
+              <div className="flex justify-center">
+                {statusDisplay.icon}
               </div>
               
-              {/* Progress text */}
+              {/* Minimal Progress Text */}
               {getProgressText(challenge) && (
-                <div className="text-xs text-center text-stone-500 dark:text-stone-400 mt-1">
+                <div className="text-xs text-center opacity-75">
                   {getProgressText(challenge)}
                 </div>
               )}
-              
-              {/* Movie title overlay on hover */}
-              {challenge.title && challenge.status !== 'unplayed' && (
-                <div className="absolute inset-0 bg-black/80 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-3">
+
+              {/* Simple hover effect - only show title for completed games */}
+              {challenge.title && challenge.status.startsWith('completed') && (
+                <div className="absolute inset-0 bg-black/80 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-1.5">
                   <div className="text-center">
                     <div className="flex justify-center mb-1">
                       {challenge.mediaType === 'tv' ? (
-                        <Tv className="w-4 h-4 text-white/80" />
+                        <Tv className="w-3 h-3 text-white/80" />
                       ) : (
-                        <Film className="w-4 h-4 text-white/80" />
+                        <Film className="w-3 h-3 text-white/80" />
                       )}
                     </div>
                     <p className="text-white text-xs font-medium line-clamp-3 leading-relaxed">
                       {challenge.title}
                     </p>
-                    
-                    {/* Status badge in overlay */}
-                    <div className="mt-2">
-                      {challenge.status === 'in-progress' && (
-                        <span className="text-xs bg-amber-600 text-white px-2 py-1 rounded-full">
-                          Continue Playing
-                        </span>
-                      )}
-                      {challenge.status === 'completed-won' && (
-                        <span className="text-xs bg-green-600 text-white px-2 py-1 rounded-full">
-                          ✓ Completed
-                        </span>
-                      )}
-                      {challenge.status === 'completed-lost' && (
-                        <span className="text-xs bg-red-600 text-white px-2 py-1 rounded-full">
-                          View Result
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
               )}
@@ -400,51 +340,26 @@ export default function ArchiveGrid() {
         })}
       </div>
       
-      {/* Pagination */}
+      {/* Simplified Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-3">
           <button
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
-            className="p-2 rounded-lg cinema-glass border border-stone-200/50 dark:border-amber-700/30 hover:border-amber-300/50 dark:hover:border-amber-600/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="p-2 rounded-lg bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             aria-label="Previous page"
           >
             <ChevronLeft className="w-4 h-4 text-stone-600 dark:text-stone-400" />
           </button>
           
-          <div className="flex gap-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum
-              if (totalPages <= 5) {
-                pageNum = i + 1
-              } else if (currentPage <= 3) {
-                pageNum = i + 1
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i
-              } else {
-                pageNum = currentPage - 2 + i
-              }
-              
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
-                    currentPage === pageNum
-                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-sm'
-                      : 'cinema-glass border border-stone-200/50 dark:border-amber-700/30 hover:border-amber-300/50 dark:hover:border-amber-600/50 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              )
-            })}
-          </div>
+          <span className="text-sm text-stone-600 dark:text-stone-400 font-medium px-4">
+            {currentPage} of {totalPages}
+          </span>
           
           <button
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages}
-            className="p-2 rounded-lg cinema-glass border border-stone-200/50 dark:border-amber-700/30 hover:border-amber-300/50 dark:hover:border-amber-600/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="p-2 rounded-lg bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             aria-label="Next page"
           >
             <ChevronRight className="w-4 h-4 text-stone-600 dark:text-stone-400" />
@@ -452,7 +367,7 @@ export default function ArchiveGrid() {
         </div>
       )}
       
-      {/* Page info for better orientation */}
+      {/* Simple page info */}
       {totalPages > 1 && (
         <div className="text-center text-xs text-stone-500 dark:text-stone-400">
           Showing {startIndex + 1}–{Math.min(startIndex + itemsPerPage, filteredChallenges.length)} of {filteredChallenges.length} challenges
