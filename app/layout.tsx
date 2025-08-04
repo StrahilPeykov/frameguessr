@@ -398,7 +398,7 @@ export default function RootLayout({
         <meta name="copyright" content="FrameGuessr Team" />
         <meta name="author" content="FrameGuessr Team" />
         <meta name="designer" content="FrameGuessr Team" />
-        <meta name="reply-to" content="strahil.peykov@gmail.com" />
+        <meta name="reply-to" content="frameguessr@gmail.com" />
         
         {/* Crawler directives */}
         <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />

@@ -361,7 +361,7 @@ export default function MobileMenu({
             </Link>
             <span className="text-stone-300 dark:text-stone-600">•</span>
             <a 
-              href="mailto:strahil.peykov@gmail.com"
+              href="mailto:frameguessr@gmail.com"
               className="text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
               onClick={onClose}
             >

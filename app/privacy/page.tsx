@@ -443,7 +443,7 @@ export default function PrivacyPage() {
                 If you have any questions about this Privacy Policy or our data practices, please contact us:
               </p>
               <div className="p-4 bg-stone-100 dark:bg-stone-800 rounded-xl">
-                <p className="font-mono text-sm mb-2">Email: strahil.peykov@gmail.com</p>
+                <p className="font-mono text-sm mb-2">Email: frameguessr@gmail.com</p>
                 <p className="text-sm text-stone-600 dark:text-stone-400">
                   Please include "FrameGuessr Privacy" in the subject line
                 </p>

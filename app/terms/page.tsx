@@ -315,7 +315,7 @@ export default function TermsPage() {
                 copyright, please send a DMCA notice to:
               </p>
               <div className="p-4 bg-stone-100 dark:bg-stone-800 rounded-xl mb-4">
-                <p className="font-mono text-sm">strahil.peykov@gmail.com</p>
+                <p className="font-mono text-sm">frameguessr@gmail.com</p>
                 <p className="text-sm text-stone-600 dark:text-stone-400 mt-1">
                   Subject: "DMCA Notice - FrameGuessr"
                 </p>
@@ -385,7 +385,7 @@ export default function TermsPage() {
                 If you have any questions about these Terms, please contact us:
               </p>
               <div className="p-4 bg-stone-100 dark:bg-stone-800 rounded-xl">
-                <p className="font-mono text-sm mb-2">Email: strahil.peykov@gmail.com</p>
+                <p className="font-mono text-sm mb-2">Email: frameguessr@gmail.com</p>
                 <p className="text-sm text-stone-600 dark:text-stone-400">
                   Please include "FrameGuessr Terms" in the subject line
                 </p>
