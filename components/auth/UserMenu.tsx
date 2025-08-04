@@ -9,13 +9,6 @@ import {
   BarChart3, 
   ChevronDown, 
   Settings,
-  Database,
-  Cloud,
-  CloudOff,
-  Smartphone,
-  AlertCircle,
-  CheckCircle,
-  RefreshCw,
   Upload
 } from 'lucide-react'
 import DataMergeModal from './DataMergeModal'
@@ -37,12 +30,10 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [showMenu, setShowMenu] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
-  const [dataSummary, setDataSummary] = useState<any>(null)
-  const [loadingData, setLoadingData] = useState(false)
-  const [loadingProfile, setLoadingProfile] = useState(false)
   const [showDataMergeModal, setShowDataMergeModal] = useState(false)
   const [showProfileSettings, setShowProfileSettings] = useState(false)
   const [conflicts, setConflicts] = useState<any[]>([])
+  const [mergeableCount, setMergeableCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -50,8 +41,8 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
       if (user) {
-        loadUserData()
         loadUserProfile(user.id)
+        checkMergeableData()
       }
     })
 
@@ -62,11 +53,11 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
       if (event === 'SIGNED_OUT') {
         setShowMenu(false)
         setSigningOut(false)
-        setDataSummary(null)
         setProfile(null)
+        setMergeableCount(0)
       } else if (event === 'SIGNED_IN' && session?.user) {
-        loadUserData()
         loadUserProfile(session.user.id)
+        checkMergeableData()
       }
     })
 
@@ -75,7 +66,6 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
 
   const loadUserProfile = async (userId: string) => {
     try {
-      setLoadingProfile(true)
       const { data, error } = await supabase
         .from('profiles')
         .select('username, display_name, avatar_url')
@@ -90,20 +80,15 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
       setProfile(data)
     } catch (error) {
       console.error('Failed to load user profile:', error)
-    } finally {
-      setLoadingProfile(false)
     }
   }
 
-  const loadUserData = async () => {
+  const checkMergeableData = async () => {
     try {
-      setLoadingData(true)
       const summary = await gameStorage.getDataSummary()
-      setDataSummary(summary)
+      setMergeableCount(summary.mergeableGames)
     } catch (error) {
-      console.error('Failed to load user data:', error)
-    } finally {
-      setLoadingData(false)
+      console.error('Failed to check mergeable data:', error)
     }
   }
 
@@ -166,11 +151,16 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
 
   if (!user) return null
 
-  // Get display information
+  // Get display information - fix the flash by being more careful about what we show
   const userEmail = user.email || ''
-  const displayName = profile?.display_name || profile?.username || userEmail.split('@')[0] || 'User'
+  
+  // Only show display name if profile is loaded, otherwise show nothing to avoid flash
+  const displayName = profile?.display_name || null
   const username = profile?.username || null
   const avatarUrl = profile?.avatar_url || null
+  
+  // Don't show anything until profile loads to avoid flash
+  const showDisplayName = displayName || username || userEmail.split('@')[0]
 
   return (
     <>
@@ -182,70 +172,37 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
         >
           <Avatar
             avatarValue={avatarUrl}
-            displayName={displayName}
+            displayName={showDisplayName}
             size={28}
           />
           <span className="hidden sm:block text-stone-700 dark:text-stone-200 font-medium truncate min-w-0 flex-1">
-            {displayName}
+            {showDisplayName}
           </span>
-          {loadingProfile && (
-            <div className="w-3 h-3 border border-stone-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-          )}
           <ChevronDown className={`w-4 h-4 text-stone-500 dark:text-stone-400 transition-transform flex-shrink-0 ${showMenu ? 'rotate-180' : ''}`} />
         </button>
 
         {showMenu && (
-          <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-stone-800 rounded-lg shadow-xl border border-stone-200 dark:border-stone-700 py-1 z-50 overflow-hidden">
-            <div className="px-3 py-2 border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900/50">
+          <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-stone-800 rounded-lg shadow-xl border border-stone-200 dark:border-stone-700 py-1 z-50 overflow-hidden">
+            {/* Simplified Header */}
+            <div className="px-3 py-3 border-b border-stone-200 dark:border-stone-700">
               <div className="flex items-center gap-2">
                 <Avatar
                   avatarValue={avatarUrl}
-                  displayName={displayName}
+                  displayName={showDisplayName}
                   size={32}
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-stone-900 dark:text-stone-100 truncate">
-                    {displayName}
+                    {showDisplayName}
                   </p>
-                  {username && username !== displayName && (
-                    <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
-                      @{username}
-                    </p>
-                  )}
                   <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
                     {userEmail}
                   </p>
                 </div>
               </div>
             </div>
-
-            {dataSummary && (
-              <div className="px-3 py-2 border-b border-stone-200 dark:border-stone-700">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-stone-600 dark:text-stone-400">Cloud Progress:</span>
-                  <span className="font-medium text-stone-900 dark:text-stone-100">
-                    {dataSummary.cloudGames} games
-                  </span>
-                </div>
-                {dataSummary.localGames > 0 && (
-                  <div className="flex items-center justify-between text-xs mt-1">
-                    <span className="text-stone-600 dark:text-stone-400">Local Progress:</span>
-                    <span className="font-medium text-stone-900 dark:text-stone-100">
-                      {dataSummary.localGames} games
-                    </span>
-                  </div>
-                )}
-                {dataSummary.mergeableGames > 0 && (
-                  <div className="flex items-center justify-between text-xs mt-1">
-                    <span className="text-orange-600 dark:text-orange-400">Can Import:</span>
-                    <span className="font-medium text-orange-600 dark:text-orange-400">
-                      {dataSummary.mergeableGames} games
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
             
+            {/* Menu Items */}
             <button 
               onClick={handleStatsClick}
               className="w-full text-left px-3 py-2 text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 flex items-center gap-2 transition-colors"
@@ -262,25 +219,19 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
               Profile Settings
             </button>
 
-            <button
-              onClick={handleSyncData}
-              className="w-full text-left px-3 py-2 text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 flex items-center gap-2 transition-colors"
-            >
-              <Upload className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              Import Local Progress
-              {dataSummary?.mergeableGames > 0 && (
-                <span className="ml-auto text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded">
-                  {dataSummary.mergeableGames}
+            {/* Only show import option if there's data to import */}
+            {mergeableCount > 0 && (
+              <button
+                onClick={handleSyncData}
+                className="w-full text-left px-3 py-2 text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 flex items-center gap-2 transition-colors"
+              >
+                <Upload className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                Import Local Progress
+                <span className="ml-auto text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded">
+                  {mergeableCount}
                 </span>
-              )}
-            </button>
-
-            <div className="px-3 py-2 border-t border-stone-200 dark:border-stone-700">
-              <div className="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400">
-                <Smartphone className="w-3 h-3" />
-                <span>Local data preserved</span>
-              </div>
-            </div>
+              </button>
+            )}
             
             <hr className="my-1 border-stone-200 dark:border-stone-700" />
             
@@ -302,7 +253,7 @@ export default function UserMenu({ onStatsClick }: UserMenuProps) {
         isOpen={showDataMergeModal}
         onClose={() => {
           setShowDataMergeModal(false)
-          loadUserData()
+          checkMergeableData()
         }}
         conflicts={conflicts}
       />

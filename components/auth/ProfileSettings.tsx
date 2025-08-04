@@ -292,7 +292,7 @@ export default function ProfileSettings({ isOpen, onClose, onSuccess }: ProfileS
                     {/* Display Name */}
                     <div>
                       <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1">
-                        Full Name
+                        Display Name
                       </label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
@@ -301,7 +301,7 @@ export default function ProfileSettings({ isOpen, onClose, onSuccess }: ProfileS
                           value={profile.display_name}
                           onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
                           className="w-full pl-9 pr-3 py-2 text-sm border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-transparent transition-all"
-                          placeholder="Enter your full name"
+                          placeholder="Your display name"
                           disabled={saving}
                         />
                       </div>

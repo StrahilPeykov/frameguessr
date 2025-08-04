@@ -18,11 +18,11 @@ export default function AuthModal({
   initialMode = 'signin' 
 }: AuthModalProps) {
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode)
-  const [email, setEmail] = useState('')
+  const [emailOrUsername, setEmailOrUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [username, setUsername] = useState('')
-  const [fullName, setFullName] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -31,11 +31,11 @@ export default function AuthModal({
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode)
-      setEmail('')
+      setEmailOrUsername('')
       setPassword('')
       setConfirmPassword('')
       setUsername('')
-      setFullName('')
+      setDisplayName('')
       setError('')
       setSuccessMessage('')
     }
@@ -50,10 +50,40 @@ export default function AuthModal({
     return null
   }
 
-  const validateFullName = (fullName: string): string | null => {
-    if (fullName.trim().length < 2) return 'Full name must be at least 2 characters'
-    if (fullName.trim().length > 50) return 'Full name must be less than 50 characters'
+  const validateDisplayName = (displayName: string): string | null => {
+    if (displayName.trim().length < 2) return 'Display name must be at least 2 characters'
+    if (displayName.trim().length > 50) return 'Display name must be less than 50 characters'
     return null
+  }
+
+  const isEmail = (input: string): boolean => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)
+  }
+
+  const lookupEmailByUsername = async (username: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username.toLowerCase().trim())
+        .single()
+
+      if (error || !data) {
+        return null
+      }
+
+      // Get the user's email from auth.users
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(data.id)
+      
+      if (userError || !userData.user) {
+        return null
+      }
+
+      return userData.user.email || null
+    } catch (error) {
+      console.error('Failed to lookup email by username:', error)
+      return null
+    }
   }
 
   const createUserProfile = async (userId: string, email: string) => {
@@ -63,7 +93,7 @@ export default function AuthModal({
         .insert({
           id: userId,
           username: username.toLowerCase().trim(),
-          display_name: fullName.trim(),
+          display_name: displayName.trim(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -89,11 +119,28 @@ export default function AuthModal({
 
     try {
       if (mode === 'signin') {
+        let email = emailOrUsername
+
+        // If it's not an email, try to look up the email by username
+        if (!isEmail(emailOrUsername)) {
+          const lookedUpEmail = await lookupEmailByUsername(emailOrUsername)
+          if (!lookedUpEmail) {
+            throw new Error('Username not found. Please check your username or try signing in with your email.')
+          }
+          email = lookedUpEmail
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password
         })
-        if (error) throw error
+        if (error) {
+          // Provide more user-friendly error messages
+          if (error.message.includes('Invalid login credentials')) {
+            throw new Error('Incorrect email/username or password. Please try again.')
+          }
+          throw error
+        }
         
         setSuccessMessage('Welcome back!')
         
@@ -117,9 +164,9 @@ export default function AuthModal({
           throw new Error(usernameError)
         }
 
-        const fullNameError = validateFullName(fullName)
-        if (fullNameError) {
-          throw new Error(fullNameError)
+        const displayNameError = validateDisplayName(displayName)
+        if (displayNameError) {
+          throw new Error(displayNameError)
         }
 
         // Check if username is available
@@ -135,12 +182,12 @@ export default function AuthModal({
 
         // Create the user account
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
+          email: emailOrUsername, // For signup, this field should be the email
           password,
           options: {
             data: {
               username: username.toLowerCase().trim(),
-              display_name: fullName.trim()
+              display_name: displayName.trim()
             }
           }
         })
@@ -151,7 +198,7 @@ export default function AuthModal({
         if (signUpData.user && !signUpData.user.email_confirmed_at) {
           setSuccessMessage('Check your email to verify your account!')
         } else if (signUpData.user) {
-          await createUserProfile(signUpData.user.id, email)
+          await createUserProfile(signUpData.user.id, emailOrUsername)
           setSuccessMessage('Account created successfully!')
           setTimeout(() => {
             onSuccess?.()
@@ -228,16 +275,16 @@ export default function AuthModal({
               <div className="grid grid-cols-1 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1">
-                    Full Name
+                    Display Name
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
                     <input
                       type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
                       className="w-full pl-9 pr-3 py-2 text-sm border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-transparent transition-all"
-                      placeholder="Your full name"
+                      placeholder="Your display name"
                       required
                       disabled={loading || !!successMessage}
                     />
@@ -269,16 +316,16 @@ export default function AuthModal({
 
             <div>
               <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1">
-                Email
+                {mode === 'signin' ? 'Email or Username' : 'Email'}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type={mode === 'signin' ? 'text' : 'email'}
+                  value={emailOrUsername}
+                  onChange={(e) => setEmailOrUsername(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-sm border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-transparent transition-all"
-                  placeholder="your@email.com"
+                  placeholder={mode === 'signin' ? 'your@email.com or username' : 'your@email.com'}
                   required
                   disabled={loading || !!successMessage}
                 />
