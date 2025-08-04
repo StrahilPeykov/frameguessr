@@ -34,7 +34,7 @@ export default function ArchiveGrid() {
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [filter, setFilter] = useState<'all' | 'played' | 'won' | 'lost' | 'in-progress'>('all')
-  const itemsPerPage = 36
+  const itemsPerPage = 24 // Optimized for better mobile UX and performance
   const today = getTodayLocal()
 
   useEffect(() => {
@@ -260,7 +260,7 @@ export default function ArchiveGrid() {
   if (loading) {
     return (
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-4">
-        {Array.from({ length: 36 }).map((_, i) => (
+        {Array.from({ length: 24 }).map((_, i) => (
           <div key={i} className="aspect-square bg-stone-100 dark:bg-stone-800/50 rounded-xl animate-pulse" />
         ))}
       </div>
@@ -449,6 +449,13 @@ export default function ArchiveGrid() {
           >
             <ChevronRight className="w-4 h-4 text-stone-600 dark:text-stone-400" />
           </button>
+        </div>
+      )}
+      
+      {/* Page info for better orientation */}
+      {totalPages > 1 && (
+        <div className="text-center text-xs text-stone-500 dark:text-stone-400">
+          Showing {startIndex + 1}–{Math.min(startIndex + itemsPerPage, filteredChallenges.length)} of {filteredChallenges.length} challenges
         </div>
       )}
     </div>
