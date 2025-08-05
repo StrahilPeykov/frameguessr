@@ -40,6 +40,84 @@ const nextConfig = {
     } : false,
   },
   
+  async redirects() {
+    return [
+      // Brand correction redirects
+      {
+        source: '/freeguessr',
+        destination: '/?ref=brand-correction',
+        permanent: false,
+      },
+      {
+        source: '/free-guessr',
+        destination: '/?ref=brand-correction',
+        permanent: false,
+      },
+      {
+        source: '/frame-guessr',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/framegussr',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/frame-guess',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/frameguess',
+        destination: '/',
+        permanent: true,
+      },
+      // Common misspellings
+      {
+        source: '/framegesser',
+        destination: '/?ref=brand-correction',
+        permanent: false,
+      },
+      {
+        source: '/framegusser',
+        destination: '/?ref=brand-correction',
+        permanent: false,
+      },
+      {
+        source: '/frameguesser',
+        destination: '/?ref=brand-correction',
+        permanent: false,
+      },
+      // Feature-based redirects
+      {
+        source: '/movie-frame-game',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/guess-movie-frame',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/daily-movie-game',
+        destination: '/',
+        permanent: true,
+      },
+    ]
+  },
+  
+  async rewrites() {
+    return [
+      // Handle any freeguessr subpaths
+      {
+        source: '/freeguessr/:path*',
+        destination: '/?ref=brand-correction',
+      },
+    ]
+  },
+  
   async headers() {
     const ContentSecurityPolicy = `
       default-src 'self';
@@ -85,6 +163,11 @@ const nextConfig = {
           {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains',
+          },
+          // Add canonical header to reinforce brand
+          {
+            key: 'Link',
+            value: '<https://frameguessr.com>; rel="canonical"',
           },
         ],
       },

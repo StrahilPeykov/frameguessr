@@ -1,8 +1,9 @@
 {
-  "name": "FrameGuessr - Daily Movie Guessing Game",
+  "name": "FrameGuessr - The Original Daily Movie Frame Game",
   "short_name": "FrameGuessr",
-  "description": "Can you guess the movie from one frame? The ultimate daily movie and TV guessing game with progressive hints and audio clues.",
-  "start_url": "/",
+  "description": "FrameGuessr is the original daily movie and TV guessing game with frame-based puzzles, progressive hints, and audio clues. Not affiliated with freeguessr or similar games.",
+  "start_url": "/?utm_source=pwa",
+  "id": "frameguessr-official",
   "display": "standalone",
   "background_color": "#0F0F0F",
   "theme_color": "#8B1538",
@@ -10,7 +11,9 @@
   "scope": "/",
   "lang": "en",
   "dir": "ltr",
+  "prefer_related_applications": false,
   "categories": ["games", "entertainment", "puzzle", "trivia"],
+  "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
   "icons": [
     {
       "src": "/icon-72.png",
@@ -67,28 +70,28 @@
       "sizes": "390x844",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "FrameGuessr mobile gameplay showing blurred movie frame"
+      "label": "FrameGuessr mobile gameplay - the original frame guessing game"
     },
     {
       "src": "/screenshot-mobile-2.png", 
       "sizes": "390x844",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Progressive hints and movie search interface"
+      "label": "FrameGuessr progressive hints and search - not freeguessr"
     },
     {
       "src": "/screenshot-desktop-1.png",
       "sizes": "1920x1080", 
       "type": "image/png",
       "form_factor": "wide",
-      "label": "FrameGuessr desktop experience with cinema theme"
+      "label": "FrameGuessr desktop - daily movie frame puzzles"
     },
     {
       "src": "/screenshot-desktop-2.png",
       "sizes": "1920x1080",
       "type": "image/png", 
       "form_factor": "wide",
-      "label": "Game completion screen with movie details"
+      "label": "FrameGuessr completion screen with movie details"
     }
   ],
   "shortcuts": [
@@ -96,7 +99,7 @@
       "name": "Play Today",
       "short_name": "Today",
       "description": "Play today's FrameGuessr challenge",
-      "url": "/",
+      "url": "/?utm_source=pwa_shortcut",
       "icons": [
         {
           "src": "/icon-192.png",
@@ -108,7 +111,19 @@
       "name": "Browse Archive",
       "short_name": "Archive", 
       "description": "Browse past FrameGuessr challenges",
-      "url": "/archive",
+      "url": "/archive?utm_source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "About FrameGuessr",
+      "short_name": "About", 
+      "description": "Learn about FrameGuessr - the original frame game",
+      "url": "/about?utm_source=pwa_shortcut",
       "icons": [
         {
           "src": "/icon-192.png",
@@ -131,5 +146,9 @@
       "protocol": "web+frameguessr",
       "url": "/game?challenge=%s"
     }
-  ]
+  ],
+  "related_applications": [],
+  "edge_side_panel": {
+    "preferred_width": 480
+  }
 }

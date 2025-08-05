@@ -4,6 +4,7 @@ import './globals.css'
 import { ThemeProvider } from '@/hooks/useTheme'
 import CookieBanner from '@/components/legal/CookieBanner'
 import Footer from '@/components/layout/Footer'
+import BrandNotice from '@/components/ui/BrandNotice'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -24,10 +25,17 @@ export const metadata: Metadata = {
     // Primary target keywords
     'frameguessr',
     'frame guessr', 
+    'FrameGuessr game',
+    'FrameGuessr movie game',
     'movie guessing game',
     'daily movie game',
     'guess the movie',
     'movie frame quiz',
+    
+    // Brand differentiation
+    'frameguessr not freeguessr',
+    'frame guessr official',
+    'original frameguessr',
     
     // Competitive keywords
     'framed game alternative',
@@ -63,6 +71,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'FrameGuessr Team' }],
   creator: 'FrameGuessr',
   publisher: 'FrameGuessr',
+  applicationName: 'FrameGuessr',
   manifest: '/manifest.json',
   category: 'Games & Entertainment',
   classification: 'Movie Guessing Game',
@@ -81,7 +90,7 @@ export const metadata: Metadata = {
   },
   verification: {
     // Add your verification codes here when you have them
-    // google: 'your-google-verification-code',
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
     // yandex: 'your-yandex-verification-code',
   },
   alternates: {
@@ -90,7 +99,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'FrameGuessr - Movie Quiz',
+    title: 'FrameGuessr',
     startupImage: [
       {
         url: '/apple-startup-image.png',
@@ -163,10 +172,10 @@ export const metadata: Metadata = {
     'yandex-verification': process.env.YANDEX_VERIFICATION || '',
     
     // Additional semantic markup
-    'subject': 'Daily Movie Guessing Game',
-    'abstract': 'Guess movies and TV shows from single frames with progressive hints',
-    'topic': 'Movie Games, Film Quiz, Entertainment',
-    'summary': 'Daily movie guessing game with blurred frames, progressive hints, and audio clues',
+    'subject': 'Daily Movie Guessing Game - FrameGuessr',
+    'abstract': 'FrameGuessr - Guess movies and TV shows from single frames with progressive hints',
+    'topic': 'Movie Games, Film Quiz, Entertainment, FrameGuessr',
+    'summary': 'FrameGuessr - Daily movie guessing game with blurred frames, progressive hints, and audio clues',
     'classification': 'Entertainment, Games, Movies, Trivia',
     'owner': 'FrameGuessr Team',
     'url': 'https://frameguessr.com',
@@ -212,8 +221,11 @@ export default function RootLayout({
         {/* Essential Meta Tags */}
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="application-name" content="FrameGuessr" />
+        <meta property="og:site_name" content="FrameGuessr" />
+        <meta name="apple-mobile-web-app-title" content="FrameGuessr" />
         
-        {/* Schema.org structured data */}
+        {/* Schema.org structured data for the WebApplication */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -221,8 +233,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebApplication",
               "name": "FrameGuessr",
-              "alternateName": ["Frame Guessr", "Movie Guessing Game"],
-              "description": "Daily movie and TV show guessing game from film stills with progressive hints and audio clues",
+              "alternateName": ["Frame Guessr", "FrameGuessr Game", "Frame Guessr Game"],
+              "description": "FrameGuessr is a daily movie and TV show guessing game where players identify films from single frames. Not to be confused with freeguessr or other similar games.",
               "url": "https://frameguessr.com",
               "applicationCategory": "GameApplication",
               "operatingSystem": "All",
@@ -284,6 +296,50 @@ export default function RootLayout({
           }}
         />
         
+        {/* Brand Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Brand",
+              "name": "FrameGuessr",
+              "alternateName": "Frame Guessr",
+              "description": "FrameGuessr is the original frame-based movie guessing game. Not to be confused with freeguessr.",
+              "url": "https://frameguessr.com",
+              "logo": "https://frameguessr.com/icon-512.png",
+              "slogan": "Guess the movie from one frame",
+              "sameAs": [
+                "https://twitter.com/frameguessr",
+                "https://www.facebook.com/frameguessr",
+                "https://www.instagram.com/frameguessr",
+                "https://www.reddit.com/r/frameguessr"
+              ]
+            })
+          }}
+        />
+        
+        {/* Organization Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "FrameGuessr",
+              "url": "https://frameguessr.com",
+              "logo": "https://frameguessr.com/icon-512.png",
+              "description": "FrameGuessr - The original daily movie frame guessing game",
+              "email": "frameguessr@gmail.com",
+              "foundingDate": "2025",
+              "founders": [{
+                "@type": "Person",
+                "name": "Strahil Peykov"
+              }]
+            })
+          }}
+        />
+        
         {/* Game-specific structured data */}
         <script
           type="application/ld+json"
@@ -316,6 +372,22 @@ export default function RootLayout({
               "mainEntity": [
                 {
                   "@type": "Question",
+                  "name": "What is FrameGuessr?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "FrameGuessr is a daily movie and TV show guessing game where you identify films from single frames. It features progressive hints, audio clues, and new challenges every day. Note: FrameGuessr is not affiliated with freeguessr or any other similar-sounding games."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Is it FrameGuessr or FreeGuessr?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "It's FrameGuessr - a frame-based movie guessing game. We are not affiliated with freeguessr or any other similar-sounding games. FrameGuessr is the original daily movie frame puzzle game."
+                  }
+                },
+                {
+                  "@type": "Question",
                   "name": "How do you play FrameGuessr?",
                   "acceptedAnswer": {
                     "@type": "Answer",
@@ -340,10 +412,10 @@ export default function RootLayout({
                 },
                 {
                   "@type": "Question",
-                  "name": "How often do you get new movies?",
+                  "name": "How often do you get new movies on FrameGuessr?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "We release a brand new movie or TV show challenge every single day at midnight. Each challenge features carefully selected stills from popular and classic entertainment."
+                    "text": "FrameGuessr releases a brand new movie or TV show challenge every single day at midnight. Each challenge features carefully selected stills from popular and classic entertainment."
                   }
                 }
               ]
@@ -472,6 +544,9 @@ export default function RootLayout({
             {/* Footer */}
             <Footer />
           </div>
+          
+          {/* Brand Notice Component */}
+          <BrandNotice />
           
           {/* Cookie Banner */}
           <CookieBanner />

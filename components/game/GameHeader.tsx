@@ -75,7 +75,7 @@ function GameHeader({
       }`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Left side - Logo */}
+            {/* Left side - Logo with enhanced branding */}
             <div className="flex items-center">
               <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-all duration-300 group">
                 <div className="relative">
@@ -85,9 +85,14 @@ function GameHeader({
                   />
                   <div className="absolute inset-0 bg-amber-500/20 dark:bg-amber-400/10 rounded-full blur-lg group-hover:bg-amber-400/30 dark:group-hover:bg-amber-300/20 transition-all duration-300 -z-10 scale-150" />
                 </div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-amber-700 via-amber-600 to-amber-800 dark:from-amber-400 dark:via-amber-300 dark:to-amber-500 bg-clip-text text-transparent group-hover:from-amber-600 group-hover:via-amber-500 group-hover:to-amber-700 dark:group-hover:from-amber-300 dark:group-hover:via-amber-200 dark:group-hover:to-amber-400 transition-all duration-300">
-                  FrameGuessr
-                </h1>
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-amber-700 via-amber-600 to-amber-800 dark:from-amber-400 dark:via-amber-300 dark:to-amber-500 bg-clip-text text-transparent group-hover:from-amber-600 group-hover:via-amber-500 group-hover:to-amber-700 dark:group-hover:from-amber-300 dark:group-hover:via-amber-200 dark:group-hover:to-amber-400 transition-all duration-300">
+                    FrameGuessr
+                  </h1>
+                  <p className="text-[10px] text-stone-500 dark:text-stone-400 -mt-1 hidden sm:block">
+                    Daily Movie Guessing Game
+                  </p>
+                </div>
               </Link>
             </div>
             
@@ -115,6 +120,14 @@ function GameHeader({
               {/* Desktop Controls */}
               <div className="hidden md:flex items-center gap-2">
                 <Link
+                  href="/about"
+                  className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
+                  aria-label="About FrameGuessr"
+                >
+                  <HelpCircle className="w-5 h-5" />
+                </Link>
+
+                <Link
                   href="/archive"
                   className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
                   aria-label="Browse archive"
@@ -123,14 +136,6 @@ function GameHeader({
                 </Link>
 
                 {/*
-                <button
-                  onClick={handleAboutClick}
-                  className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"
-                  aria-label="About and how to play"
-                >
-                  <HelpCircle className="w-5 h-5" />
-                </button>
-
                 <button
                   onClick={toggleTheme}
                   className="p-2.5 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-xl transition-all duration-300 cinema-touch"

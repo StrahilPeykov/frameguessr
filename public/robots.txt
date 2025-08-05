@@ -1,9 +1,59 @@
 # FrameGuessr robots.txt
+# This is the official FrameGuessr website
+# Not affiliated with freeguessr or any similar names
+
 User-agent: *
 Allow: /
+Allow: /about
+Allow: /archive
+Allow: /day/*
 
 # API endpoints
 Disallow: /api/
 
+# Temporary redirects
+Allow: /freeguessr
+Allow: /free-guessr
+Allow: /framegussr
+Allow: /frame-guessr
+
 # Sitemap
 Sitemap: https://frameguessr.com/sitemap.xml
+
+# Crawl delay for respectful crawling
+Crawl-delay: 1
+
+# Special directives for major search engines
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Crawl-delay: 0
+
+# Social media crawlers
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+# Prevent AI training if desired
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+# Contact information
+# Website: https://frameguessr.com
+# Email: frameguessr@gmail.com
