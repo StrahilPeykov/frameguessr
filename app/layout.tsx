@@ -19,8 +19,8 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'FrameGuessr - Daily Movie & TV Guessing Game',
-  description: 'Can you guess the movie from one frame? Play FrameGuessr - the ultimate daily movie guessing game. New movie stills every day, progressive hints, and audio clues.',
+  title: 'FrameGuessr - Can You Guess Today\'s Movie? Daily Film Challenge',
+  description: 'Play today\'s FrameGuessr challenge! Can you identify today\'s featured movie or TV show from a single frame? Progressive hints, audio clues, and unlimited fun. The original daily movie guessing game.',
   keywords: [
     // Primary target keywords
     'frameguessr',
@@ -31,6 +31,13 @@ export const metadata: Metadata = {
     'daily movie game',
     'guess the movie',
     'movie frame quiz',
+    'today movie game',
+    'daily movie challenge today',
+    'guess today movie',
+    'movie game today',
+    'frame quiz today',
+    'daily film puzzle',
+    'today\'s movie quiz',
     
     // Brand differentiation
     'frameguessr not freeguessr',
@@ -114,16 +121,16 @@ export const metadata: Metadata = {
     email: false,
   },
   openGraph: {
-    title: 'FrameGuessr - The Ultimate Daily Movie Guessing Game',
-    description: 'Think you know movies? Guess the film from a single frame! Progressive hints, audio clues, and new challenges daily. More fun than Framed or any movie quiz!',
+    title: 'FrameGuessr - Can You Guess Today\'s Movie? Daily Film Challenge',
+    description: 'Play today\'s FrameGuessr challenge! Progressive hints, audio clues, and cinematic fun. The original daily movie guessing game - not freeguessr!',
     url: 'https://frameguessr.com',
     siteName: 'FrameGuessr',
     images: [
       {
-        url: '/images/og-image.png',
+        url: '/images/og-daily-challenge.png',
         width: 1200,
         height: 630,
-        alt: 'FrameGuessr - Daily Movie Guessing Game - Guess the movie from one frame',
+        alt: 'FrameGuessr Today - Daily Movie Guessing Challenge',
         type: 'image/png',
       },
       {
@@ -139,9 +146,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FrameGuessr - Can You Guess The Movie From One Frame?',
-    description: 'Daily movie guessing game with progressive hints. More challenging than Framed! New movie every day',
-    images: ['/images/og-image.png'],
+    title: 'Can You Guess Today\'s Movie? 🎬',
+    description: 'New daily movie challenge is live! Progressive hints and audio clues available. The original FrameGuessr game.',
+    images: ['/images/og-daily-challenge.png'],
     creator: '@frameguessr',
     site: '@frameguessr',
   },
@@ -194,6 +201,9 @@ export const metadata: Metadata = {
     // Performance and crawling hints
     'preload': 'https://api.themoviedb.org',
     'dns-prefetch': 'https://image.tmdb.org',
+    
+    // Current date info (static)
+    'game-type': 'daily-movie-challenge',
   },
 }
 

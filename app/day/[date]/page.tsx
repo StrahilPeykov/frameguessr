@@ -71,13 +71,13 @@ export async function generateMetadata({ params }: PageProps) {
   const shortDate = `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`
   const dayName = dayNames[dateObj.getDay()]
   
-  // Check if it's today in user's timezone (best effort server-side)
-  const now = new Date()
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  const isTodayDate = date === today
+  // Check if it's today (using UTC comparison to avoid timezone issues)
+  const nowUTC = new Date()
+  const todayUTC = `${nowUTC.getUTCFullYear()}-${String(nowUTC.getUTCMonth() + 1).padStart(2, '0')}-${String(nowUTC.getUTCDate()).padStart(2, '0')}`
+  const isTodayDate = date === todayUTC
   
   // Check if it's recent (within last 7 days) for SEO purposes
-  const daysDiff = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60 * 60 * 24))
+  const daysDiff = Math.floor((nowUTC.getTime() - dateObj.getTime()) / (1000 * 60 * 60 * 24))
   const isRecent = daysDiff >= 0 && daysDiff <= 7
   const isFuture = daysDiff < 0
   
