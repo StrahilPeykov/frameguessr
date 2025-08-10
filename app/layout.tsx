@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/hooks/useTheme'
 import CookieBanner from '@/components/legal/CookieBanner'
 import Footer from '@/components/layout/Footer'
 import BrandNotice from '@/components/ui/BrandNotice'
+import { Suspense } from 'react'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -555,8 +556,10 @@ export default function RootLayout({
             <Footer />
           </div>
           
-          {/* Brand Notice Component */}
-          <BrandNotice />
+          {/* Brand Notice Component - wrapped in Suspense */}
+          <Suspense fallback={null}>
+            <BrandNotice />
+          </Suspense>
           
           {/* Cookie Banner */}
           <CookieBanner />
